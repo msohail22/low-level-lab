@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build output
+dist
+build
+apps/api/dist
+apps/web/dist
+apps/web/dist-ssr
+
+# Environment
+.env
+.env.*
+
+# Tests
+coverage
+
+# IDEs
+.vscode
+.idea
+
+# OS
+.DS_Store
+
+# Bazel
+bazel-*
+WORKSPACE.bazel
+BUILD.bazel
