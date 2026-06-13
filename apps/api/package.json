@@ -5,6 +5,8 @@
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy --minify",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"typecheck": "tsc --noEmit",
+		"build": "wrangler deploy --dry-run --env dev",
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {
@@ -13,6 +15,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^25.9.0",
+		"typescript": "^6.0.2",
 		"wrangler": "^4.92.0"
 	}
 }
