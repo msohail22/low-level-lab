@@ -20,7 +20,7 @@
 	],
 	"env": {
 		"dev": {
-			"name": "api-dev",
+			"name": "low-level-lab-api",
 			"kv_namespaces": [
 				{
 					"binding": "KV_STORE",

@@ -9,7 +9,9 @@
 		"lint": "eslint .",
 		"preview": "pnpm run build && vite preview",
 		"deploy": "pnpm run build && wrangler deploy",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"deploy:dev": "pnpm run build:dev && wrangler deploy --env dev",
+		"build:dev": "CLOUDFLARE_ENV=dev vite build"
 	},
 	"dependencies": {
 		"react": "^19.2.5",
