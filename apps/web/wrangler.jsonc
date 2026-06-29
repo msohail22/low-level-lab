@@ -19,7 +19,7 @@
 	],
 	"env": {
 		"dev": {
-			"name": "low-level-lab-web"
+			"name": "l3-web"
 		}
 	},
 	/**
