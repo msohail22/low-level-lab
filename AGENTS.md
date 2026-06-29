@@ -1,40 +1,62 @@
-# Repository Guidelines
+# AGENTS.md — low-level-lab
 
-## Project Structure & Module Organization
+## Repo Overview
+pnpm monorepo with Cloudflare Workers:
+- **apps/api** — Hono API (Cloudflare Worker, D1 DB)
+- **apps/web** — React + Vite SPA deployed as Cloudflare Worker (assets + worker)
+- **shared/** — empty shared package (empty src/)
 
-This repository contains TypeScript applications:
+## Commands
+Run from repo root:
 
-- `apps/web/`: React 19 and Vite frontend. Code is in `src/`; the Cloudflare Worker entry point is `worker/index.ts`.
-- `apps/api/`: Hono API for Cloudflare Workers. Middleware lives under `src/`, with database code in `src/db/`.
-- `apps/mobile/`: React Native app, including native projects in `android/` and `ios/`. Jest tests live in `__tests__/`.
-- `shared/`: reusable schemas and code. Add shared contracts here instead of duplicating them.
-- `docs/`: architecture and design documentation.
+| Task | Command |
+|------|---------|
+| Install deps | `pnpm install` |
+| Dev (API + Web) | `pnpm dev` |
+| Dev API only | `pnpm dev:api` |
+| Dev Web only | `pnpm dev:web` |
+| Build all | `pnpm build` |
+| Build API | `pnpm build:api` |
+| Build Web | `pnpm build:web` |
+| Lint API | `pnpm lint:api` |
+| Lint Web | `pnpm lint:web` |
+| Typecheck API | `pnpm typecheck:api` |
+| Deploy all | `pnpm deploy` |
+| Deploy API | `pnpm deploy:api` |
+| Deploy Web | `pnpm deploy:web` |
+| D1 migration (local) | `pnpm db:migrate:local` |
+| D1 migration (remote) | `pnpm db:migrate:remote` |
 
-Keep generated and platform build output out of version control.
+**Note:** `pnpm test` / `pnpm test:mobile` / `pnpm lint:mobile` / `pnpm build:mobile` exist in root `package.json` but `apps/mobile` does not exist — these will fail.
 
-## Build, Test, and Development Commands
+## CI (`.github/workflows/ci.yml`)
+Runs on PRs to main:
+1. `lint-web` → `build-web`
+2. `test-mobile` (fails — no mobile app)
+3. `typecheck-api` → `build-api`
+4. `lint-mobile` (fails — no mobile app)
 
-Use Node.js 22.11+ and pnpm 10.30. Because the workspace file is empty, run package commands explicitly:
+## Deploy (`.github/workflows/deploy.yml`)
+On push to main:
+1. Run D1 migrations (remote)
+2. Deploy API (`apps/api`)
+3. Deploy Web (`apps/web`)
 
-- `pnpm --dir apps/web dev`: start the Vite web development server.
-- `pnpm --dir apps/web build`: type-check and build the web app.
-- `pnpm --dir apps/web lint`: lint web TypeScript and React code.
-- `pnpm --dir apps/api dev`: run the API locally with Wrangler.
-- `pnpm --dir apps/api cf-typegen`: regenerate Cloudflare binding types.
-- `pnpm --dir apps/mobile start`: start Metro.
-- `pnpm --dir apps/mobile android` or `ios`: launch the native app.
-- `pnpm --dir apps/mobile test`: run Jest tests.
+Requires secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `DATABASE_ID`.
 
-Do not use the root `pnpm test`; it is a placeholder that intentionally fails.
+## Key Files
+- `apps/api/wrangler.jsonc` — API Worker config (D1 binding `DB`)
+- `apps/web/wrangler.jsonc` — Web Worker config (assets + SPA fallback)
+- `apps/api/src/db/schema.ts` — Drizzle schema (D1)
+- `pnpm-workspace.yaml` — workspace config
+- `.env` — local env (not committed)
 
-## Coding Style & Naming Conventions
+## Gotchas
+- `apps/mobile` referenced in CI/root scripts but **does not exist** — CI jobs fail.
+- `shared/src/` is empty — not published or used yet.
+- Root `pnpm test` / `test:mobile` / `lint:mobile` / `build:mobile` will fail.
+- D1 migrations run via `wrangler d1 migrations apply` (see deploy workflow).
+- API uses Hono + Drizzle (D1). Web uses React + Vite + Cloudflare Workers.
 
-Use strict TypeScript and keep modules focused. Follow the style already used in each package: two-space indentation, `PascalCase` for React components and types, `camelCase` for functions and variables, and descriptive lowercase filenames such as `logger.ts`. Web code is checked by ESLint; mobile code uses the React Native ESLint preset and Prettier. Avoid unused parameters, unchecked values, and duplicated validation; use Zod for external data boundaries.
-
-## Testing Guidelines
-
-Mobile tests use Jest with `react-test-renderer`. Name tests `*.test.ts` or `*.test.tsx` and place them in `__tests__/` near the feature. Add tests for behavior changes and regressions. Web and API packages do not yet define test runners, so at minimum run their build, lint, or Wrangler type-generation commands as applicable.
-
-## Commit & Pull Request Guidelines
-
-Recent commits use short, imperative summaries such as `Refactor code structure for improved readability and maintainability`. Keep each commit scoped to one logical change. Pull requests should explain the problem and solution, list verification commands, link related issues, and include screenshots or recordings for visible web or mobile changes. Never commit secrets from `.env` or Cloudflare credentials.
+## Design Requirements
+- **Responsive design mandatory** — all web pages must work on mobile, tablet, desktop, and ultra-wide screens. Use Tailwind CSS responsive utilities (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`) and test across breakpoints.
