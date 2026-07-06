@@ -1,12 +1,24 @@
+// react 
+import React from "react";
+
+// dev tools
+import { DevTools } from "jotai-devtools";
+import "jotai-devtools/styles.css";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+
 export default function App() {
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white">
-      <h1 className="text-5xl font-bold mb-4">My App</h1>
-      <p className="text-slate-400 mb-8">A simple landing page</p>
-
-      <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg">
-        Get Started
-      </button>
-    </div>
+    <>
+      {
+        import.meta.env.DEV && ( 
+          <React.Fragment>
+            <DevTools />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </React.Fragment>
+        ) 
+      }
+      <h1> Hello, Auntry </h1>
+    </>
   );
 }
