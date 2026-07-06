@@ -10,11 +10,15 @@
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {
+		"dotenv": "^17.4.2",
+		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.19",
+		"postgres": "^3.4.9",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
 		"@types/node": "^25.9.0",
+		"drizzle-kit": "^0.31.10",
 		"typescript": "^6.0.2",
 		"wrangler": "^4.92.0"
 	}
