@@ -3,8 +3,10 @@ import { Link, NavLink } from "react-router-dom";
 const navItems = [
 	{ to: "/", label: "Home" },
 	{ to: "/topics", label: "Learn" },
-	{ to: "/dashboard", label: "Dashboard" },
+	{ to: "/method", label: "Method" },
+	{ to: "/search", label: "Search" },
 	{ to: "/settings", label: "Settings" },
+	{ to: "/login", label: "Sign In" },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -57,8 +59,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 							<Link className="pill-link !px-3 !py-2 !text-xs" to="/topics">
 								Learn
 							</Link>
-							<Link className="pill-link !px-3 !py-2 !text-xs" to="/dashboard">
-								Dashboard
+							<Link className="pill-link !px-3 !py-2 !text-xs" to="/method">
+								Method
+							</Link>
+							<Link className="pill-link !px-3 !py-2 !text-xs" to="/search">
+								Search
 							</Link>
 							<Link className="pill-link !px-3 !py-2 !text-xs" to="/settings">
 								Settings
