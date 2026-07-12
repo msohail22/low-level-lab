@@ -1,5 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 
+import LLBFooter from "../ui/LLBFooter";
+
 const navItems = [
 	{ to: "/", label: "Home" },
 	{ to: "/topics", label: "Learn" },
@@ -11,7 +13,7 @@ const navItems = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
 	return (
-		<div className="min-h-screen text-slate-900">
+		<div className="flex min-h-screen flex-col text-slate-900">
 			<header className="sticky top-0 z-20 border-b border-[color:var(--line)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-xl">
 				<div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
 					<Link to="/" className="flex items-center gap-3">
@@ -50,27 +52,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 				</div>
 			</header>
 
-			<main>{children}</main>
+			<main className="flex-1">{children}</main>
 
-				<footer className="border-t border-[color:var(--line)] bg-[color:var(--bg)]/70">
-					<div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-[color:var(--muted)] sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
-						<p>Low Level Lab · free systems programming practice</p>
-						<div className="flex flex-wrap gap-3">
-							<Link className="pill-link !px-3 !py-2 !text-xs" to="/topics">
-								Learn
-							</Link>
-							<Link className="pill-link !px-3 !py-2 !text-xs" to="/method">
-								Method
-							</Link>
-							<Link className="pill-link !px-3 !py-2 !text-xs" to="/search">
-								Search
-							</Link>
-							<Link className="pill-link !px-3 !py-2 !text-xs" to="/settings">
-								Settings
-							</Link>
-						</div>
-					</div>
-			</footer>
+			<LLBFooter />
 		</div>
 	);
 }
