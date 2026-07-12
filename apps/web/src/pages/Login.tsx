@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
+import { FaApple, FaGithub } from "react-icons/fa";
 
 import LLBButton from "../components/ui/LLBButton";
 import LLBCard from "../components/ui/LLBCard";
@@ -22,9 +24,16 @@ export default function Login() {
           </label>
           <LLBButton className="w-full" variant="primary" type="button">Sign in</LLBButton>
         </form>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <a className="pill-link" href="#">Continue with GitHub</a>
-          <a className="pill-link" href="#">Continue with Google</a>
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <a aria-label="Continue with GitHub" className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-white text-[color:var(--ink)] transition hover:border-[color:var(--accent)]/25 hover:bg-[color:var(--surface-2)]" href="#">
+            <FaGithub aria-hidden="true" className="text-lg" />
+          </a>
+          <a aria-label="Continue with Google" className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-white text-[color:var(--ink)] transition hover:border-[color:var(--accent)]/25 hover:bg-[color:var(--surface-2)]" href="#">
+            <FcGoogle aria-hidden="true" className="text-lg" />
+          </a>
+          <a aria-label="Continue with Apple" className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-white text-[color:var(--ink)] transition hover:border-[color:var(--accent)]/25 hover:bg-[color:var(--surface-2)]" href="#">
+            <FaApple aria-hidden="true" className="text-lg" />
+          </a>
         </div>
         <p className="mt-4 text-sm text-[color:var(--muted)]">No account yet? <Link className="text-[color:var(--accent)] underline decoration-[color:var(--accent)]/30 underline-offset-4" to="/register">Create one</Link></p>
 			</LLBCard>
