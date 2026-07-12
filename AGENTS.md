@@ -2,61 +2,52 @@
 
 ## Repo Overview
 pnpm monorepo with Cloudflare Workers:
-- **apps/api** — Hono API (Cloudflare Worker, D1 DB)
-- **apps/web** — React + Vite SPA deployed as Cloudflare Worker (assets + worker)
-- **shared/** — empty shared package (empty src/)
+- **apps/api** — Hono API worker with D1 and Better Auth support
+- **apps/web** — React + Vite SPA worker with React Router, React Query, and Better Auth client code
+- **shared/** — shared package scaffold with `src/` for reusable code
 
 ## Commands
-Run from repo root:
+Run from repo root unless noted otherwise:
 
 | Task | Command |
 |------|---------|
 | Install deps | `pnpm install` |
-| Dev (API + Web) | `pnpm dev` |
-| Dev API only | `pnpm dev:api` |
-| Dev Web only | `pnpm dev:web` |
-| Build all | `pnpm build` |
-| Build API | `pnpm build:api` |
-| Build Web | `pnpm build:web` |
-| Lint API | `pnpm lint:api` |
-| Lint Web | `pnpm lint:web` |
-| Typecheck API | `pnpm typecheck:api` |
-| Deploy all | `pnpm deploy` |
+| Dev API | `pnpm dev:api` |
+| Dev Web | `pnpm dev:web` |
+| Build web app | `pnpm build` |
+| Deploy both apps | `pnpm deploy` |
 | Deploy API | `pnpm deploy:api` |
 | Deploy Web | `pnpm deploy:web` |
-| D1 migration (local) | `pnpm db:migrate:local` |
-| D1 migration (remote) | `pnpm db:migrate:remote` |
+| API typecheck | `pnpm --dir apps/api typecheck` |
+| API build / dry-run deploy | `pnpm --dir apps/api build` |
+| API local dev deploy | `pnpm --dir apps/api deploy:dev` |
+| Web lint | `pnpm --dir apps/web lint` |
+| Web build | `pnpm --dir apps/web build` |
+| Web dev deploy | `pnpm --dir apps/web deploy:dev` |
 
-**Note:** `pnpm test` / `pnpm test:mobile` / `pnpm lint:mobile` / `pnpm build:mobile` exist in root `package.json` but `apps/mobile` does not exist — these will fail.
-
-## CI (`.github/workflows/ci.yml`)
-Runs on PRs to main:
-1. `lint-web` → `build-web`
-2. `test-mobile` (fails — no mobile app)
-3. `typecheck-api` → `build-api`
-4. `lint-mobile` (fails — no mobile app)
-
-## Deploy (`.github/workflows/deploy.yml`)
-On push to main:
-1. Run D1 migrations (remote)
-2. Deploy API (`apps/api`)
-3. Deploy Web (`apps/web`)
-
-Requires secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `DATABASE_ID`.
+## Gotchas
+- Root `package.json` does not define `dev`, `build:api`, `build:web`, `lint:api`, `lint:web`, `typecheck:api`, or D1 migration scripts, so use the app-level scripts above for those tasks.
+- Root `pnpm test` still targets `apps/mobile`, which does not exist and will fail.
+- D1 migrations are handled through Wrangler in `apps/api`.
 
 ## Key Files
 - `apps/api/wrangler.jsonc` — API Worker config (D1 binding `DB`)
 - `apps/web/wrangler.jsonc` — Web Worker config (assets + SPA fallback)
 - `apps/api/src/db/schema.ts` — Drizzle schema (D1)
+- `apps/web/src/routes/index.tsx` — app route map
+- `apps/web/src/context/` — app contexts such as auth and theme
 - `pnpm-workspace.yaml` — workspace config
 - `.env` — local env (not committed)
 
-## Gotchas
-- `apps/mobile` referenced in CI/root scripts but **does not exist** — CI jobs fail.
-- `shared/src/` is empty — not published or used yet.
-- Root `pnpm test` / `test:mobile` / `lint:mobile` / `build:mobile` will fail.
-- D1 migrations run via `wrangler d1 migrations apply` (see deploy workflow).
+## Notes
+- `shared/src/` is currently a scaffold for future reuse.
 - API uses Hono + Drizzle (D1). Web uses React + Vite + Cloudflare Workers.
+- Keep custom web CSS centralized in `apps/web/src/index.css`.
 
 ## Design Requirements
 - **Responsive design mandatory** — all web pages must work on mobile, tablet, desktop, and ultra-wide screens. Use Tailwind CSS responsive utilities (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`) and test across breakpoints.
+
+## Web Styling Rule
+- Keep all custom web CSS in `apps/web/src/index.css`.
+- Prefer Tailwind utilities in components; use `index.css` for global tokens, resets, shared styles, and reusable patterns.
+- Avoid adding separate CSS files for individual components unless there is a strong reason.

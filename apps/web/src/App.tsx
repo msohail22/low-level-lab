@@ -1,7 +1,12 @@
+import { AppRouter } from "@/routes";
+import { authClient } from "@/lib/auth";
+
 export default function App() {
-  return (
-    <div>
-      <h1>App</h1>
-    </div>
-  );
+  const { isPending } = authClient.useSession();
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  return <AppRouter />;
 }
