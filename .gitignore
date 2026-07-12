@@ -19,6 +19,11 @@ build/
 .vite/
 *.tsbuildinfo
 
+# Extracted design bundle / reference files
+/web/
+/docs/PAGES-WEB.md
+/web-design-specification-product-guide.md
+
 # Test and coverage output
 coverage/
 .nyc_output/
