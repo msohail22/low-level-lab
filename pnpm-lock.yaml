@@ -200,11 +200,7 @@ importers:
         specifier: ^4.92.0
         version: 4.100.0
 
-  shared:
-    dependencies:
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
+  packages/shared: {}
 
 packages:
 
