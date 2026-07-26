@@ -200,6 +200,8 @@ importers:
         specifier: ^4.92.0
         version: 4.100.0
 
+  packages/reactor-sdk: {}
+
   packages/shared: {}
 
 packages:

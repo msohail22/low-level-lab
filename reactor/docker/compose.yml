@@ -1,0 +1,149 @@
+services:
+  reactor:
+    # Builds and runs the Reactor binary from the local Dockerfile.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: reactor-app
+    networks:
+      - reactor-net
+
+  redis:
+    # Lightweight cache for local development.
+    image: redis:7-alpine
+    container_name: reactor-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - reactor-net
+
+  kafka:
+    # Kafka broker in KRaft mode, without ZooKeeper.
+    image: bitnami/kafka:3.7
+    container_name: reactor-kafka
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_NODE_ID: "0"
+      KAFKA_CFG_PROCESS_ROLES: "controller,broker"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@kafka:9093"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_KRAFT_CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - reactor-net
+
+  kafka-ui:
+    # Web UI for browsing Kafka topics and brokers.
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: reactor-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - reactor-net
+
+  minio:
+    # Simple S3-compatible object store for local integrations.
+    image: minio/minio:latest
+    container_name: reactor-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - reactor-net
+
+  prometheus:
+    # Metrics scraper with only the default self-scrape target.
+    image: prom/prometheus:latest
+    container_name: reactor-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - reactor-net
+
+  grafana:
+    # Dashboard UI for viewing metrics and traces.
+    image: grafana/grafana:latest
+    container_name: reactor-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - reactor-net
+
+  loki:
+    # Log aggregation backend for local development.
+    image: grafana/loki:latest
+    container_name: reactor-loki
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    networks:
+      - reactor-net
+
+  tempo:
+    # Trace storage backend for local OpenTelemetry data.
+    image: grafana/tempo:latest
+    container_name: reactor-tempo
+    command: -config.file=/etc/tempo/tempo.yml
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo-data:/tempo
+    networks:
+      - reactor-net
+
+  otel-collector:
+    # OpenTelemetry Collector that receives traces and forwards them to Tempo.
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: reactor-otel-collector
+    command: ["--config=/etc/otel/config.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./otel/config.yaml:/etc/otel/config.yaml:ro
+    networks:
+      - reactor-net
+
+networks:
+  reactor-net:
+
+volumes:
+  redis-data:
+  kafka-data:
+  minio-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  tempo-data:

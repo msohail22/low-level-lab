@@ -1,0 +1,6 @@
+[submodule "reactor/vendors/googletest"]
+	path = reactor/vendors/googletest
+	url = https://github.com/google/googletest.git
+[submodule "reactor/vendors/spdlog"]
+	path = reactor/vendors/spdlog
+	url = https://github.com/gabime/spdlog.git
