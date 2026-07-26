@@ -11,7 +11,11 @@
     "deploy:web": "pnpm --dir apps/web deploy:dev",
     "deploy:dev": "pnpm run deploy:api && pnpm run deploy:web",
     "dev:api": "pnpm --dir apps/api dev",
-    "dev:web": "pnpm --dir apps/web dev"
+    "dev:web": "pnpm --dir apps/web dev",
+    "sonar:up": "docker compose up -d",
+    "sonar:down": "docker compose down",
+    "sonar:logs": "docker compose logs -f sonarqube",
+    "sonar:scan": "test -n \"$SONAR_TOKEN\" || (echo 'Set SONAR_TOKEN before running a scan' && exit 1); SONAR_SCANNER_UID=$(id -u) docker compose --profile scan run --rm scanner"
   },
   "keywords": [],
   "author": "",

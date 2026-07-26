@@ -25,9 +25,9 @@ export default function Questions() {
               ["Spot the off-by-one", "Find bug · medium"],
               ["What does %zu print?", "MCQ · easy"],
             ].map(([title, meta], index) => (
-              <div key={title as string} className={`rounded-2xl border px-4 py-4 ${index === 0 ? "border-[color:var(--accent)] bg-[color:var(--surface-2)]" : "border-[color:var(--line)] bg-white"}`}>
-                <h2 className="text-lg font-semibold tracking-tight">{title as string}</h2>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">{meta as string}</p>
+              <div key={title} className={`rounded-2xl border px-4 py-4 ${index === 0 ? "border-[color:var(--accent)] bg-[color:var(--surface-2)]" : "border-[color:var(--line)] bg-white"}`}>
+                <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">{meta}</p>
               </div>
             ))}
           </div>

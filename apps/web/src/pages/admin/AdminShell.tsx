@@ -9,7 +9,7 @@ const adminNav = [
 ];
 
 type AdminShellProps = {
-	children: ReactNode;
+	readonly children: ReactNode;
 };
 
 export default function AdminShell({ children }: AdminShellProps) {

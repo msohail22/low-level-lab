@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from "react";
 
-type LLBInputProps = InputHTMLAttributes<HTMLInputElement>;
+type LLBInputProps = Readonly<InputHTMLAttributes<HTMLInputElement>>;
 
 export default function LLBInput({ className = "", ...props }: LLBInputProps) {
 	return (

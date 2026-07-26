@@ -1,5 +1,15 @@
 import { Link } from "react-router-dom";
 
+const statusClassNames: Record<string, string> = {
+	Live: "bg-[color:rgba(46,125,50,0.12)] text-[color:var(--ok)]",
+	Draft: "bg-[color:rgba(168,65,36,0.1)] text-[color:var(--accent)]",
+	"In review": "bg-[color:rgba(168,65,36,0.08)] text-[color:var(--accent)]",
+};
+
+function getStatusClassName(status: string) {
+	return statusClassNames[status] ?? statusClassNames["In review"];
+}
+
 export default function AdminDashboard() {
 	return (
 		<section className="mx-auto w-full max-w-7xl">
@@ -51,7 +61,9 @@ export default function AdminDashboard() {
 									<td className="px-4 py-3 font-medium text-[color:var(--ink)]">{row[0]}</td>
 									<td className="px-4 py-3 text-[color:var(--muted)]">{row[1]}</td>
 									<td className="px-4 py-3 text-[color:var(--muted)]">{row[2]}</td>
-									<td className="px-4 py-3"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${row[3] === "Live" ? "bg-[color:rgba(46,125,50,0.12)] text-[color:var(--ok)]" : row[3] === "Draft" ? "bg-[color:rgba(168,65,36,0.1)] text-[color:var(--accent)]" : "bg-[color:rgba(168,65,36,0.08)] text-[color:var(--accent)]"}`}>{row[3]}</span></td>
+									<td className="px-4 py-3">
+										<span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClassName(row[3])}`}>{row[3]}</span>
+									</td>
 									<td className="px-4 py-3 text-[color:var(--muted)]">{row[4]}</td>
 								</tr>
 							))}

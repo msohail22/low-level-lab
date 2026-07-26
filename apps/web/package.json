@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
+		"test": "vitest run --coverage",
 		"lint": "eslint .",
 		"preview": "pnpm run build && vite preview",
 		"deploy": "pnpm run build && wrangler deploy",
@@ -34,6 +35,7 @@
 		"@types/react": "^18.3.31",
 		"@types/react-dom": "^18.3.7",
 		"@vitejs/plugin-react": "^6.0.1",
+		"@vitest/coverage-v8": "^4.1.10",
 		"eslint": "^10.2.1",
 		"eslint-plugin-react-hooks": "^7.1.1",
 		"eslint-plugin-react-refresh": "^0.5.2",
@@ -41,6 +43,7 @@
 		"typescript": "~6.0.2",
 		"typescript-eslint": "^8.58.2",
 		"vite": "^8.0.10",
+		"vitest": "^4.1.10",
 		"wrangler": "^4.92.0"
 	}
 }

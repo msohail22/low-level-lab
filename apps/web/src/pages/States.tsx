@@ -16,10 +16,10 @@ export default function States() {
 					["Empty", "Helpful guidance when nothing is there yet."],
 					["Success", "A clear confirmation and next step."],
 				].map(([title, copy]) => (
-					<div key={title as string} className="surface-card p-6">
+					<div key={title} className="surface-card p-6">
 						<p className="section-eyebrow">State</p>
-						<h2 className="mt-3 text-2xl font-semibold tracking-tight">{title as string}</h2>
-						<p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">{copy as string}</p>
+						<h2 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h2>
+						<p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">{copy}</p>
 					</div>
 				))}
 			</div>

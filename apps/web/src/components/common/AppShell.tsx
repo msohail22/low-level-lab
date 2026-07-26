@@ -11,7 +11,7 @@ const navItems = [
 	{ to: "/login", label: "Sign In" },
 ];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children }: { readonly children: React.ReactNode }) {
 	return (
 		<div className="flex min-h-screen flex-col text-slate-900">
 			<header className="sticky top-0 z-20 border-b border-[color:var(--line)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-xl">

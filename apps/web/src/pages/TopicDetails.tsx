@@ -33,9 +33,9 @@ export default function TopicDetails() {
               ["Integer promotion rules", "MCQ · medium"],
               ["Complete the swap function", "Fill blank · medium"],
             ].map(([title, meta], index) => (
-              <div key={title as string} className={`rounded-2xl border px-4 py-4 ${index === 2 ? "border-[color:var(--accent)] bg-[color:var(--surface-2)]" : "border-[color:var(--line)] bg-white"}`}>
-                <h3 className="text-lg font-semibold tracking-tight">{title as string}</h3>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">{meta as string}</p>
+              <div key={title} className={`rounded-2xl border px-4 py-4 ${index === 2 ? "border-[color:var(--accent)] bg-[color:var(--surface-2)]" : "border-[color:var(--line)] bg-white"}`}>
+                <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">{meta}</p>
               </div>
             ))}
           </div>

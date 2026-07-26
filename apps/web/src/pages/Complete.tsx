@@ -13,9 +13,9 @@ export default function Complete() {
 						["Time", "6.2h"],
 						["Accuracy", "88%"],
 					].map(([label, value]) => (
-						<div key={label as string} className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-4">
-							<p className="text-sm text-[color:var(--muted)]">{label as string}</p>
-							<div className="mt-2 text-3xl font-semibold tracking-tight">{value as string}</div>
+						<div key={label} className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-4">
+							<p className="text-sm text-[color:var(--muted)]">{label}</p>
+							<div className="mt-2 text-3xl font-semibold tracking-tight">{value}</div>
 						</div>
 					))}
 				</div>

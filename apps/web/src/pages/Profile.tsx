@@ -31,9 +31,9 @@ export default function Profile() {
               ["Track master", "Finish any full track"],
               ["No hints", "Solve 20 in a row hint-free"],
             ].map(([title, copy]) => (
-              <div key={title as string} className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-4">
-                <h3 className="text-lg font-semibold tracking-tight">{title as string}</h3>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">{copy as string}</p>
+              <div key={title} className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-2)] p-4">
+                <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">{copy}</p>
               </div>
             ))}
           </div>
