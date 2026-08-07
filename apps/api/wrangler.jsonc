@@ -3,12 +3,14 @@
 	"name": "api",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-05-18",
-	"compatibility_flags": ["nodejs_compat"],
-	"d1_databases": [
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"hyperdrive": [
 		{
-			"binding": "DB",
-			"database_name": "low-level-lab",
-			"database_id": "REPLACE_WITH_D1_DATABASE_ID"
+			"binding": "HYPERDRIVE",
+			"id": "99045301314f4530817f32abff2f2445",
+			"localConnectionString": "postgres://postgres:postgres@localhost:5433/lowlevellab"
 		}
 	],
 	"assets": {
@@ -18,5 +20,15 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"env": {
+		"dev": {
+			"hyperdrive": [
+				{
+					"binding": "HYPERDRIVE",
+					"id": "99045301314f4530817f32abff2f2445"
+				}
+			]
+		}
+	}
 }

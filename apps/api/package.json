@@ -3,6 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
+		"dev:remote": "wrangler dev --remote",
 		"deploy": "wrangler deploy --minify",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
 		"typecheck": "tsc --noEmit",
@@ -11,14 +12,16 @@
 	},
 	"dependencies": {
 		"@openfga/sdk": "^0.9.6",
+		"@types/pg": "^8.20.4",
 		"better-auth": "^1.6.23",
-		"dotenv": "^17.4.2",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.19",
+		"pg": "^8.22.0",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
 		"@types/node": "^25.9.0",
+		"dotenv": "^17.4.2",
 		"drizzle-kit": "^0.31.10",
 		"typescript": "^6.0.2",
 		"wrangler": "^4.92.0"

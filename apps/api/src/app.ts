@@ -1,7 +1,8 @@
 import { Hono } from "hono";
+import { routes } from "./routes/index.ts";
 
-export function createApp() {
-  const app = new Hono();
+const app = new Hono();
 
-  return app;
-}
+app.route("/", routes);
+
+export default app;
