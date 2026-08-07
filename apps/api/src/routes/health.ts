@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { sql } from "drizzle-orm";
-import { createDb } from "../db";
+import { createDb } from "../db/index.ts";
 import type { Hyperdrive } from "@cloudflare/workers-types";
 
 export const health = new Hono<{ Bindings: { HYPERDRIVE: Hyperdrive } }>();

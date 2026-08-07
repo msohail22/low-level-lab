@@ -11,6 +11,7 @@
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {
+		"@better-auth/drizzle-adapter": "^1.6.26",
 		"@openfga/sdk": "^0.9.6",
 		"@types/pg": "^8.20.4",
 		"better-auth": "^1.6.23",
@@ -20,6 +21,7 @@
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20260804.1",
 		"@types/node": "^25.9.0",
 		"dotenv": "^17.4.2",
 		"drizzle-kit": "^0.31.10",

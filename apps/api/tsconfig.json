@@ -11,8 +11,16 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "types": [
-        "./worker-configuration.d.ts",
-        "node"
-    ]
+      "./worker-configuration.d.ts",
+      "node"
+    ],
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
+  "include": [
+    "src/**/*",
+    "worker-configuration.d.ts"
+  ]
 }
