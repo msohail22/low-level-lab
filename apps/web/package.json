@@ -1,18 +1,15 @@
 {
-	"name": "web",
+	"name": "llb-web",
 	"private": true,
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
-		"test": "vitest run --coverage",
 		"lint": "eslint .",
 		"preview": "pnpm run build && vite preview",
-		"deploy": "pnpm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
-		"deploy:dev": "pnpm run build:dev && wrangler deploy --env dev",
-		"build:dev": "CLOUDFLARE_ENV=dev vite build"
+		"deploy:dev": "pnpm run build:dev && wrangler deploy --env dev"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.1",
