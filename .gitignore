@@ -36,7 +36,6 @@ blob-report/
 .eslintcache
 .stylelintcache
 .turbo/
-.scannerwork/
 
 # Logs
 logs/

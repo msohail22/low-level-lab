@@ -131,7 +131,6 @@ Configured via GitHub API / `gh` (not committed YAML — rules live in GitHub se
 - Production Wrangler env / multi-environment promotion
 - D1 migrations (project uses Postgres + Hyperdrive)
 - Mobile app CI
-- SonarQube in Actions
 - Automatic Cloudflare secret sync beyond the three GitHub secrets above
 
 ## Testing / verification
