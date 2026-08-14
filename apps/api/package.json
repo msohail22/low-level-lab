@@ -9,6 +9,7 @@
 		"typecheck": "tsc --noEmit",
 		"build": "wrangler deploy --dry-run --env dev",
 		"migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push --force",
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {

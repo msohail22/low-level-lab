@@ -8,6 +8,7 @@
     "lint": "pnpm --dir apps/web lint && pnpm --dir apps/api typecheck",
     "build": "pnpm --dir apps/web build",
     "migrate": "pnpm --dir apps/api migrate",
+    "db:push": "pnpm --dir apps/api db:push",
     "deploy": "pnpm run deploy:dev",
     "deploy:api": "pnpm --dir apps/api deploy:dev",
     "deploy:web": "pnpm --dir apps/web deploy:dev",

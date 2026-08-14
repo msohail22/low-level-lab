@@ -37,13 +37,13 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm run deploy:dev
-      - name: Run DB migrations
+      - name: Push DB schema
         working-directory: apps/api
         env:
           DB_URL: ${{ secrets.DB_URL }}
         run: |
           if [ -z "$DB_URL" ]; then
-            echo "::error::Missing GitHub secret DB_URL (Postgres connection string for drizzle-kit migrate)"
+            echo "::error::Missing GitHub secret DB_URL (Postgres connection string for drizzle-kit push)"
             exit 1
           fi
-          pnpm run migrate
+          pnpm run db:push
