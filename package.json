@@ -14,7 +14,9 @@
     "deploy:web": "pnpm --dir apps/web deploy:dev",
     "deploy:dev": "pnpm run deploy:api && pnpm run deploy:web",
     "dev:api": "pnpm --dir apps/api dev",
-    "dev:web": "pnpm --dir apps/web dev"
+    "dev:web": "pnpm --dir apps/web dev",
+    "prepush": "pnpm lint && pnpm build",
+    "check": "pnpm prepush"
   },
   "keywords": [],
   "author": "",
