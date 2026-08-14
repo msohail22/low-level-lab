@@ -41,4 +41,9 @@ jobs:
         working-directory: apps/api
         env:
           DB_URL: ${{ secrets.DB_URL }}
-        run: pnpm run migrate
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::error::Missing GitHub secret DB_URL (Postgres connection string for drizzle-kit migrate)"
+            exit 1
+          fi
+          pnpm run migrate
