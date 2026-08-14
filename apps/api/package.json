@@ -8,6 +8,7 @@
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
 		"typecheck": "tsc --noEmit",
 		"build": "wrangler deploy --dry-run --env dev",
+		"migrate": "drizzle-kit migrate",
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {

@@ -9,7 +9,7 @@
 		"lint": "eslint .",
 		"preview": "pnpm run build && vite preview",
 		"cf-typegen": "wrangler types",
-		"deploy:dev": "pnpm run build:dev && wrangler deploy --env dev"
+		"deploy:dev": "pnpm run build && wrangler deploy --env dev"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.1",
