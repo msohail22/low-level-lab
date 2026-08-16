@@ -139,7 +139,10 @@ export default function Dashboard() {
       )}
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Link className="auth-primary-btn text-center" to="/paths">
+        <Link className="auth-primary-btn text-center" to="/playground">
+          Reactor playground
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/paths">
           Learning paths
         </Link>
         <Link className="auth-secondary-btn text-center" to="/challenge">

@@ -19,6 +19,9 @@ export function AppShell({ title, eyebrow, children }: AppShellProps) {
             Low-Level Lab
           </Link>
           <nav className="flex flex-wrap gap-3 text-sm">
+            <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/playground">
+              Playground
+            </Link>
             <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/paths">
               Paths
             </Link>

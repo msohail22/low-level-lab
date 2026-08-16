@@ -19,7 +19,7 @@ Product backlog (lean) — migration `0006_study_loop_depth` + `/api/learn` stud
 
 Still deferred (infra): Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning, richer version UI/diff.
 
-**Code execution:** not on Workers. Use **reactor/** (remote sandbox) + `packages/reactor-sdk`, then call it from `/api/learn/questions/:id/sandbox` (today: print_output check + stub for full compile/run).
+**Code execution (PoC):** `reactor/service` + `@llb/reactor-sdk` + authenticated `/api/reactor/*` + web `/playground`. Full production isolation / learn-sandbox wiring still later.
 
 ## Request log pruning
 

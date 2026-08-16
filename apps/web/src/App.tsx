@@ -24,6 +24,7 @@ import EditQuestion from "@/pages/contribute/EditQuestion";
 import { Bookmarks, DueReviews, Mistakes } from "@/pages/learn/Queues";
 import TopicQuestions from "@/pages/learn/TopicQuestions";
 import Topics from "@/pages/learn/Topics";
+import Playground from "@/pages/Playground";
 import ReviewQueue from "@/pages/review/ReviewQueue";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
       <Route path="/authors/:authorId" element={<AuthorProfile />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/playground" element={<Playground />} />
         <Route path="/practice/:questionId" element={<PracticeQuestion />} />
         <Route path="/due" element={<DueReviews />} />
         <Route path="/mistakes" element={<Mistakes />} />

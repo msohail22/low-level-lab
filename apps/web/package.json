@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@llb/shared": "workspace:*",
+		"@llb/reactor-sdk": "workspace:*",
 		"@tailwindcss/vite": "^4.3.1",
 		"@tanstack/react-query": "^5.101.2",
 		"@tanstack/react-query-devtools": "^5.101.2",

@@ -15,8 +15,8 @@ pnpm monorepo with Cloudflare Workers:
 - **apps/api** — Hono API worker with Postgres/Hyperdrive and Better Auth support
 - **apps/web** — React + Vite SPA worker with React Router, React Query, and Better Auth client code
 - **packages/shared** (`@llb/shared`) — shared Zod schemas, DTOs, and constants
-- **reactor/** — remote code-execution service (sandbox); wire via `packages/reactor-sdk` later
-- **packages/reactor-sdk** — client SDK scaffold for Reactor
+- **reactor/service** — local Reactor PoC (HTTP + Kafka + Redis + clang++/g++)
+- **packages/reactor-sdk** (`@llb/reactor-sdk`) — TS client for Reactor / API proxy
 
 ## Commands
 Run from repo root unless noted otherwise:
@@ -26,6 +26,7 @@ Run from repo root unless noted otherwise:
 | Install deps | `pnpm install` |
 | Dev API | `pnpm dev:api` |
 | Dev Web | `pnpm dev:web` |
+| Dev Reactor | `docker compose -f reactor/docker/compose.yml up --build redis kafka reactor` |
 | Build web app | `pnpm build` |
 | Deploy both apps | `pnpm deploy` |
 | Deploy API | `pnpm deploy:api` |

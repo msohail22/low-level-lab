@@ -15,6 +15,7 @@ interface __BaseEnv_CloudflareBindings {
 	OPENFGA_API_TOKEN: string;
 	REVIEWER_USER_IDS: string;
 	ADMIN_USER_IDS: string;
+	REACTOR_URL: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -34,6 +35,7 @@ declare namespace Cloudflare {
 		OPENFGA_API_TOKEN: string;
 		REVIEWER_USER_IDS: string;
 		ADMIN_USER_IDS: string;
+		REACTOR_URL: string;
 	}
 	interface Env extends __BaseEnv_CloudflareBindings {}
 }

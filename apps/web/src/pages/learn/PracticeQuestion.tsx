@@ -448,7 +448,7 @@ export default function PracticeQuestionPage() {
           </div>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
             {question.type} · {question.difficulty}
-            {question.calibration.percentCorrect != null && (
+            {question.calibration?.percentCorrect != null && (
               <>
                 {" "}
                 · Community {question.calibration.percentCorrect}% correct (

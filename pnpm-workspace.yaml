@@ -1,6 +1,7 @@
 packages:
   - apps/*
-  - packages/* 
+  - packages/*
+  - reactor/service
 
 onlyBuiltDependencies:
   - esbuild

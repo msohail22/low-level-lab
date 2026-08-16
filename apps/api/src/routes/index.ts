@@ -4,6 +4,7 @@ import { health } from "./health.ts";
 import { engagementRoutes } from "./engagement.ts";
 import { learnRoutes, leaderboardRoutes } from "./learn.ts";
 import { platformRoutes } from "./platform.ts";
+import { reactorRoutes } from "./reactor.ts";
 import { studyRoutes } from "./study.ts";
 import {
   adminRoutes,
@@ -24,3 +25,4 @@ routes.route("/api/learn", engagementRoutes);
 routes.route("/api/learn", platformRoutes);
 routes.route("/api/learn", studyRoutes);
 routes.route("/api/leaderboard", leaderboardRoutes);
+routes.route("/api/reactor", reactorRoutes);

@@ -1,71 +1,48 @@
-# Configure once (or after changing CMake)
-cmake -B build
+# Reactor
 
-# Build
-cmake --build build
+Remote C++ execution for Low-Level Lab (PoC).
 
-# Run application
-./build/reactor
+## Architecture (PoC)
 
-# Run all tests
-ctest --test-dir build
+- **`reactor/service`** — TypeScript HTTP API + worker (`POST /v1/jobs`, `GET /v1/jobs/:id`)
+- Jobs stored in **Redis**, enqueued on **Kafka** topic `reactor.jobs` (Redis list is a local fallback)
+- Worker compiles/runs with real `clang++` / `g++` (3s run timeout)
+- Clients use **`@llb/reactor-sdk`** (API proxy + web Playground)
 
-## Docker
+The legacy CMake binary under `src/` remains for experiments; the runnable PoC path is `service/`.
 
-This repo now includes a minimal local Docker setup under `docker/`.
-It is meant for local development only and keeps the configuration as small as possible.
-
-### Start the stack
-
-From the repository root:
+## Docker (recommended)
 
 ```bash
-docker compose -f docker/compose.yml up --build
+docker compose -f reactor/docker/compose.yml up --build redis kafka reactor
 ```
 
-This starts:
+- Reactor HTTP: http://127.0.0.1:18080/health
+- Redis: `6379`
+- Kafka UI (full stack): port `8080` when started with the full compose file
 
-- `reactor`
-- `redis`
-- `kafka` in KRaft mode
-- `kafka-ui`
-- `minio`
-- `prometheus`
-- `grafana`
-- `loki`
-- `tempo`
-- `otel-collector`
-
-### Stop the stack
+## Host service (Redis-only quick start)
 
 ```bash
-docker compose -f docker/compose.yml down
+docker compose -f reactor/docker/compose.yml up -d redis
+REDIS_URL=redis://127.0.0.1:6379 KAFKA_DISABLED=1 \
+  pnpm --dir reactor/service start
 ```
 
-### Useful local ports
+With Kafka (Compose):
 
-- `3000` - Grafana
-- `3100` - Loki
-- `3200` - Tempo
-- `4317` - OpenTelemetry Collector gRPC
-- `4318` - OpenTelemetry Collector HTTP
-- `6379` - Redis
-- `8080` - Kafka UI
-- `9000` - MinIO API
-- `9001` - MinIO console
-- `9090` - Prometheus
-- `9092` - Kafka
+```bash
+docker compose -f reactor/docker/compose.yml up --build -d redis kafka reactor
+```
 
-### Notes
+## App wiring
 
-- The `reactor` image is built from the local `Dockerfile`.
-- The current `reactor` binary is a short-lived sample app, so the container exits after it logs a few messages.
-- The observability configs are placeholders so Docker Compose can start cleanly without extra setup.
+1. Start Reactor (`:18080`)
+2. `pnpm dev:api` — `REACTOR_URL=http://127.0.0.1:18080`
+3. `pnpm dev:web` — log in → **/playground**
 
-## What changed
+## CMake (legacy sample)
 
-- Added a root `Dockerfile` that builds the CMake project and runs `./build/reactor`.
-- Added `docker/compose.yml` with all requested local services on one network.
-- Added minimal placeholder config files for Prometheus, Loki, Tempo, and the OpenTelemetry Collector.
-- Added a tracked placeholder file for `docker/grafana/` so the directory exists in the repo.
-
+```bash
+cmake -B build && cmake --build build && ./build/reactor
+```
