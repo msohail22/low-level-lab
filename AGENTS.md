@@ -70,3 +70,24 @@ Run from repo root unless noted otherwise:
 - Keep all custom web CSS in `apps/web/src/index.css`.
 - Prefer Tailwind utilities in components; use `index.css` for global tokens, resets, shared styles, and reusable patterns.
 - Avoid adding separate CSS files for individual components unless there is a strong reason.
+
+## Design Tokens & MatteBlack Color System (`@llb/ui-tokens`)
+All UI colors, radii, and typography MUST be consumed from `@llb/ui-tokens` (`packages/ui-tokens/src/index.ts`) and corresponding CSS variables generated in `apps/web/src/index.css`.
+
+### MatteBlack Palette (`tahayvr/matteblack.nvim` mapping):
+- **Canvas (`bg0`)**: `--canvas` (`#0D0D0D` dark / `#F4F4F5` light) — Deep main background.
+- **Surface (`bg1`)**: `--surface` (`#121212` dark / `#FAFAFA` light) — Primary containers & header backdrop.
+- **Surface 2 / Panels (`bg3`)**: `--surface-2` (`#212121` dark / `#FFFFFF` light) — Cards, modals, dropdowns.
+- **Surface Active (`bg4`)**: `--surface-active` (`#262626` dark / `#E4E4E7` light) — Hover states & active nav pills.
+- **Borders & Lines (`bg2`)**: `--line` (`#333333` dark / `#E4E4E7` light) — Card borders & divider lines.
+- **Primary Ink (`fg1`)**: `--ink` (`#EAEAEA` dark / `#121212` light) — Primary body text.
+- **High-Contrast Bright (`fg0`)**: `--fg-bright` (`#FFFFFF` dark / `#0D0D0D` light) — Headings & active titles.
+- **Secondary Text (`fg2`)**: `--fg-secondary` (`#BEBEBE` dark / `#52525B` light) — Subheadings & label text.
+- **Muted Text (`fg3`/`comment`)**: `--muted` (`#8A8A8D` dark / `#71717A` light) — Placeholders & subtle captions.
+- **Brand Accent (`orange`)**: `--accent` / `--accent-btn` (`#F59E0B` dark / `#D97706` light) — Primary buttons, links, active rings.
+- **Text On Accent**: `--on-accent` (`#0D0D0D`).
+- **Gold Accent (`gold`)**: `--gold` (`#EFBF04` dark / `#D97706` light) — Leaderboard ranks, high scores, highlight chips.
+- **Success (`teal`/`green`)**: `--success` (`#10B981` dark / `#059669` light) — Correct answer badges & complete status.
+- **Danger (`crimson`/`red`)**: `--danger` (`#DC2626` dark / `#B91C1C` light) — Incorrect states & delete actions.
+- **Warning (`amber`)**: `--warn` (`#D97706` dark / `#B45309` light) — Review due banners & soft alerts.
+- **Info (`blue`)**: `--info` (`#3B82F6` dark / `#2563EB` light) — Hint triggers & informational callouts.

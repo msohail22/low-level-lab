@@ -1,19 +1,23 @@
 /** Shared design tokens — platform-agnostic.
- * Dark palette mirrors Omarchy/nvim **matteblack** / matte-black
- * (accent #e68e0d, bg #121212, fg #bebebe / #eaeaea).
+ * Dark palette mirrors Neovim **matteblack** (tahayvr/matteblack.nvim)
+ * (accent #f59e0b, bg #121212, fg #eaeaea).
  */
 
 export type ColorTokens = {
   ink: string;
+  fgBright: string;
+  fgSecondary: string;
   accent: string;
   accentBtn: string;
   onAccent: string;
   surface: string;
   surface2: string;
+  surfaceActive: string;
   line: string;
   muted: string;
   panel: string;
   canvas: string;
+  gold: string;
   danger: string;
   dangerBg: string;
   success: string;
@@ -24,18 +28,22 @@ export type ColorTokens = {
   infoBg: string;
 };
 
-/** Dark = matteblack (current nvim / omarchy theme) */
+/** Dark = matteblack (current nvim matteblack theme) */
 export const darkColors: ColorTokens = {
   ink: "#eaeaea",
-  accent: "#e68e0d",
+  fgBright: "#ffffff",
+  fgSecondary: "#bebebe",
+  accent: "#f59e0b",
   accentBtn: "#f59e0b",
   onAccent: "#0d0d0d",
   surface: "#121212",
   surface2: "#212121",
+  surfaceActive: "#262626",
   line: "#333333",
   muted: "#8a8a8d",
-  panel: "#1a1a1a",
+  panel: "#212121",
   canvas: "#0d0d0d",
+  gold: "#efbf04",
   danger: "#dc2626",
   dangerBg: "#2a1212",
   success: "#10b981",
@@ -49,15 +57,19 @@ export const darkColors: ColorTokens = {
 /** Light companion — same amber accent, paper surfaces */
 export const lightColors: ColorTokens = {
   ink: "#121212",
+  fgBright: "#0d0d0d",
+  fgSecondary: "#52525b",
   accent: "#d97706",
-  accentBtn: "#e68e0d",
+  accentBtn: "#f59e0b",
   onAccent: "#0d0d0d",
   surface: "#fafafa",
   surface2: "#f0f0f0",
+  surfaceActive: "#e4e4e7",
   line: "#e4e4e7",
   muted: "#71717a",
   panel: "#ffffff",
   canvas: "#f4f4f5",
+  gold: "#d97706",
   danger: "#b91c1c",
   dangerBg: "#fef2f2",
   success: "#059669",
@@ -74,7 +86,7 @@ export const colors = lightColors;
 export const radii = {
   control: "0.5rem",
   card: "0.75rem",
-  pill: "999px",
+  pill: "9999px",
 } as const;
 
 export const spacing = {
@@ -87,23 +99,27 @@ export const spacing = {
 } as const;
 
 export const typography = {
-  fontFamily: '"IBM Plex Sans", "Segoe UI", sans-serif',
-  monoFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontFamily: '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  monoFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace',
 } as const;
 
 export function colorsToCssVars(c: ColorTokens): Record<string, string> {
   return {
     "--ink": c.ink,
+    "--fg-bright": c.fgBright,
+    "--fg-secondary": c.fgSecondary,
     "--accent": c.accent,
     "--accent-btn": c.accentBtn,
     "--on-accent": c.onAccent,
     "--surface": c.surface,
     "--surface-2": c.surface2,
+    "--surface-active": c.surfaceActive,
     "--line": c.line,
     "--muted": c.muted,
     "--panel": c.panel,
     "--white": c.panel,
     "--canvas": c.canvas,
+    "--gold": c.gold,
     "--danger": c.danger,
     "--danger-bg": c.dangerBg,
     "--success": c.success,
@@ -146,7 +162,7 @@ export function cssVariablesBlock(
 
 export const themeMeta = {
   name: "matteblack",
-  source: "nvim matteblack / omarchy matte-black",
-  accent: "#e68e0d",
-  background: "#121212",
+  source: "tahayvr/matteblack.nvim",
+  accent: "#f59e0b",
+  background: "#0d0d0d",
 } as const;

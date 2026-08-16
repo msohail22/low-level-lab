@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useMe } from "@/hooks/useMe";
@@ -12,63 +12,78 @@ type AppShellProps = {
 export function AppShell({ title, eyebrow, children }: AppShellProps) {
   const { data } = useMe();
 
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `rounded-full px-3 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+      isActive
+        ? "bg-[color:var(--surface-active)] text-[color:var(--accent)] border border-[color:var(--line)] shadow-sm"
+        : "text-[color:var(--muted)] hover:text-[color:var(--ink)] hover:bg-[color:var(--surface-2)]"
+    }`;
+
   return (
-    <div className="min-h-screen bg-[color:var(--canvas)]">
-      <header className="border-b border-[color:var(--line)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link to="/dashboard" className="font-semibold tracking-tight text-[color:var(--ink)]">
-            Low-Level Lab
+    <div className="min-h-screen bg-[color:var(--canvas)] text-[color:var(--ink)] antialiased">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--line)] bg-[color:color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2 font-bold tracking-tight text-[color:var(--fg-bright)] hover:text-[color:var(--accent)] transition-colors"
+          >
+            <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--accent)] shadow-[0_0_8px_color-mix(in_srgb,var(--accent)_60%,transparent)]" />
+            <span>Low-Level Lab</span>
           </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <nav className="flex flex-wrap gap-3 text-sm">
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/playground">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <nav className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-sm">
+              <NavLink className={navLinkClass} to="/playground">
                 Playground
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/paths">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/paths">
                 Paths
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/topics">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/topics">
                 Practice
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/challenge">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/challenge">
                 Challenge
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/due">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/due">
                 Due
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/sets">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/sets">
                 Sets
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/glossary">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/glossary">
                 Glossary
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/leaderboard">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/leaderboard">
                 Leaderboard
-              </Link>
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/contribute/questions">
+              </NavLink>
+              <NavLink className={navLinkClass} to="/contribute/questions">
                 Contribute
-              </Link>
+              </NavLink>
               {data?.roles.reviewer && (
-                <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/review/questions">
+                <NavLink className={navLinkClass} to="/review/questions">
                   Review
-                </Link>
+                </NavLink>
               )}
               {data?.roles.admin && (
-                <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/admin">
+                <NavLink className={navLinkClass} to="/admin">
                   Admin
-                </Link>
+                </NavLink>
               )}
-              <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/dashboard">
+              <NavLink className={navLinkClass} to="/dashboard">
                 Dashboard
-              </Link>
+              </NavLink>
             </nav>
-            <ThemeToggle />
+            <div className="pl-1 border-l border-[color:var(--line)]">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-        <p className="section-eyebrow">{eyebrow}</p>
-        <h1 className="section-title mt-2">{title}</h1>
+      <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-6">
+          <p className="section-eyebrow">{eyebrow}</p>
+          <h1 className="section-title mt-1.5">{title}</h1>
+        </div>
         {children}
       </main>
     </div>
