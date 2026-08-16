@@ -15,6 +15,7 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
+		"@llb/shared": "workspace:*",
 		"@better-auth/core": "1.6.26",
 		"@better-auth/drizzle-adapter": "^1.6.26",
 		"@openfga/sdk": "^0.9.6",

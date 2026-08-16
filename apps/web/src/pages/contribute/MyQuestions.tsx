@@ -8,17 +8,9 @@ import {
   STATUS_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
 } from "@/lib/filter-options";
-import { apiFetch } from "@/lib/api";
+import type { MyQuestionRow } from "@llb/shared";
 
-type QuestionRow = {
-  id: string;
-  title: string;
-  type: string;
-  status: string;
-  difficulty: string;
-  reviewNote: string | null;
-  createdAt: string;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function MyQuestions() {
   const queryClient = useQueryClient();
@@ -32,7 +24,7 @@ export default function MyQuestions() {
       if (type) params.set("type", type);
       if (status) params.set("status", status);
       const qs = params.toString();
-      const res = await apiFetch<{ questions: QuestionRow[] }>(
+      const res = await apiFetch<{ questions: MyQuestionRow[] }>(
         `/api/questions/mine${qs ? `?${qs}` : ""}`,
       );
       if (res.error) throw new Error(res.error);

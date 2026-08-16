@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { z } from "zod";
+import {
+  duplicateFlagSchema,
+  explanationVoteSchema,
+  ingestUiEventsSchema,
+} from "@llb/shared";
 
 import { createAuth } from "../auth/index.ts";
 import { canReviewQuestions } from "../authz/openfga.ts";
@@ -66,7 +70,7 @@ studyRoutes.get("/topics/:topicId/prerequisite", async (c) => {
 studyRoutes.use("/questions/:id/explanation-vote", requireSession);
 studyRoutes.post("/questions/:id/explanation-vote", async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z.object({ helpful: z.boolean() }).safeParse(body);
+  const parsed = explanationVoteSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await voteExplanation(
     c.env,
@@ -91,12 +95,7 @@ studyRoutes.get("/questions/:id/explanation-vote", async (c) => {
 studyRoutes.use("/questions/:id/duplicate-flag", requireSession);
 studyRoutes.post("/questions/:id/duplicate-flag", async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      similarQuestionId: z.string().optional(),
-      note: z.string().max(2000).optional(),
-    })
-    .safeParse(body);
+  const parsed = duplicateFlagSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await flagDuplicateQuestion(
     c.env,
@@ -118,24 +117,7 @@ studyRoutes.get("/sets/:id/play", async (c) => {
 studyRoutes.post("/ui-events", async (c) => {
   const userId = await optionalUserId(c.env, c.req.raw.headers);
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      events: z
-        .array(
-          z.object({
-            eventName: z.string().min(1).max(80),
-            route: z.string().max(300).optional(),
-            questionId: z.string().optional(),
-            targetId: z.string().max(120).optional(),
-            durationMs: z.number().int().min(0).max(3_600_000).optional(),
-            meta: z.record(z.string(), z.unknown()).optional(),
-            sessionKey: z.string().max(120).optional(),
-          }),
-        )
-        .min(1)
-        .max(50),
-    })
-    .safeParse(body);
+  const parsed = ingestUiEventsSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await ingestUiEvents(c.env, userId, parsed.data.events);
   return c.json(result, 201);

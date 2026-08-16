@@ -2,16 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { QueueItem } from "@llb/shared";
 
-type Item = {
-  questionId: string;
-  title: string;
-  type: string;
-  difficulty: string;
-  dueAt?: string;
-  attemptedAt?: string;
-};
+import { apiFetch } from "@/lib/api";
 
 function QuestionListPage({
   eyebrow,
@@ -29,7 +22,7 @@ function QuestionListPage({
   const { data, isPending, error } = useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
-      const res = await apiFetch<{ items: Item[] }>(path);
+      const res = await apiFetch<{ items: QueueItem[] }>(path);
       if (res.error) throw new Error(res.error);
       return res.data!.items;
     },

@@ -2,22 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { WeakDrillItem } from "@llb/shared";
 
-type Item = {
-  questionId: string;
-  title: string;
-  type: string;
-  difficulty: string;
-  topicId: string;
-  topicTitle: string;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function WeakDrill() {
   const { data, isPending, error } = useQuery({
     queryKey: ["weak-drill"],
     queryFn: async () => {
-      const res = await apiFetch<{ items: Item[] }>("/api/learn/drill/weak");
+      const res = await apiFetch<{ items: WeakDrillItem[] }>("/api/learn/drill/weak");
       if (res.error) throw new Error(res.error);
       return res.data!.items;
     },

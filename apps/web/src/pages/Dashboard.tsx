@@ -4,15 +4,10 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { useMe } from "@/hooks/useMe";
+import type { ContinueState, LearningStats } from "@llb/shared";
+
 import { apiFetch } from "@/lib/api";
 import { authClient } from "@/lib/auth";
-
-type Stats = {
-  dailyGoal: number;
-  currentStreak: number;
-  longestStreak: number;
-  todayAttemptCount: number;
-};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -25,7 +20,7 @@ export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ["learning-stats"],
     queryFn: async () => {
-      const res = await apiFetch<{ stats: Stats }>("/api/learn/stats");
+      const res = await apiFetch<{ stats: LearningStats }>("/api/learn/stats");
       if (res.error) throw new Error(res.error);
       setGoal(res.data!.stats.dailyGoal);
       return res.data!.stats;
@@ -36,15 +31,7 @@ export default function Dashboard() {
     queryKey: ["continue"],
     queryFn: async () => {
       const res = await apiFetch<{
-        continue: {
-          lastQuestionId: string | null;
-          lastQuestionTitle: string | null;
-          lastTopicId: string | null;
-          lastTopicTitle: string | null;
-          lastPathId: string | null;
-          lastPathTitle: string | null;
-          dueCount: number;
-        } | null;
+        continue: ContinueState | null;
       }>("/api/learn/continue");
       if (res.error) throw new Error(res.error);
       return res.data!.continue;
@@ -53,7 +40,7 @@ export default function Dashboard() {
 
   const saveGoal = useMutation({
     mutationFn: async () => {
-      const res = await apiFetch<{ stats: Stats }>("/api/learn/stats/goal", {
+      const res = await apiFetch<{ stats: LearningStats }>("/api/learn/stats/goal", {
         method: "PATCH",
         body: JSON.stringify({ dailyGoal: goal }),
       });

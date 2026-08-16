@@ -2,31 +2,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import type {
+  DailyChallenge,
+  DailyChallengeLeaderboardEntry,
+} from "@llb/shared";
+
 import { apiFetch } from "@/lib/api";
-
-type Challenge = {
-  id: string;
-  challengeDate: string;
-  questionId: string;
-  title: string;
-  type: string;
-  difficulty: string;
-};
-
-type Entry = {
-  rank: number;
-  userId: string;
-  name: string;
-  completedAt: string;
-};
 
 export default function DailyChallenge() {
   const { data, isPending, error } = useQuery({
     queryKey: ["daily-challenge"],
     queryFn: async () => {
       const res = await apiFetch<{
-        challenge: Challenge | null;
-        leaderboard: Entry[];
+        challenge: DailyChallenge | null;
+        leaderboard: DailyChallengeLeaderboardEntry[];
       }>("/api/learn/challenge/leaderboard");
       if (res.error) throw new Error(res.error);
       return res.data!;

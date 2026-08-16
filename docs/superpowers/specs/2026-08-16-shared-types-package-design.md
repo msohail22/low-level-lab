@@ -1,7 +1,7 @@
 # Shared types package (`@llb/shared`) — Design
 
 **Date:** 2026-08-16  
-**Status:** Approved for planning  
+**Status:** Implemented (see `packages/shared` / `@llb/shared`)  
 **Scope choice:** C — API contracts (Zod + inferred types) + shared enums/constants; exclude component props and Hono/Worker-only types
 
 ## Goal

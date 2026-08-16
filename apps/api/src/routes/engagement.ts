@@ -1,5 +1,8 @@
 import { Hono } from "hono";
-import { z } from "zod";
+import {
+  bookmarkBodySchema,
+  dailyGoalSchema,
+} from "@llb/shared";
 
 import { requireSession } from "../middleware/session.ts";
 import {
@@ -55,9 +58,7 @@ engagementRoutes.get("/stats", async (c) => {
 engagementRoutes.use("/stats/goal", requireSession);
 engagementRoutes.patch("/stats/goal", async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({ dailyGoal: z.number().int().min(1).max(50) })
-    .safeParse(body);
+  const parsed = dailyGoalSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const stats = await updateDailyGoal(
     c.env,
@@ -88,7 +89,7 @@ engagementRoutes.get("/bookmarks", async (c) => {
 
 engagementRoutes.post("/bookmarks", async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z.object({ questionId: z.string().min(1) }).safeParse(body);
+  const parsed = bookmarkBodySchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await addBookmark(
     c.env,

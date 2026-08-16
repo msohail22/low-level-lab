@@ -2,16 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { GlossaryTerm } from "@llb/shared";
 
-type Term = {
-  id: string;
-  slug: string;
-  term: string;
-  definition: string;
-  topicId: string | null;
-  topicTitle: string | null;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function Glossary() {
   const { slug } = useParams();
@@ -20,7 +13,7 @@ export default function Glossary() {
     queryKey: ["glossary"],
     enabled: !slug,
     queryFn: async () => {
-      const res = await apiFetch<{ terms: Term[] }>("/api/learn/glossary");
+      const res = await apiFetch<{ terms: GlossaryTerm[] }>("/api/learn/glossary");
       if (res.error) throw new Error(res.error);
       return res.data!.terms;
     },
@@ -30,7 +23,7 @@ export default function Glossary() {
     queryKey: ["glossary", slug],
     enabled: Boolean(slug),
     queryFn: async () => {
-      const res = await apiFetch<{ term: Term }>(`/api/learn/glossary/${slug}`);
+      const res = await apiFetch<{ term: GlossaryTerm }>(`/api/learn/glossary/${slug}`);
       if (res.error) throw new Error(res.error);
       return res.data!.term;
     },

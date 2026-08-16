@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { z } from "zod";
 
 import {
   canAdminPlatform,
@@ -10,7 +9,11 @@ import {
   writeQuestionAuthor,
 } from "../authz/openfga.ts";
 import { requireSession } from "../middleware/session.ts";
-import { createQuestionSchema, reviewActionSchema } from "../questions/schema.ts";
+import {
+  createQuestionSchema,
+  reviewActionSchema,
+  updateQuestionSchema,
+} from "../questions/schema.ts";
 import {
   createQuestionWithParts,
   getAdminStats,
@@ -123,21 +126,7 @@ questionsRoutes.get("/:id", async (c) => {
 
 questionsRoutes.patch("/:id", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      title: z.string().min(3).max(200).optional(),
-      prompt: z.string().min(3).max(5000).optional(),
-      explanation: z.string().min(3).max(5000).optional(),
-      whyWrong: z.string().max(5000).nullable().optional(),
-      workedSolution: z.string().max(8000).nullable().optional(),
-      diagramMarkdown: z.string().max(8000).nullable().optional(),
-      difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
-      codeSnippet: z.string().max(8000).nullable().optional(),
-      relatedQuestionId: z.string().nullable().optional(),
-      similarQuestionId: z.string().nullable().optional(),
-      requireReReview: z.boolean().optional(),
-    })
-    .safeParse(body);
+  const parsed = updateQuestionSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
 
   const userId = c.get("userId");

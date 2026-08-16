@@ -1,25 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { apiFetch } from "@/lib/api";
+import type { TopicMastery } from "@llb/shared";
 
-type Topic = {
-  topicId: string;
-  title: string;
-  description: string | null;
-  approvedCount: number;
-  attempted: number;
-  correct: number;
-  remaining: number;
-  masteryPercent: number;
-  prerequisiteTopicId: string | null;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function Topics() {
   const { data, isPending, error } = useQuery({
     queryKey: ["mastery"],
     queryFn: async () => {
-      const res = await apiFetch<{ topics: Topic[] }>("/api/learn/mastery");
+      const res = await apiFetch<{ topics: TopicMastery[] }>("/api/learn/mastery");
       if (res.error) throw new Error(res.error);
       return res.data!.topics;
     },

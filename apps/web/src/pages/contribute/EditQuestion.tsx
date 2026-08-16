@@ -1,24 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import type { EditableQuestion } from "@llb/shared";
 
 import { AppShell } from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 
-type QuestionRow = {
-  id: string;
-  title: string;
-  prompt: string;
-  explanation: string;
-  whyWrong: string | null;
-  workedSolution: string | null;
-  diagramMarkdown: string | null;
-  difficulty: string;
-  codeSnippet: string | null;
-  status: string;
-};
-
-function EditForm({ data }: { data: QuestionRow }) {
+function EditForm({ data }: { data: EditableQuestion }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(data.title);
@@ -136,7 +124,7 @@ export default function EditQuestion() {
     enabled: Boolean(questionId),
     queryFn: async () => {
       const res = await apiFetch<{
-        question: { question: QuestionRow };
+        question: { question: EditableQuestion };
       }>(`/api/questions/${questionId}`);
       if (res.error) throw new Error(res.error);
       return res.data!.question.question;

@@ -2,22 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { FollowingFeedItem } from "@llb/shared";
 
-type FeedItem = {
-  id: string;
-  title: string;
-  type: string;
-  difficulty: string;
-  authorId: string;
-  authorName: string;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function FollowingFeed() {
   const { data, isPending, error } = useQuery({
     queryKey: ["following-feed"],
     queryFn: async () => {
-      const res = await apiFetch<{ items: FeedItem[] }>("/api/learn/feed");
+      const res = await apiFetch<{ items: FollowingFeedItem[] }>("/api/learn/feed");
       if (res.error) throw new Error(res.error);
       return res.data!.items;
     },

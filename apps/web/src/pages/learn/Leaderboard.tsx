@@ -1,22 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { apiFetch } from "@/lib/api";
+import type { LeaderboardEntry } from "@llb/shared";
 
-type Entry = {
-  rank: number;
-  userId: string;
-  name: string;
-  email: string;
-  correctCount: number;
-  attemptCount: number;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function Leaderboard() {
   const { data, isPending, error } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
-      const res = await apiFetch<{ leaderboard: Entry[] }>("/api/leaderboard");
+      const res = await apiFetch<{ leaderboard: LeaderboardEntry[] }>("/api/leaderboard");
       if (res.error) throw new Error(res.error);
       return res.data!.leaderboard;
     },

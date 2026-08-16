@@ -1,15 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { Achievement } from "@llb/shared";
 
-type Achievement = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  earnedAt: string | null;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function Achievements() {
   const { data, isPending, error } = useQuery({

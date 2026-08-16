@@ -2,50 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
+import type {
+  AttemptResult,
+  ExplanationVoteStats,
+  PracticeQuestion,
+  PrerequisiteGate,
+} from "@llb/shared";
+
 import { apiFetch } from "@/lib/api";
 import { flushUiEvents, trackUiEvent } from "@/lib/ui-analytics";
-
-type PracticeOption = {
-  id: string;
-  label: string;
-  body: string;
-};
-
-type PracticeQuestion = {
-  id: string;
-  topicId: string;
-  type: string;
-  title: string;
-  prompt: string;
-  difficulty: string;
-  codeSnippet: string | null;
-  diagramMarkdown: string | null;
-  relatedQuestionId: string | null;
-  similarQuestionId: string | null;
-  hintCount: number;
-  authorId: string;
-  authorName: string | null;
-  calibration: {
-    attempts: number;
-    correct: number;
-    percentCorrect: number | null;
-  };
-  options: PracticeOption[];
-};
-
-type AttemptView = {
-  isCorrect: boolean;
-  explanation: string;
-  whyWrong?: string | null;
-  workedSolution?: string | null;
-  relatedQuestionId?: string | null;
-  correctBooleanValue: boolean | null;
-  correctOptionIds: string[];
-  selectedOptionIds?: string[];
-  booleanValue?: boolean | null;
-  dailyChallengeCorrect?: boolean;
-  confidence?: number | null;
-};
 
 export default function PracticeQuestionPage() {
   const { questionId = "" } = useParams();
@@ -54,7 +19,7 @@ export default function PracticeQuestionPage() {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [booleanValue, setBooleanValue] = useState<boolean | null>(null);
-  const [result, setResult] = useState<AttemptView | null>(null);
+  const [result, setResult] = useState<AttemptResult | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hintsRevealed, setHintsRevealed] = useState<string[]>([]);
@@ -112,13 +77,9 @@ export default function PracticeQuestionPage() {
     queryFn: async () => {
       const res = await apiFetch<{
         question: PracticeQuestion;
-        attempt: AttemptView | null;
-        votes: { helpful: number; unhelpful: number; mine: boolean | null };
-        prerequisite: {
-          warn?: boolean;
-          prerequisite: { id: string; title: string } | null;
-          masteryPercent?: number;
-        };
+        attempt: AttemptResult | null;
+        votes: ExplanationVoteStats;
+        prerequisite: PrerequisiteGate;
       }>(`/api/learn/questions/${questionId}`);
       if (res.error) throw new Error(res.error);
       return res.data!;
@@ -212,7 +173,7 @@ export default function PracticeQuestionPage() {
               elapsedMs: timedMode ? elapsedMs : undefined,
             };
 
-      const res = await apiFetch<AttemptView>(
+      const res = await apiFetch<AttemptResult>(
         `/api/learn/questions/${questionId}/attempt`,
         {
           method: "POST",

@@ -3,25 +3,9 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import type { QuestionSetDetail, QuestionSetSummary } from "@llb/shared";
+
 import { apiFetch } from "@/lib/api";
-
-type SetRow = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  ownerName: string;
-};
-
-type SetDetail = SetRow & {
-  ownerId: string;
-  items: {
-    questionId: string;
-    title: string;
-    type: string;
-    difficulty: string;
-  }[];
-};
 
 export default function QuestionSets() {
   const { setId } = useParams();
@@ -33,7 +17,7 @@ export default function QuestionSets() {
     queryKey: ["sets"],
     enabled: !setId,
     queryFn: async () => {
-      const res = await apiFetch<{ sets: SetRow[] }>("/api/learn/sets");
+      const res = await apiFetch<{ sets: QuestionSetSummary[] }>("/api/learn/sets");
       if (res.error) throw new Error(res.error);
       return res.data!.sets;
     },
@@ -43,7 +27,7 @@ export default function QuestionSets() {
     queryKey: ["set", setId],
     enabled: Boolean(setId),
     queryFn: async () => {
-      const res = await apiFetch<{ set: SetDetail }>(`/api/learn/sets/${setId}`);
+      const res = await apiFetch<{ set: QuestionSetDetail }>(`/api/learn/sets/${setId}`);
       if (res.error) throw new Error(res.error);
       return res.data!.set;
     },

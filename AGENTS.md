@@ -44,14 +44,15 @@ Run from repo root unless noted otherwise:
 - `apps/api/wrangler.jsonc` — API Worker config (D1 binding `DB`)
 - `apps/web/wrangler.jsonc` — Web Worker config (assets + SPA fallback)
 - `apps/api/src/db/schema.ts` — Drizzle schema (D1)
+- `packages/shared` (`@llb/shared`) — shared Zod schemas, DTOs, and constants for API + web
 - `apps/web/src/routes/index.tsx` — app route map
 - `apps/web/src/context/` — app contexts such as auth and theme
 - `pnpm-workspace.yaml` — workspace config
 - `.env` — local env (not committed)
 
 ## Notes
-- `shared/src/` is currently a scaffold for future reuse.
-- API uses Hono + Drizzle (D1). Web uses React + Vite + Cloudflare Workers.
+- `packages/shared` (`@llb/shared`) holds cross-app API contracts; do not put Hono env or React component props there.
+- API uses Hono + Drizzle (Postgres via Hyperdrive). Web uses React + Vite + Cloudflare Workers.
 - Keep custom web CSS centralized in `apps/web/src/index.css`.
 
 ## Design Requirements

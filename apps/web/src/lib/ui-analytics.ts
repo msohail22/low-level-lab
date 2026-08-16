@@ -1,15 +1,9 @@
+import type { UiEventInput } from "@llb/shared";
+
 const API_BASE =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:8787";
 
-type UiEvent = {
-  eventName: string;
-  route?: string;
-  questionId?: string;
-  targetId?: string;
-  durationMs?: number;
-  meta?: Record<string, unknown>;
-  sessionKey?: string;
-};
+type QueuedEvent = UiEventInput;
 
 const QUEUE_KEY = "llb_ui_events";
 const SESSION_KEY = "llb_ui_session";
@@ -23,21 +17,21 @@ function sessionKey(): string {
   return key;
 }
 
-function readQueue(): UiEvent[] {
+function readQueue(): QueuedEvent[] {
   try {
     const raw = sessionStorage.getItem(QUEUE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as UiEvent[];
+    return JSON.parse(raw) as QueuedEvent[];
   } catch {
     return [];
   }
 }
 
-function writeQueue(events: UiEvent[]) {
+function writeQueue(events: QueuedEvent[]) {
   sessionStorage.setItem(QUEUE_KEY, JSON.stringify(events.slice(-100)));
 }
 
-export function trackUiEvent(event: Omit<UiEvent, "sessionKey">) {
+export function trackUiEvent(event: Omit<UiEventInput, "sessionKey">) {
   const next = [
     ...readQueue(),
     {
@@ -49,6 +43,7 @@ export function trackUiEvent(event: Omit<UiEvent, "sessionKey">) {
   writeQueue(next);
   if (next.length >= 8) void flushUiEvents();
 }
+
 
 export async function flushUiEvents() {
   const events = readQueue();

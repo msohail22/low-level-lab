@@ -1,5 +1,11 @@
 import { Hono } from "hono";
-import { z } from "zod";
+import {
+  addSetItemSchema,
+  createCommentSchema,
+  createQuestionSetSchema,
+  reportQuestionSchema,
+  sandboxSubmitSchema,
+} from "@llb/shared";
 
 import { createAuth } from "../auth/index.ts";
 import { canReviewQuestions } from "../authz/openfga.ts";
@@ -93,14 +99,7 @@ platformRoutes.get("/sets/:id", async (c) => {
 
 platformRoutes.post("/sets", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      title: z.string().min(3).max(200),
-      description: z.string().max(2000).optional(),
-      isPublic: z.boolean().optional(),
-      questionIds: z.array(z.string().min(1)).max(100).optional(),
-    })
-    .safeParse(body);
+  const parsed = createQuestionSetSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const created = await createQuestionSet(c.env, c.get("userId"), parsed.data);
   return c.json(created, 201);
@@ -108,7 +107,7 @@ platformRoutes.post("/sets", requireSession, async (c) => {
 
 platformRoutes.post("/sets/:id/items", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z.object({ questionId: z.string().min(1) }).safeParse(body);
+  const parsed = addSetItemSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await addSetItem(
     c.env,
@@ -162,9 +161,7 @@ platformRoutes.get("/questions/:id/comments", async (c) => {
 
 platformRoutes.post("/questions/:id/comments", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({ body: z.string().min(2).max(2000) })
-    .safeParse(body);
+  const parsed = createCommentSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await createComment(
     c.env,
@@ -205,12 +202,7 @@ platformRoutes.get("/questions/:id/next", async (c) => {
 
 platformRoutes.post("/questions/:id/sandbox", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      sourceCode: z.string().max(20000).optional(),
-      submittedOutput: z.string().max(4000).optional(),
-    })
-    .safeParse(body);
+  const parsed = sandboxSubmitSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await submitSandbox(
     c.env,
@@ -224,12 +216,7 @@ platformRoutes.post("/questions/:id/sandbox", requireSession, async (c) => {
 
 platformRoutes.post("/questions/:id/report", requireSession, async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = z
-    .object({
-      reason: z.string().min(3).max(200),
-      details: z.string().max(2000).optional(),
-    })
-    .safeParse(body);
+  const parsed = reportQuestionSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
   const result = await reportQuestion(
     c.env,

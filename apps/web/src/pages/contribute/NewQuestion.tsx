@@ -2,19 +2,26 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { questionTypes, type QuestionType } from "@llb/shared";
+
 import { apiFetch } from "@/lib/api";
 
 type Topic = { id: string; title: string; slug: string };
 
 type OptionDraft = { label: string; body: string; isCorrect: boolean };
 
-const TYPES = [
-  { value: "mcq", label: "Multiple choice" },
-  { value: "true_false", label: "True / False" },
-  { value: "multi_select", label: "Multi-select" },
-  { value: "print_output", label: "What does this print?" },
-  { value: "spot_bug", label: "Spot the bug" },
-] as const;
+const TYPE_LABELS: Record<QuestionType, string> = {
+  mcq: "Multiple choice",
+  true_false: "True / False",
+  multi_select: "Multi-select",
+  print_output: "What does this print?",
+  spot_bug: "Spot the bug",
+};
+
+const TYPES = questionTypes.map((value) => ({
+  value,
+  label: TYPE_LABELS[value],
+}));
 
 const LABELS = ["A", "B", "C", "D", "E", "F"];
 
@@ -36,7 +43,7 @@ export default function NewQuestion() {
     },
   });
 
-  const [type, setType] = useState<(typeof TYPES)[number]["value"]>("mcq");
+  const [type, setType] = useState<QuestionType>("mcq");
   const [topicId, setTopicId] = useState("");
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -133,7 +140,7 @@ export default function NewQuestion() {
             className="auth-input"
             value={type}
             onChange={(e) => {
-              const next = e.target.value as (typeof TYPES)[number]["value"];
+              const next = e.target.value as QuestionType;
               setType(next);
               if (next !== "true_false" && options.length < 2) {
                 setOptions(emptyOptions());

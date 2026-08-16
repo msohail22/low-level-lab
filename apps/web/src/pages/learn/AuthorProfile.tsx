@@ -2,17 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
-import { apiFetch } from "@/lib/api";
+import type { AuthorReputation } from "@llb/shared";
 
-type Reputation = {
-  authorId: string;
-  name: string;
-  approvedQuestionCount: number;
-  followerCount: number;
-  learnerAttempts: number;
-  learnerCorrect: number;
-  reputationScore: number;
-};
+import { apiFetch } from "@/lib/api";
 
 export default function AuthorProfile() {
   const { authorId = "" } = useParams();
@@ -22,7 +14,7 @@ export default function AuthorProfile() {
     queryKey: ["author-reputation", authorId],
     enabled: Boolean(authorId),
     queryFn: async () => {
-      const res = await apiFetch<{ reputation: Reputation }>(
+      const res = await apiFetch<{ reputation: AuthorReputation }>(
         `/api/learn/authors/${authorId}/reputation`,
       );
       if (res.error) throw new Error(res.error);

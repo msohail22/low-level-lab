@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import type { MeResponse } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
 
-export type MeResponse = {
-  user: { id: string; email: string; name: string };
-  roles: { reviewer: boolean; admin: boolean };
-};
+export type { MeResponse };
 
 export function useMe() {
   return useQuery({
