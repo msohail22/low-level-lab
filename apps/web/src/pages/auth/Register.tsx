@@ -1,6 +1,7 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useState, type FormEvent } from "react";
 
+import { Alert, Button, Input } from "@/components/ui";
 import { authClient } from "@/lib/auth";
 
 export default function Register() {
@@ -48,8 +49,7 @@ export default function Register() {
       <form className="mt-8 space-y-4" onSubmit={onSubmit}>
         <label className="block space-y-2 text-sm font-medium text-[color:var(--ink)]">
           <span>Name</span>
-          <input
-            className="auth-input"
+          <Input
             type="text"
             autoComplete="name"
             required
@@ -60,8 +60,7 @@ export default function Register() {
 
         <label className="block space-y-2 text-sm font-medium text-[color:var(--ink)]">
           <span>Email</span>
-          <input
-            className="auth-input"
+          <Input
             type="email"
             autoComplete="email"
             required
@@ -72,8 +71,7 @@ export default function Register() {
 
         <label className="block space-y-2 text-sm font-medium text-[color:var(--ink)]">
           <span>Password</span>
-          <input
-            className="auth-input"
+          <Input
             type="password"
             autoComplete="new-password"
             required
@@ -83,15 +81,11 @@ export default function Register() {
           />
         </label>
 
-        {error ? (
-          <p className="text-sm text-red-700" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <Alert variant="error">{error}</Alert> : null}
 
-        <button className="auth-primary-btn" type="submit" disabled={loading}>
+        <Button variant="primary" fullWidth type="submit" disabled={loading}>
           {loading ? "Creating…" : "Sign up"}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-sm text-[color:var(--muted)]">

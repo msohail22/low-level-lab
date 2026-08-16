@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
 import { FilterSelect } from "@/components/QuestionFilters";
+import { Card } from "@/components/ui";
 import {
   ATTEMPTED_FILTER_OPTIONS,
   DIFFICULTY_FILTER_OPTIONS,
@@ -78,19 +79,18 @@ export default function TopicQuestions() {
       <ul className="mt-8 space-y-3">
         {data?.map((q) => (
           <li key={q.id}>
-            <Link
-              to={`/practice/${q.id}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted)]">
-                {q.type} · {q.difficulty}
-                {q.attempted
-                  ? q.isCorrect
-                    ? " · correct"
-                    : " · attempted"
-                  : " · not attempted"}
-              </p>
+            <Link to={`/practice/${q.id}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {q.type} · {q.difficulty}
+                  {q.attempted
+                    ? q.isCorrect
+                      ? " · correct"
+                      : " · attempted"
+                    : " · not attempted"}
+                </p>
+              </Card>
             </Link>
           </li>
         ))}

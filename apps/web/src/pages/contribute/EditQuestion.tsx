@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import type { EditableQuestion } from "@llb/shared";
 
 import { AppShell } from "@/components/AppShell";
+import { Alert, Button, Card, Checkbox, Input, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 
 function EditForm({ data }: { data: EditableQuestion }) {
@@ -45,74 +46,71 @@ function EditForm({ data }: { data: EditableQuestion }) {
   });
 
   return (
-    <form
-      className="surface-card mt-8 space-y-4 p-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        save.mutate();
-      }}
-    >
-      <label className="block space-y-2 text-sm">
-        Title
-        <input
-          className="auth-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </label>
-      <label className="block space-y-2 text-sm">
-        Prompt
-        <textarea
-          className="auth-input min-h-28"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-      </label>
-      <label className="block space-y-2 text-sm">
-        Explanation
-        <textarea
-          className="auth-input min-h-28"
-          value={explanation}
-          onChange={(e) => setExplanation(e.target.value)}
-        />
-      </label>
-      <label className="block space-y-2 text-sm">
-        Why wrong
-        <textarea
-          className="auth-input min-h-20"
-          value={whyWrong}
-          onChange={(e) => setWhyWrong(e.target.value)}
-        />
-      </label>
-      <label className="block space-y-2 text-sm">
-        Worked solution
-        <textarea
-          className="auth-input min-h-28"
-          value={workedSolution}
-          onChange={(e) => setWorkedSolution(e.target.value)}
-        />
-      </label>
-      <label className="block space-y-2 text-sm">
-        Diagram (mermaid or SVG markup)
-        <textarea
-          className="auth-input min-h-28 font-mono text-sm"
-          value={diagramMarkdown}
-          onChange={(e) => setDiagramMarkdown(e.target.value)}
-        />
-      </label>
-      <label className="inline-flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={requireReReview}
-          onChange={(e) => setRequireReReview(e.target.checked)}
-        />
-        Send approved questions back for re-review
-      </label>
-      {error && <p className="text-sm text-red-700">{error}</p>}
-      <button type="submit" className="auth-primary-btn" disabled={save.isPending}>
-        {save.isPending ? "Saving…" : "Save version"}
-      </button>
-    </form>
+    <Card className="mt-8 p-6">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <label className="block space-y-2 text-sm">
+          Title
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <label className="block space-y-2 text-sm">
+          Prompt
+          <Textarea
+            className="min-h-28"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+        </label>
+        <label className="block space-y-2 text-sm">
+          Explanation
+          <Textarea
+            className="min-h-28"
+            value={explanation}
+            onChange={(e) => setExplanation(e.target.value)}
+          />
+        </label>
+        <label className="block space-y-2 text-sm">
+          Why wrong
+          <Textarea
+            className="min-h-20"
+            value={whyWrong}
+            onChange={(e) => setWhyWrong(e.target.value)}
+          />
+        </label>
+        <label className="block space-y-2 text-sm">
+          Worked solution
+          <Textarea
+            className="min-h-28"
+            value={workedSolution}
+            onChange={(e) => setWorkedSolution(e.target.value)}
+          />
+        </label>
+        <label className="block space-y-2 text-sm">
+          Diagram (mermaid or SVG markup)
+          <Textarea
+            className="min-h-28 font-mono text-sm"
+            value={diagramMarkdown}
+            onChange={(e) => setDiagramMarkdown(e.target.value)}
+          />
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={requireReReview}
+            onCheckedChange={(checked) => setRequireReReview(checked === true)}
+          />
+          Send approved questions back for re-review
+        </label>
+        {error && <Alert variant="error">{error}</Alert>}
+        <Button type="submit" variant="primary" fullWidth disabled={save.isPending}>
+          {save.isPending ? "Saving…" : "Save version"}
+        </Button>
+      </form>
+    </Card>
   );
 }
 

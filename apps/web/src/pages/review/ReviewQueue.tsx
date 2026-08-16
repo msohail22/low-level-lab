@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { FilterSelect } from "@/components/QuestionFilters";
+import { Alert, Button, Card, Textarea } from "@/components/ui";
 import {
   DIFFICULTY_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
@@ -87,48 +88,55 @@ export default function ReviewQueue() {
           <code>reviewer</code>.
         </p>
       )}
-      {actionError && <p className="mt-4 text-sm text-red-700">{actionError}</p>}
+      {actionError && (
+        <Alert className="mt-4" variant="error">
+          {actionError}
+        </Alert>
+      )}
 
       <ul className="mt-8 space-y-4">
         {data?.map((q) => (
-          <li key={q.id} className="surface-card space-y-4 p-5">
-            <div>
-              <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted)]">
-                {q.type} · {q.difficulty}
-              </p>
-              <p className="mt-3 whitespace-pre-wrap text-sm text-[color:var(--ink)]">
-                {q.prompt}
-              </p>
-            </div>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">Note (optional)</span>
-              <textarea
-                className="auth-input min-h-20"
-                value={note[q.id] ?? ""}
-                onChange={(e) =>
-                  setNote((prev) => ({ ...prev, [q.id]: e.target.value }))
-                }
-              />
-            </label>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                className="auth-primary-btn"
-                disabled={review.isPending}
-                onClick={() => review.mutate({ id: q.id, action: "approve" })}
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                className="auth-secondary-btn"
-                disabled={review.isPending}
-                onClick={() => review.mutate({ id: q.id, action: "reject" })}
-              >
-                Reject
-              </button>
-            </div>
+          <li key={q.id}>
+            <Card className="space-y-4 p-5">
+              <div>
+                <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {q.type} · {q.difficulty}
+                </p>
+                <p className="mt-3 whitespace-pre-wrap text-sm text-[color:var(--ink)]">
+                  {q.prompt}
+                </p>
+              </div>
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Note (optional)</span>
+                <Textarea
+                  className="min-h-20"
+                  value={note[q.id] ?? ""}
+                  onChange={(e) =>
+                    setNote((prev) => ({ ...prev, [q.id]: e.target.value }))
+                  }
+                />
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="primary"
+                  fullWidth
+                  disabled={review.isPending}
+                  onClick={() => review.mutate({ id: q.id, action: "approve" })}
+                >
+                  Approve
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={review.isPending}
+                  onClick={() => review.mutate({ id: q.id, action: "reject" })}
+                >
+                  Reject
+                </Button>
+              </div>
+            </Card>
           </li>
         ))}
       </ul>
@@ -242,31 +250,33 @@ function ModerationPanels() {
       <h2 className="mt-12 text-lg font-semibold">Pending comments</h2>
       <ul className="mt-4 space-y-3">
         {comments.data?.map((c) => (
-          <li key={c.id} className="surface-card space-y-3 p-4">
-            <p className="text-sm text-[color:var(--muted)]">
-              {c.authorName} on {c.questionTitle}
-            </p>
-            <p className="text-sm">{c.body}</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="auth-primary-btn"
-                onClick={() =>
-                  commentAction.mutate({ id: c.id, action: "approve" })
-                }
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                className="auth-secondary-btn"
-                onClick={() =>
-                  commentAction.mutate({ id: c.id, action: "reject" })
-                }
-              >
-                Reject
-              </button>
-            </div>
+          <li key={c.id}>
+            <Card className="space-y-3 p-4">
+              <p className="text-sm text-[color:var(--muted)]">
+                {c.authorName} on {c.questionTitle}
+              </p>
+              <p className="text-sm">{c.body}</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() =>
+                    commentAction.mutate({ id: c.id, action: "approve" })
+                  }
+                >
+                  Approve
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    commentAction.mutate({ id: c.id, action: "reject" })
+                  }
+                >
+                  Reject
+                </Button>
+              </div>
+            </Card>
           </li>
         ))}
       </ul>
@@ -277,32 +287,34 @@ function ModerationPanels() {
       <h2 className="mt-12 text-lg font-semibold">Open reports</h2>
       <ul className="mt-4 space-y-3">
         {reports.data?.map((r) => (
-          <li key={r.id} className="surface-card space-y-3 p-4">
-            <p className="font-medium">{r.questionTitle}</p>
-            <p className="text-sm text-[color:var(--muted)]">
-              {r.reason} — {r.reporterName}
-            </p>
-            {r.details && <p className="text-sm">{r.details}</p>}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="auth-primary-btn"
-                onClick={() =>
-                  reportAction.mutate({ id: r.id, action: "resolve" })
-                }
-              >
-                Resolve
-              </button>
-              <button
-                type="button"
-                className="auth-secondary-btn"
-                onClick={() =>
-                  reportAction.mutate({ id: r.id, action: "dismiss" })
-                }
-              >
-                Dismiss
-              </button>
-            </div>
+          <li key={r.id}>
+            <Card className="space-y-3 p-4">
+              <p className="font-medium">{r.questionTitle}</p>
+              <p className="text-sm text-[color:var(--muted)]">
+                {r.reason} — {r.reporterName}
+              </p>
+              {r.details && <p className="text-sm">{r.details}</p>}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() =>
+                    reportAction.mutate({ id: r.id, action: "resolve" })
+                  }
+                >
+                  Resolve
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    reportAction.mutate({ id: r.id, action: "dismiss" })
+                  }
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </Card>
           </li>
         ))}
       </ul>
@@ -313,34 +325,36 @@ function ModerationPanels() {
       <h2 className="mt-12 text-lg font-semibold">Duplicate flags</h2>
       <ul className="mt-4 space-y-3">
         {duplicates.data?.map((f) => (
-          <li key={f.id} className="surface-card space-y-3 p-4">
-            <p className="font-medium">{f.questionTitle}</p>
-            {f.note && <p className="text-sm text-[color:var(--muted)]">{f.note}</p>}
-            {f.similarQuestionId && (
-              <p className="text-sm text-[color:var(--muted)]">
-                Similar: {f.similarQuestionId}
-              </p>
-            )}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="auth-primary-btn"
-                onClick={() =>
-                  duplicateAction.mutate({ id: f.id, action: "resolve" })
-                }
-              >
-                Resolve
-              </button>
-              <button
-                type="button"
-                className="auth-secondary-btn"
-                onClick={() =>
-                  duplicateAction.mutate({ id: f.id, action: "dismiss" })
-                }
-              >
-                Dismiss
-              </button>
-            </div>
+          <li key={f.id}>
+            <Card className="space-y-3 p-4">
+              <p className="font-medium">{f.questionTitle}</p>
+              {f.note && <p className="text-sm text-[color:var(--muted)]">{f.note}</p>}
+              {f.similarQuestionId && (
+                <p className="text-sm text-[color:var(--muted)]">
+                  Similar: {f.similarQuestionId}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() =>
+                    duplicateAction.mutate({ id: f.id, action: "resolve" })
+                  }
+                >
+                  Resolve
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    duplicateAction.mutate({ id: f.id, action: "dismiss" })
+                  }
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </Card>
           </li>
         ))}
       </ul>

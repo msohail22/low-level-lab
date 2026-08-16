@@ -1,6 +1,5 @@
-import { Link } from "react-router-dom";
-
 import { authClient } from "@/lib/auth";
+import { LinkButton } from "@/components/ui";
 
 export default function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -17,17 +16,17 @@ export default function Home() {
         {isPending ? (
           <span className="text-sm text-[color:var(--muted)]">Loading…</span>
         ) : session ? (
-          <Link className="auth-primary-btn inline-flex" to="/dashboard">
+          <LinkButton variant="primary" to="/dashboard">
             Go to dashboard
-          </Link>
+          </LinkButton>
         ) : (
           <>
-            <Link className="auth-primary-btn inline-flex" to="/login">
+            <LinkButton variant="primary" to="/login">
               Sign in
-            </Link>
-            <Link className="auth-secondary-btn inline-flex" to="/register">
+            </LinkButton>
+            <LinkButton variant="secondary" to="/register">
               Sign up
-            </Link>
+            </LinkButton>
           </>
         )}
       </div>

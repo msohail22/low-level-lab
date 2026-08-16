@@ -15,6 +15,8 @@ pnpm monorepo with Cloudflare Workers:
 - **apps/api** — Hono API worker with Postgres/Hyperdrive and Better Auth support
 - **apps/web** — React + Vite SPA worker with React Router, React Query, and Better Auth client code
 - **packages/shared** (`@llb/shared`) — shared Zod schemas, DTOs, and constants
+- **packages/ui-tokens** (`@llb/ui-tokens`) — shared design tokens (colors, radii, type)
+- **apps/web/src/components/ui** — Radix + CVA web UI kit (Button, Select, etc.)
 - **reactor/service** — local Reactor PoC (HTTP + Kafka + Redis + clang++/g++)
 - **packages/reactor-sdk** (`@llb/reactor-sdk`) — TS client for Reactor / API proxy
 

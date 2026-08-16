@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 
 type PathDetail = {
@@ -50,20 +51,19 @@ export default function PathDetailPage() {
           <ol className="mt-8 space-y-3">
             {data.topics.map((topic, index) => (
               <li key={topic.topicId}>
-                <Link
-                  to={`/topics/${topic.topicId}`}
-                  className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-                >
-                  <p className="text-xs uppercase tracking-wide text-[color:var(--muted)]">
-                    Step {index + 1}
-                  </p>
-                  <p className="mt-1 font-semibold text-[color:var(--ink)]">
-                    {topic.title}
-                  </p>
-                  <p className="mt-1 text-sm text-[color:var(--muted)]">
-                    {topic.correctCount}/{topic.approvedCount} correct ·{" "}
-                    {topic.progressPercent}%
-                  </p>
+                <Link to={`/topics/${topic.topicId}`} className="block">
+                  <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                    <p className="text-xs uppercase tracking-wide text-[color:var(--muted)]">
+                      Step {index + 1}
+                    </p>
+                    <p className="mt-1 font-semibold text-[color:var(--ink)]">
+                      {topic.title}
+                    </p>
+                    <p className="mt-1 text-sm text-[color:var(--muted)]">
+                      {topic.correctCount}/{topic.approvedCount} correct ·{" "}
+                      {topic.progressPercent}%
+                    </p>
+                  </Card>
                 </Link>
               </li>
             ))}

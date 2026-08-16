@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Button, Card, Input, LinkButton, Textarea } from "@/components/ui";
 import type { QuestionSetDetail, QuestionSetSummary } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -72,23 +73,26 @@ export default function QuestionSets() {
                 <li key={item.questionId}>
                   <Link
                     to={`/practice/${item.questionId}?playlist=${set.slug}`}
-                    className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
+                    className="block"
                   >
-                    <p className="font-semibold">{item.title}</p>
-                    <p className="mt-1 text-sm text-[color:var(--muted)]">
-                      {item.type} · {item.difficulty}
-                    </p>
+                    <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                      <p className="font-semibold">{item.title}</p>
+                      <p className="mt-1 text-sm text-[color:var(--muted)]">
+                        {item.type} · {item.difficulty}
+                      </p>
+                    </Card>
                   </Link>
                 </li>
               ))}
             </ul>
             {set.items[0] && (
-              <Link
-                className="auth-primary-btn mt-6 inline-flex"
+              <LinkButton
+                variant="primary"
+                className="mt-6"
                 to={`/practice/${set.items[0].questionId}?playlist=${set.slug}`}
               >
                 Practice this playlist
-              </Link>
+              </LinkButton>
             )}
             <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/sets">
               ← All sets
@@ -105,54 +109,56 @@ export default function QuestionSets() {
         Public playlists of approved questions. Create one, then add items from practice.
       </p>
 
-      <form
-        className="surface-card mt-8 space-y-3 p-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          create.mutate();
-        }}
-      >
-        <label className="block text-sm text-[color:var(--muted)]">
-          Title
-          <input
-            className="auth-input mt-1"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            minLength={3}
-          />
-        </label>
-        <label className="block text-sm text-[color:var(--muted)]">
-          Description
-          <textarea
-            className="auth-input mt-1 min-h-20"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </label>
-        <button
-          type="submit"
-          className="auth-primary-btn"
-          disabled={create.isPending || title.trim().length < 3}
+      <Card className="mt-8 p-5">
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            create.mutate();
+          }}
         >
-          {create.isPending ? "Creating…" : "Create set"}
-        </button>
-        {create.error && (
-          <p className="text-sm text-red-700">{(create.error as Error).message}</p>
-        )}
-      </form>
+          <label className="block text-sm text-[color:var(--muted)]">
+            Title
+            <Input
+              className="mt-1"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              minLength={3}
+            />
+          </label>
+          <label className="block text-sm text-[color:var(--muted)]">
+            Description
+            <Textarea
+              className="mt-1 min-h-20"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </label>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            disabled={create.isPending || title.trim().length < 3}
+          >
+            {create.isPending ? "Creating…" : "Create set"}
+          </Button>
+          {create.error && (
+            <p className="text-sm text-red-700">{(create.error as Error).message}</p>
+          )}
+        </form>
+      </Card>
 
       <ul className="mt-8 space-y-3">
         {list.data?.map((set) => (
           <li key={set.id}>
-            <Link
-              to={`/sets/${set.slug}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold text-[color:var(--ink)]">{set.title}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted)]">
-                by {set.ownerName}
-              </p>
+            <Link to={`/sets/${set.slug}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold text-[color:var(--ink)]">{set.title}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  by {set.ownerName}
+                </p>
+              </Card>
             </Link>
           </li>
         ))}

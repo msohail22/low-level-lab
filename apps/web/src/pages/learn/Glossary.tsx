@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import type { GlossaryTerm } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -64,14 +65,13 @@ export default function Glossary() {
       <ul className="mt-8 space-y-3">
         {list.data?.map((term) => (
           <li key={term.id}>
-            <Link
-              to={`/glossary/${term.slug}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold text-[color:var(--ink)]">{term.term}</p>
-              <p className="mt-2 line-clamp-2 text-sm text-[color:var(--muted)]">
-                {term.definition}
-              </p>
+            <Link to={`/glossary/${term.slug}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold text-[color:var(--ink)]">{term.term}</p>
+                <p className="mt-2 line-clamp-2 text-sm text-[color:var(--muted)]">
+                  {term.definition}
+                </p>
+              </Card>
             </Link>
           </li>
         ))}

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card, LinkButton } from "@/components/ui";
 import type {
   DailyChallenge,
   DailyChallengeLeaderboardEntry,
@@ -40,7 +41,7 @@ export default function DailyChallenge() {
       )}
 
       {data?.challenge && (
-        <div className="surface-card mt-8 space-y-4 p-6">
+        <Card className="mt-8 space-y-4 p-6">
           <p className="text-sm text-[color:var(--muted)]">
             {data.challenge.challengeDate} UTC
           </p>
@@ -50,13 +51,13 @@ export default function DailyChallenge() {
           <p className="text-sm text-[color:var(--muted)]">
             {data.challenge.type} · {data.challenge.difficulty}
           </p>
-          <Link
-            className="auth-primary-btn inline-flex"
+          <LinkButton
+            variant="primary"
             to={`/practice/${data.challenge.questionId}`}
           >
             Start challenge
-          </Link>
-        </div>
+          </LinkButton>
+        </Card>
       )}
 
       <h2 className="mt-10 text-lg font-semibold text-[color:var(--ink)]">

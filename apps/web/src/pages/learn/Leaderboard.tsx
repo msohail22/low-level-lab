@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
+import { Card } from "@/components/ui";
 import type { LeaderboardEntry } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -28,7 +29,7 @@ export default function Leaderboard() {
         <p className="mt-8 text-sm text-red-700">{(error as Error).message}</p>
       )}
 
-      <div className="surface-card mt-8 overflow-x-auto">
+      <Card className="mt-8 overflow-x-auto">
         <table className="w-full min-w-[28rem] text-left text-sm">
           <thead className="border-b border-[color:var(--line)] text-[color:var(--muted)]">
             <tr>
@@ -58,7 +59,7 @@ export default function Leaderboard() {
         {data?.length === 0 && (
           <p className="p-6 text-[color:var(--muted)]">No attempts yet.</p>
         )}
-      </div>
+      </Card>
 
       <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/dashboard">
         ← Back to dashboard

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Button, Card, Input } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 
 type Stats = {
@@ -56,42 +57,43 @@ export default function AdminHome() {
 
       {data && (
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="surface-card p-5">
+          <Card className="p-5">
             <p className="text-sm text-[color:var(--muted)]">Pending</p>
             <p className="mt-1 text-2xl font-semibold">{data.pendingCount}</p>
-          </div>
-          <div className="surface-card p-5">
+          </Card>
+          <Card className="p-5">
             <p className="text-sm text-[color:var(--muted)]">Approved</p>
             <p className="mt-1 text-2xl font-semibold">{data.approvedCount}</p>
-          </div>
-          <div className="surface-card p-5">
+          </Card>
+          <Card className="p-5">
             <p className="text-sm text-[color:var(--muted)]">Topics</p>
             <p className="mt-1 text-2xl font-semibold">{data.topicCount}</p>
-          </div>
+          </Card>
         </div>
       )}
 
-      <form
-        className="surface-card mt-8 space-y-4 p-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setMessage(null);
-          grant.mutate();
-        }}
-      >
-        <p className="font-medium text-[color:var(--ink)]">Grant reviewer</p>
-        <input
-          className="auth-input"
-          placeholder="User id"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          required
-        />
-        <button type="submit" className="auth-primary-btn" disabled={grant.isPending}>
-          {grant.isPending ? "Granting…" : "Grant reviewer"}
-        </button>
-        {message && <p className="text-sm text-[color:var(--muted)]">{message}</p>}
-      </form>
+      <Card className="mt-8 p-5">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setMessage(null);
+            grant.mutate();
+          }}
+        >
+          <p className="font-medium text-[color:var(--ink)]">Grant reviewer</p>
+          <Input
+            placeholder="User id"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            required
+          />
+          <Button type="submit" variant="primary" fullWidth disabled={grant.isPending}>
+            {grant.isPending ? "Granting…" : "Grant reviewer"}
+          </Button>
+          {message && <p className="text-sm text-[color:var(--muted)]">{message}</p>}
+        </form>
+      </Card>
 
       <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/review/questions">
         Open review queue →

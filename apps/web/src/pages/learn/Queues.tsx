@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import type { QueueItem } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -38,14 +39,13 @@ function QuestionListPage({
       <ul className="mt-8 space-y-3">
         {data?.map((item) => (
           <li key={item.questionId}>
-            <Link
-              to={`/practice/${item.questionId}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold text-[color:var(--ink)]">{item.title}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted)]">
-                {item.type} · {item.difficulty}
-              </p>
+            <Link to={`/practice/${item.questionId}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold text-[color:var(--ink)]">{item.title}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {item.type} · {item.difficulty}
+                </p>
+              </Card>
             </Link>
           </li>
         ))}

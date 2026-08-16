@@ -9,6 +9,7 @@ import type {
   PrerequisiteGate,
 } from "@llb/shared";
 
+import { Alert, Button, Card, Input, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 import { flushUiEvents, trackUiEvent } from "@/lib/ui-analytics";
 
@@ -398,7 +399,7 @@ export default function PracticeQuestionPage() {
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
 
       {data?.prerequisite?.warn && data.prerequisite.prerequisite && (
-        <p className="surface-card mt-4 p-4 text-sm text-[color:var(--muted)]">
+        <Card className="mt-4 p-4 text-sm text-[color:var(--muted)]">
           Soft prerequisite:{" "}
           <Link
             className="text-[color:var(--accent)]"
@@ -407,7 +408,7 @@ export default function PracticeQuestionPage() {
             {data.prerequisite.prerequisite.title}
           </Link>{" "}
           (your mastery there is {data.prerequisite.masteryPercent ?? 0}%).
-        </p>
+        </Card>
       )}
 
       {question && (
@@ -415,9 +416,10 @@ export default function PracticeQuestionPage() {
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <h1 className="section-title">{question.title}</h1>
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
-                className="auth-secondary-btn shrink-0"
+                variant="secondary"
+                className="shrink-0"
                 onClick={() => {
                   setTimedMode((v) => !v);
                   viewStarted.current = Date.now();
@@ -427,23 +429,25 @@ export default function PracticeQuestionPage() {
                 {timedMode
                   ? `Timer ${(elapsedMs / 1000).toFixed(0)}s`
                   : "Timed mode"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="auth-secondary-btn shrink-0"
+                variant="secondary"
+                className="shrink-0"
                 onClick={() => toggleBookmark.mutate()}
                 disabled={toggleBookmark.isPending}
               >
                 {bookmarkStatus.data?.bookmarked ? "Bookmarked" : "Bookmark"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="auth-secondary-btn shrink-0"
+                variant="secondary"
+                className="shrink-0"
                 onClick={() => toggleFollow.mutate()}
                 disabled={toggleFollow.isPending}
               >
                 {followStatus.data?.following ? "Following" : "Follow author"}
-              </button>
+              </Button>
             </div>
           </div>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
@@ -470,32 +474,32 @@ export default function PracticeQuestionPage() {
           </p>
           <p className="section-copy mt-4 whitespace-pre-wrap">{question.prompt}</p>
           {question.codeSnippet && (
-            <pre className="surface-card mt-4 overflow-x-auto p-4 font-mono text-sm">
-              {question.codeSnippet}
-            </pre>
+            <Card className="mt-4 overflow-x-auto p-4 font-mono text-sm">
+              <pre>{question.codeSnippet}</pre>
+            </Card>
           )}
           {question.diagramMarkdown && (
-            <pre className="surface-card mt-4 overflow-x-auto p-4 text-sm">
-              {question.diagramMarkdown}
-            </pre>
+            <Card className="mt-4 overflow-x-auto p-4 text-sm">
+              <pre>{question.diagramMarkdown}</pre>
+            </Card>
           )}
 
           {question.hintCount > 0 && !shown && (
             <div className="mt-6 space-y-2">
               {hintsRevealed.map((body, i) => (
-                <p key={i} className="surface-card p-3 text-sm text-[color:var(--muted)]">
+                <Card key={i} className="p-3 text-sm text-[color:var(--muted)]">
                   Hint {i + 1}: {body}
-                </p>
+                </Card>
               ))}
               {hintsRevealed.length < question.hintCount && (
-                <button
+                <Button
                   type="button"
-                  className="auth-secondary-btn"
+                  variant="secondary"
                   onClick={() => revealHint.mutate()}
                   disabled={revealHint.isPending}
                 >
                   Reveal hint ({hintsRevealed.length}/{question.hintCount})
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -503,19 +507,20 @@ export default function PracticeQuestionPage() {
           {question.type === "true_false" ? (
             <div className="mt-6 flex gap-4">
               {[true, false].map((value) => (
-                <button
+                <Button
                   key={String(value)}
                   type="button"
+                  variant="secondary"
                   disabled={Boolean(shown)}
-                  className={`auth-secondary-btn ${
+                  className={
                     (shown ? shown.booleanValue : booleanValue) === value
                       ? "border-[color:var(--accent)]"
                       : ""
-                  }`}
+                  }
                   onClick={() => setBooleanValue(value)}
                 >
                   {value ? "True" : "False"}
-                </button>
+                </Button>
               ))}
             </div>
           ) : (
@@ -525,8 +530,10 @@ export default function PracticeQuestionPage() {
                 const checked = selected.includes(opt.id);
                 return (
                   <li key={opt.id}>
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
+                      fullWidth
                       disabled={Boolean(shown)}
                       onClick={() => toggleOption(opt.id)}
                       onMouseEnter={() => {
@@ -540,7 +547,7 @@ export default function PracticeQuestionPage() {
                           (Date.now() - start);
                         delete hoverStart.current[opt.id];
                       }}
-                      className={`surface-card flex w-full items-start gap-3 p-4 text-left ${
+                      className={`h-auto justify-start gap-3 rounded-[var(--radius-card)] p-4 text-left ${
                         checked || state !== "idle"
                           ? "border-[color:var(--accent)]"
                           : ""
@@ -548,7 +555,7 @@ export default function PracticeQuestionPage() {
                     >
                       <span className="font-semibold">{opt.label}.</span>
                       <span>{opt.body}</span>
-                    </button>
+                    </Button>
                   </li>
                 );
               })}
@@ -562,21 +569,23 @@ export default function PracticeQuestionPage() {
               </p>
               <div className="flex gap-2">
                 {[1, 2, 3].map((n) => (
-                  <button
+                  <Button
                     key={n}
                     type="button"
-                    className={`auth-secondary-btn ${
+                    variant="secondary"
+                    className={
                       confidence === n ? "border-[color:var(--accent)]" : ""
-                    }`}
+                    }
                     onClick={() => setConfidence(n)}
                   >
                     {n === 1 ? "Guessing" : n === 2 ? "Okay" : "Sure"}
-                  </button>
+                  </Button>
                 ))}
               </div>
-              <button
+              <Button
                 type="button"
-                className="auth-primary-btn"
+                variant="primary"
+                fullWidth
                 disabled={
                   submit.isPending ||
                   (question.type === "true_false"
@@ -586,14 +595,18 @@ export default function PracticeQuestionPage() {
                 onClick={() => submit.mutate()}
               >
                 {submit.isPending ? "Checking…" : "Submit answer"}
-              </button>
+              </Button>
             </div>
           )}
 
-          {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
+          {error && (
+            <Alert className="mt-4" variant="error">
+              {error}
+            </Alert>
+          )}
 
           {shown && (
-            <div className="surface-card mt-8 space-y-3 p-5">
+            <Card className="mt-8 space-y-3 p-5">
               <p className="font-semibold text-[color:var(--ink)]">
                 {shown.isCorrect ? "Correct" : "Not quite"}
               </p>
@@ -619,20 +632,20 @@ export default function PracticeQuestionPage() {
                 <span className="text-[color:var(--muted)]">
                   Explanation helpful?
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="auth-secondary-btn"
+                  variant="secondary"
                   onClick={() => vote.mutate(true)}
                 >
                   Yes ({data.votes.helpful})
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="auth-secondary-btn"
+                  variant="secondary"
                   onClick={() => vote.mutate(false)}
                 >
                   No ({data.votes.unhelpful})
-                </button>
+                </Button>
               </div>
               {(shown.relatedQuestionId || question.relatedQuestionId) && (
                 <Link
@@ -657,9 +670,9 @@ export default function PracticeQuestionPage() {
                   Suggested next: {nextQuestion.data.title} →
                 </Link>
               ) : null}
-              <button
+              <Button
                 type="button"
-                className="auth-secondary-btn"
+                variant="secondary"
                 onClick={() => {
                   trackUiEvent({ eventName: "retry_click", questionId });
                   setRetrying(true);
@@ -672,31 +685,31 @@ export default function PracticeQuestionPage() {
                 }}
               >
                 Try again
-              </button>
-            </div>
+              </Button>
+            </Card>
           )}
 
           {(question.type === "print_output" || question.codeSnippet) && (
-            <div className="surface-card mt-8 space-y-3 p-5">
+            <Card className="mt-8 space-y-3 p-5">
               <p className="font-semibold">Sandbox</p>
-              <textarea
-                className="auth-input min-h-24 font-mono text-sm"
+              <Textarea
+                className="min-h-24 font-mono text-sm"
                 placeholder="Predicted output"
                 value={sandboxOutput}
                 onChange={(e) => setSandboxOutput(e.target.value)}
               />
-              <button
+              <Button
                 type="button"
-                className="auth-secondary-btn"
+                variant="secondary"
                 onClick={() => sandbox.mutate()}
                 disabled={sandbox.isPending}
               >
                 Check output
-              </button>
+              </Button>
               {sandboxMsg && (
                 <p className="text-sm text-[color:var(--ink)]">{sandboxMsg}</p>
               )}
-            </div>
+            </Card>
           )}
 
           <div className="mt-10 space-y-4">
@@ -716,61 +729,62 @@ export default function PracticeQuestionPage() {
                 postComment.mutate();
               }}
             >
-              <textarea
-                className="auth-input min-h-20"
+              <Textarea
+                className="min-h-20"
                 placeholder="Comment (moderated before publish)"
                 value={commentBody}
                 onChange={(e) => setCommentBody(e.target.value)}
                 required
                 minLength={2}
               />
-              <button type="submit" className="auth-secondary-btn">
+              <Button type="submit" variant="secondary">
                 Submit for moderation
-              </button>
+              </Button>
             </form>
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <form
-              className="surface-card flex-1 space-y-2 p-5"
-              onSubmit={(e) => {
-                e.preventDefault();
-                report.mutate();
-              }}
-            >
-              <p className="font-semibold">Report question</p>
-              <input
-                className="auth-input"
-                placeholder="Reason"
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                required
-                minLength={3}
-              />
-              <textarea
-                className="auth-input min-h-16"
-                placeholder="Details (optional)"
-                value={reportDetails}
-                onChange={(e) => setReportDetails(e.target.value)}
-              />
-              <button type="submit" className="auth-secondary-btn">
-                Send report
-              </button>
-            </form>
-            <div className="surface-card flex-1 space-y-2 p-5">
+            <Card className="flex-1 p-5">
+              <form
+                className="space-y-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  report.mutate();
+                }}
+              >
+                <p className="font-semibold">Report question</p>
+                <Input
+                  placeholder="Reason"
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  required
+                  minLength={3}
+                />
+                <Textarea
+                  className="min-h-16"
+                  placeholder="Details (optional)"
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                />
+                <Button type="submit" variant="secondary">
+                  Send report
+                </Button>
+              </form>
+            </Card>
+            <Card className="flex-1 space-y-2 p-5">
               <p className="font-semibold">Duplicate?</p>
               <p className="text-sm text-[color:var(--muted)]">
                 Flag for reviewers if this looks like another question.
               </p>
-              <button
+              <Button
                 type="button"
-                className="auth-secondary-btn"
+                variant="secondary"
                 onClick={() => flagDup.mutate()}
                 disabled={flagDup.isPending}
               >
                 Flag as duplicate
-              </button>
-            </div>
+              </Button>
+            </Card>
           </div>
 
           <Link

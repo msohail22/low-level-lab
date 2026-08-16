@@ -5,6 +5,8 @@ import {
   type GetJobResponse,
 } from "@llb/reactor-sdk";
 
+import { Alert, Button } from "@/components/ui";
+
 const API_BASE =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:8787";
 const DIRECT_REACTOR = import.meta.env.VITE_REACTOR_URL?.replace(/\/$/, "");
@@ -84,25 +86,21 @@ export function ReactorRunner() {
         />
       </label>
       <div className="flex flex-wrap gap-2">
-        <button
+        <Button
           type="button"
-          className="auth-primary-btn"
+          variant="primary"
           disabled={busy}
           onClick={() => void onRun()}
         >
           {busy ? "Running…" : "Run"}
-        </button>
+        </Button>
         {DIRECT_REACTOR && (
           <span className="self-center text-xs text-[color:var(--muted)]">
             Direct Reactor: {DIRECT_REACTOR}
           </span>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <Alert variant="error">{error}</Alert>}
       {job && (
         <div className="rounded-md border border-[color:var(--line)] bg-[color:var(--surface)] p-4 text-sm">
           <p className="text-[color:var(--muted)]">

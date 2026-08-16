@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import type { Achievement } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -28,21 +29,22 @@ export default function Achievements() {
       )}
       <ul className="mt-8 grid gap-3 sm:grid-cols-2">
         {data?.map((a) => (
-          <li
-            key={a.id}
-            className={`surface-card p-5 ${
-              a.earnedAt ? "border-[color:var(--accent)]" : "opacity-70"
-            }`}
-          >
-            <p className="font-semibold text-[color:var(--ink)]">{a.title}</p>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              {a.description}
-            </p>
-            <p className="mt-3 text-xs text-[color:var(--muted)]">
-              {a.earnedAt
-                ? `Earned ${new Date(a.earnedAt).toLocaleDateString()}`
-                : "Locked"}
-            </p>
+          <li key={a.id}>
+            <Card
+              className={`p-5 ${
+                a.earnedAt ? "border-[color:var(--accent)]" : "opacity-70"
+              }`}
+            >
+              <p className="font-semibold text-[color:var(--ink)]">{a.title}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                {a.description}
+              </p>
+              <p className="mt-3 text-xs text-[color:var(--muted)]">
+                {a.earnedAt
+                  ? `Earned ${new Date(a.earnedAt).toLocaleDateString()}`
+                  : "Locked"}
+              </p>
+            </Card>
           </li>
         ))}
       </ul>

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import type { FollowingFeedItem } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -28,20 +29,19 @@ export default function FollowingFeed() {
       <ul className="mt-8 space-y-3">
         {data?.map((item) => (
           <li key={item.id}>
-            <Link
-              to={`/practice/${item.id}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold">{item.title}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted)]">
-                {item.type} · {item.difficulty} ·{" "}
-                <span
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-[color:var(--accent)]"
-                >
-                  {item.authorName}
-                </span>
-              </p>
+            <Link to={`/practice/${item.id}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold">{item.title}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {item.type} · {item.difficulty} ·{" "}
+                  <span
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[color:var(--accent)]"
+                  >
+                    {item.authorName}
+                  </span>
+                </p>
+              </Card>
             </Link>
           </li>
         ))}

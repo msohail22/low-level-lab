@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { Button, Card, Input, LinkButton } from "@/components/ui";
 import { useMe } from "@/hooks/useMe";
 import type { ContinueState, LearningStats } from "@llb/shared";
 
@@ -63,7 +64,7 @@ export default function Dashboard() {
         Signed in as {session?.user.name || session?.user.email}.
       </p>
 
-      <div className="surface-card mt-8 grid gap-4 p-6 sm:grid-cols-3">
+      <Card className="mt-8 grid gap-4 p-6 sm:grid-cols-3">
         <div>
           <p className="text-sm text-[color:var(--muted)]">Streak</p>
           <p className="mt-1 text-2xl font-semibold">
@@ -88,8 +89,8 @@ export default function Dashboard() {
         >
           <label className="block text-sm text-[color:var(--muted)]">
             Daily goal
-            <input
-              className="auth-input mt-1"
+            <Input
+              className="mt-1"
               type="number"
               min={1}
               max={50}
@@ -97,14 +98,14 @@ export default function Dashboard() {
               onChange={(e) => setGoal(Number(e.target.value))}
             />
           </label>
-          <button type="submit" className="auth-secondary-btn" disabled={saveGoal.isPending}>
+          <Button type="submit" variant="secondary" disabled={saveGoal.isPending}>
             Save goal
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
 
       {cont && (cont.lastQuestionId || cont.dueCount > 0 || cont.lastTopicId) && (
-        <div className="surface-card mt-6 space-y-3 p-5">
+        <Card className="mt-6 space-y-3 p-5">
           <p className="font-semibold">Continue where you left off</p>
           {cont.dueCount > 0 && (
             <Link className="block text-sm text-[color:var(--accent)]" to="/due">
@@ -135,72 +136,83 @@ export default function Dashboard() {
               Path: {cont.lastPathTitle ?? "last path"} →
             </Link>
           )}
-        </div>
+        </Card>
       )}
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Link className="auth-primary-btn text-center" to="/playground">
+        <LinkButton variant="primary" fullWidth className="text-center" to="/playground">
           Reactor playground
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/paths">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/paths">
           Learning paths
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/challenge">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/challenge">
           Daily challenge
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/topics">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/topics">
           Practice topics
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/drill">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/drill">
           Weak-topic drill
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/due">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/due">
           Spaced review
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/mistakes">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/mistakes">
           My mistakes
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/bookmarks">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/bookmarks">
           Bookmarks
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/achievements">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/achievements">
           Achievements
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/feed">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/feed">
           Following feed
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/sets">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/sets">
           Curated sets
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/glossary">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/glossary">
           Glossary
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/leaderboard">
+        </LinkButton>
+        <LinkButton variant="secondary" fullWidth className="text-center" to="/leaderboard">
           Leaderboard
-        </Link>
-        <Link className="auth-secondary-btn text-center" to="/contribute/questions">
+        </LinkButton>
+        <LinkButton
+          variant="secondary"
+          fullWidth
+          className="text-center"
+          to="/contribute/questions"
+        >
           Contribute questions
-        </Link>
+        </LinkButton>
         {me?.roles.reviewer && (
-          <Link className="auth-secondary-btn text-center" to="/review/questions">
+          <LinkButton
+            variant="secondary"
+            fullWidth
+            className="text-center"
+            to="/review/questions"
+          >
             Review queue
-          </Link>
+          </LinkButton>
         )}
         {me?.roles.admin && (
-          <Link className="auth-secondary-btn text-center" to="/admin">
+          <LinkButton variant="secondary" fullWidth className="text-center" to="/admin">
             Admin console
-          </Link>
+          </LinkButton>
         )}
       </div>
 
-      <button
-        className="auth-secondary-btn mt-8"
+      <Button
+        className="mt-8"
+        variant="secondary"
         type="button"
         onClick={onLogout}
         disabled={loggingOut}
       >
         {loggingOut ? "Signing out…" : "Sign out"}
-      </button>
+      </Button>
     </AppShell>
   );
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Button, Card } from "@/components/ui";
 import type { AuthorReputation } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -67,7 +68,7 @@ export default function AuthorProfile() {
       )}
       {data && (
         <>
-          <div className="surface-card mt-8 grid gap-4 p-6 sm:grid-cols-2">
+          <Card className="mt-8 grid gap-4 p-6 sm:grid-cols-2">
             <div>
               <p className="text-sm text-[color:var(--muted)]">Reputation</p>
               <p className="mt-1 text-3xl font-semibold">{data.reputationScore}</p>
@@ -88,15 +89,17 @@ export default function AuthorProfile() {
                 {data.learnerCorrect}/{data.learnerAttempts}
               </p>
             </div>
-          </div>
-          <button
+          </Card>
+          <Button
             type="button"
-            className="auth-primary-btn mt-6"
+            variant="primary"
+            fullWidth
+            className="mt-6"
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
           >
             {followStatus.data?.following ? "Unfollow" : "Follow"}
-          </button>
+          </Button>
         </>
       )}
     </AppShell>

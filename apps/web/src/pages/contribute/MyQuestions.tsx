@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
 import { FilterSelect } from "@/components/QuestionFilters";
+import { Button, Card, LinkButton } from "@/components/ui";
 import {
   STATUS_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
@@ -64,9 +64,13 @@ export default function MyQuestions() {
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
-        <Link className="auth-primary-btn shrink-0 text-center" to="/contribute/questions/new">
+        <LinkButton
+          variant="primary"
+          className="shrink-0 text-center"
+          to="/contribute/questions/new"
+        >
           New question
-        </Link>
+        </LinkButton>
       </div>
 
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
@@ -76,38 +80,41 @@ export default function MyQuestions() {
 
       <ul className="mt-8 space-y-3">
         {data?.map((q) => (
-          <li key={q.id} className="surface-card p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">
-                  {q.type} · {q.difficulty} · {q.status}
-                </p>
-                {q.reviewNote && (
-                  <p className="mt-2 text-sm text-[color:var(--muted)]">
-                    Review note: {q.reviewNote}
+          <li key={q.id}>
+            <Card className="p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="font-semibold text-[color:var(--ink)]">{q.title}</p>
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    {q.type} · {q.difficulty} · {q.status}
                   </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2 sm:items-end">
-                <Link
-                  className="auth-secondary-btn text-center"
-                  to={`/contribute/questions/${q.id}/edit`}
-                >
-                  Edit
-                </Link>
-                {(q.status === "draft" || q.status === "rejected") && (
-                  <button
-                    type="button"
-                    className="auth-secondary-btn"
-                    disabled={submit.isPending}
-                    onClick={() => submit.mutate(q.id)}
+                  {q.reviewNote && (
+                    <p className="mt-2 text-sm text-[color:var(--muted)]">
+                      Review note: {q.reviewNote}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 sm:items-end">
+                  <LinkButton
+                    variant="secondary"
+                    className="text-center"
+                    to={`/contribute/questions/${q.id}/edit`}
                   >
-                    Submit for review
-                  </button>
-                )}
+                    Edit
+                  </LinkButton>
+                  {(q.status === "draft" || q.status === "rejected") && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={submit.isPending}
+                      onClick={() => submit.mutate(q.id)}
+                    >
+                      Submit for review
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            </Card>
           </li>
         ))}
       </ul>

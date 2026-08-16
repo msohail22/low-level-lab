@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
+import { Card } from "@/components/ui";
 import type { TopicMastery } from "@llb/shared";
 
 import { apiFetch } from "@/lib/api";
@@ -32,27 +33,26 @@ export default function Topics() {
       <ul className="mt-8 space-y-3">
         {data?.map((topic) => (
           <li key={topic.topicId}>
-            <Link
-              to={`/topics/${topic.topicId}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold text-[color:var(--ink)]">
-                  {topic.title}
+            <Link to={`/topics/${topic.topicId}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="font-semibold text-[color:var(--ink)]">
+                    {topic.title}
+                  </p>
+                  <p className="text-sm text-[color:var(--accent)]">
+                    {topic.masteryPercent}% mastery
+                  </p>
+                </div>
+                {topic.description && (
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    {topic.description}
+                  </p>
+                )}
+                <p className="mt-3 text-sm text-[color:var(--muted)]">
+                  {topic.correct}/{topic.approvedCount} correct · {topic.attempted}{" "}
+                  attempted · {topic.remaining} remaining
                 </p>
-                <p className="text-sm text-[color:var(--accent)]">
-                  {topic.masteryPercent}% mastery
-                </p>
-              </div>
-              {topic.description && (
-                <p className="mt-1 text-sm text-[color:var(--muted)]">
-                  {topic.description}
-                </p>
-              )}
-              <p className="mt-3 text-sm text-[color:var(--muted)]">
-                {topic.correct}/{topic.approvedCount} correct · {topic.attempted}{" "}
-                attempted · {topic.remaining} remaining
-              </p>
+              </Card>
             </Link>
           </li>
         ))}

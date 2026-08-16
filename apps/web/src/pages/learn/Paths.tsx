@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { Card } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 
 type PathRow = {
@@ -33,25 +34,24 @@ export default function Paths() {
       <ul className="mt-8 space-y-3">
         {data?.map((path) => (
           <li key={path.id}>
-            <Link
-              to={`/paths/${path.id}`}
-              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
-            >
-              <p className="font-semibold text-[color:var(--ink)]">{path.title}</p>
-              {path.description && (
-                <p className="mt-1 text-sm text-[color:var(--muted)]">
-                  {path.description}
+            <Link to={`/paths/${path.id}`} className="block">
+              <Card className="p-5 transition hover:border-[color:var(--accent)]">
+                <p className="font-semibold text-[color:var(--ink)]">{path.title}</p>
+                {path.description && (
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    {path.description}
+                  </p>
+                )}
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--surface-2)]">
+                  <div
+                    className="h-full bg-[color:var(--accent-btn)]"
+                    style={{ width: `${path.progressPercent}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-[color:var(--accent)]">
+                  {path.progressPercent}% complete
                 </p>
-              )}
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--surface-2)]">
-                <div
-                  className="h-full bg-[color:var(--accent-btn)]"
-                  style={{ width: `${path.progressPercent}%` }}
-                />
-              </div>
-              <p className="mt-2 text-sm text-[color:var(--accent)]">
-                {path.progressPercent}% complete
-              </p>
+              </Card>
             </Link>
           </li>
         ))}
