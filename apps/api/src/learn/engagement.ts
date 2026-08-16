@@ -70,12 +70,17 @@ export async function getLearningStats(env: CloudflareBindings, userId: string) 
       ),
     );
 
+  const dueReviews = await listDueReviews(env, userId);
+  const bookmarks = await listBookmarks(env, userId);
+
   return {
     dailyGoal: row.dailyGoal,
     currentStreak: row.currentStreak,
     longestStreak: row.longestStreak,
     lastActiveDate: row.lastActiveDate,
     todayAttemptCount: Number(todayCount?.value ?? 0),
+    dueReviewCount: dueReviews.length,
+    bookmarkCount: bookmarks.length,
   };
 }
 
@@ -346,6 +351,22 @@ export async function isBookmarked(
     )
     .limit(1);
   return Boolean(row);
+}
+
+export async function toggleBookmark(
+  env: CloudflareBindings,
+  userId: string,
+  questionId: string,
+) {
+  const bookmarked = await isBookmarked(env, userId, questionId);
+  if (bookmarked) {
+    await removeBookmark(env, userId, questionId);
+    return { bookmarked: false };
+  } else {
+    const res = await addBookmark(env, userId, questionId);
+    if (res.error) throw new Error(res.error);
+    return { bookmarked: true };
+  }
 }
 
 export async function listPaths(env: CloudflareBindings, userId?: string) {

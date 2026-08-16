@@ -22,6 +22,14 @@ export function createAuth(env: CloudflareBindings) {
       enabled: true,
     },
     databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            const { ensurePlatformMember } = await import("../authz/openfga.ts");
+            await ensurePlatformMember(env, user.id);
+          },
+        },
+      },
       session: {
         create: {
           after: async (session) => {

@@ -5,6 +5,7 @@ interface __BaseEnv_CloudflareBindings {
 	HYPERDRIVE: Hyperdrive;
 	ASSETS: Fetcher;
 	REQUEST_LOGS_QUEUE: Queue;
+	LEADERBOARD_DO?: DurableObjectNamespace;
 	DB_URL: string;
 	BETTER_AUTH_SECRET: string;
 	BETTER_AUTH_URL: string;
@@ -16,6 +17,10 @@ interface __BaseEnv_CloudflareBindings {
 	REVIEWER_USER_IDS: string;
 	ADMIN_USER_IDS: string;
 	REACTOR_URL: string;
+	REQUEST_LOG_RETENTION_DAYS?: string;
+	UPSTASH_REDIS_REST_URL?: string;
+	UPSTASH_REDIS_REST_TOKEN?: string;
+	REDIS_URL?: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

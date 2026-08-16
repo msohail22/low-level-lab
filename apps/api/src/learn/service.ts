@@ -49,27 +49,49 @@ export async function listApprovedQuestionsForTopic(
     attempted?: "all" | "yes" | "no";
   },
 ) {
-  const db = getDb(env);
-  const conditions = [
-    eq(question.topicId, topicId),
-    eq(question.status, "approved"),
-  ];
-  if (filters?.type) conditions.push(eq(question.type, filters.type));
-  if (filters?.difficulty) {
-    conditions.push(eq(question.difficulty, filters.difficulty));
+  const { getCache, setCache } = await import("../cache/redis.ts");
+  const cacheKey = `questions:approved:topic:${topicId}${filters?.type ? `:${filters.type}` : ""}${filters?.difficulty ? `:${filters.difficulty}` : ""}`;
+
+  let rows: {
+    id: string;
+    title: string;
+    type: string;
+    difficulty: string;
+    publishedAt: Date | string | null;
+  }[] | null = null;
+
+  if (!userId && (!filters?.attempted || filters.attempted === "all")) {
+    rows = await getCache(env, cacheKey);
   }
 
-  const rows = await db
-    .select({
-      id: question.id,
-      title: question.title,
-      type: question.type,
-      difficulty: question.difficulty,
-      publishedAt: question.publishedAt,
-    })
-    .from(question)
-    .where(and(...conditions))
-    .orderBy(asc(question.publishedAt));
+  if (!rows) {
+    const db = getDb(env);
+    const conditions = [
+      eq(question.topicId, topicId),
+      eq(question.status, "approved"),
+    ];
+    if (filters?.type) conditions.push(eq(question.type, filters.type));
+    if (filters?.difficulty) {
+      conditions.push(eq(question.difficulty, filters.difficulty));
+    }
+
+    const fetched = await db
+      .select({
+        id: question.id,
+        title: question.title,
+        type: question.type,
+        difficulty: question.difficulty,
+        publishedAt: question.publishedAt,
+      })
+      .from(question)
+      .where(and(...conditions))
+      .orderBy(asc(question.publishedAt));
+
+    rows = fetched;
+    if (!userId && (!filters?.attempted || filters.attempted === "all")) {
+      await setCache(env, cacheKey, rows, 900);
+    }
+  }
 
   if (!userId) {
     return rows.map((r) => ({
@@ -79,6 +101,7 @@ export async function listApprovedQuestionsForTopic(
     }));
   }
 
+  const db = getDb(env);
   const attempts = await db
     .select({
       questionId: attempt.questionId,
@@ -257,6 +280,9 @@ export async function submitAttempt(
     "./platform.ts"
   );
   const { recordContinuePointer } = await import("./study.ts");
+  const { notifyLeaderboardDO } = await import("../durable-objects/LeaderboardDO.ts");
+  const { invalidateUserCache } = await import("../cache/redis.ts");
+
   await recordActivityStreak(env, userId);
   await upsertSpacedReview(
     env,
@@ -276,6 +302,13 @@ export async function submitAttempt(
     dailyChallengeCorrect = challenge?.questionId === questionId;
   }
   await evaluateAchievements(env, userId, { dailyChallengeCorrect });
+
+  // Invalidate Redis user session cache and notify Realtime Leaderboard DO
+  await invalidateUserCache(env, userId);
+  await notifyLeaderboardDO(env, {
+    userId,
+    score: isCorrect ? 1 : 0,
+  });
 
   const correctOptionIds = answers
     .map((a) => a.optionId)

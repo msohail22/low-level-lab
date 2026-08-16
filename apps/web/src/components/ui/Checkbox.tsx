@@ -10,12 +10,12 @@ export const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "flex h-4 w-4 shrink-0 items-center justify-center rounded border border-[color:var(--line)] bg-[color:var(--white)] data-[state=checked]:border-[color:var(--accent)] data-[state=checked]:bg-[color:var(--accent)]",
+      "flex h-4 w-4 shrink-0 items-center justify-center rounded border border-[color:var(--line)] bg-[color:var(--panel)] data-[state=checked]:border-[color:var(--accent)] data-[state=checked]:bg-[color:var(--accent)]",
       className,
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator className="text-[color:var(--white)]">
+    <CheckboxPrimitive.Indicator className="text-[color:var(--on-accent)]">
       <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden>
         <path
           d="M2 6.5 4.5 9 10 3"

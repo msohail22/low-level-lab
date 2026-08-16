@@ -1,29 +1,64 @@
 @import "tailwindcss";
 
+/* Light — matteblack companion (amber accent) */
 :root {
-  /* Sourced from @llb/ui-tokens (keep in sync with packages/ui-tokens) */
-  --ink: #1a1a1a;
-  --accent: #2f6f5e;
-  --accent-btn: #3a8571;
-  --surface: #f7f7f5;
-  --surface-2: #eceae4;
-  --line: #ddd9d0;
-  --muted: #6b6560;
+  --ink: #121212;
+  --fg-bright: #0d0d0d;
+  --fg-secondary: #4a4a4a;
+  --accent: #d97706;
+  --accent-btn: #f59e0b;
+  --on-accent: #0d0d0d;
+  --surface: #fafafa;
+  --surface-2: #f0f0f0;
+  --surface-active: #e4e4e7;
+  --line: #e4e4e7;
+  --muted: #71717a;
+  --panel: #ffffff;
   --white: #ffffff;
-  --canvas: #fbfaf7;
-  --danger: #b42318;
-  --danger-bg: #fef3f2;
-  --success: #027a48;
-  --success-bg: #ecfdf3;
-  --warn: #b54708;
-  --warn-bg: #fffaeb;
-  --info: #026aa2;
-  --info-bg: #f0f9ff;
-  --radius-control: 0.75rem;
-  --radius-card: 1rem;
+  --canvas: #f4f4f5;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
+  --gold: #d97706;
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
   --radius-pill: 999px;
   --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color-scheme: light;
+}
+
+/* Dark — Neovim matteblack (tahayvr/matteblack.nvim) exact palette */
+html.dark {
+  --canvas: #0d0d0d;
+  --surface: #121212;
+  --surface-2: #212121;
+  --surface-active: #262626;
+  --panel: #212121;
+  --white: #212121;
+  --line: #333333;
+  --ink: #eaeaea;
+  --fg-bright: #ffffff;
+  --fg-secondary: #bebebe;
+  --muted: #8a8a8d;
+  --accent: #f59e0b;
+  --accent-btn: #f59e0b;
+  --on-accent: #0d0d0d;
+  --gold: #efbf04;
+  --danger: #dc2626;
+  --danger-bg: #2a1212;
+  --success: #10b981;
+  --success-bg: #0f241c;
+  --warn: #d97706;
+  --warn-bg: #2a1f0a;
+  --info: #3b82f6;
+  --info-bg: #111827;
+  color-scheme: dark;
 }
 
 html,
@@ -34,9 +69,7 @@ body,
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%),
-    linear-gradient(180deg, var(--canvas) 0%, var(--surface) 100%);
+  background-color: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans);
 }
@@ -53,11 +86,63 @@ body {
   font-size: 1.875rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--ink);
+  color: var(--fg-bright);
 }
 
 .section-copy {
   font-size: 1rem;
   line-height: 1.7;
   color: var(--muted);
+}
+
+.surface-card {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface-2);
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.surface-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background-color: var(--surface-2);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 5rem;
+  color: var(--muted);
+}
+
+.pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background-color: var(--surface-2);
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.2s ease;
+}
+
+.pill-link:hover {
+  border-color: var(--accent);
+  background-color: var(--surface-active);
+}
+
+.matte-code-block {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--canvas);
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--ink);
 }

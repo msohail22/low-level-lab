@@ -160,3 +160,61 @@ export async function grantReviewer(
   ]);
   return { ok: true, mode: "openfga" };
 }
+
+export async function revokeReviewer(
+  env: CloudflareBindings,
+  userId: string,
+): Promise<{ ok: boolean; mode: "openfga" | "fallback_hint" }> {
+  const client = createClient(env);
+  if (!client) {
+    return { ok: false, mode: "fallback_hint" };
+  }
+
+  await client.deleteTuples([
+    {
+      user: `user:${userId}`,
+      relation: "reviewer",
+      object: `platform:${PLATFORM_ID}`,
+    },
+  ]);
+  return { ok: true, mode: "openfga" };
+}
+
+export async function grantAdmin(
+  env: CloudflareBindings,
+  userId: string,
+): Promise<{ ok: boolean; mode: "openfga" | "fallback_hint" }> {
+  const client = createClient(env);
+  if (!client) {
+    return { ok: false, mode: "fallback_hint" };
+  }
+
+  await client.writeTuples([
+    {
+      user: `user:${userId}`,
+      relation: "admin",
+      object: `platform:${PLATFORM_ID}`,
+    },
+  ]);
+  return { ok: true, mode: "openfga" };
+}
+
+export async function revokeAdmin(
+  env: CloudflareBindings,
+  userId: string,
+): Promise<{ ok: boolean; mode: "openfga" | "fallback_hint" }> {
+  const client = createClient(env);
+  if (!client) {
+    return { ok: false, mode: "fallback_hint" };
+  }
+
+  await client.deleteTuples([
+    {
+      user: `user:${userId}`,
+      relation: "admin",
+      object: `platform:${PLATFORM_ID}`,
+    },
+  ]);
+  return { ok: true, mode: "openfga" };
+}
+

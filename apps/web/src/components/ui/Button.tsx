@@ -13,13 +13,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "border border-transparent bg-[color:var(--accent-btn)] text-[color:var(--white)] hover:bg-[color:var(--accent)]",
+          "border border-transparent bg-[color:var(--accent-btn)] text-[color:var(--on-accent)] hover:bg-[color:var(--accent)]",
         secondary:
-          "border border-[color:var(--line)] bg-[color:var(--white)] text-[color:var(--ink)] hover:bg-[color:var(--surface-2)]",
+          "border border-[color:var(--line)] bg-[color:var(--panel)] text-[color:var(--ink)] hover:bg-[color:var(--surface-2)]",
         ghost:
           "border border-transparent bg-transparent text-[color:var(--ink)] hover:bg-[color:var(--surface-2)]",
         danger:
-          "border border-transparent bg-[color:var(--danger)] text-[color:var(--white)] hover:opacity-90",
+          "border border-transparent bg-[color:var(--danger)] text-[#fafafa] hover:opacity-90",
       },
       size: {
         sm: "px-3 py-1.5 text-xs",

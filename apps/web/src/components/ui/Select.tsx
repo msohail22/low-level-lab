@@ -16,7 +16,7 @@ export const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[color:var(--line)] bg-[color:var(--white)] px-[0.9rem] py-3 text-left text-sm text-[color:var(--ink)] outline-none focus:border-[color:color-mix(in_srgb,var(--accent)_55%,var(--line))] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_18%,transparent)] disabled:cursor-not-allowed disabled:opacity-65 data-[placeholder]:text-[color:var(--muted)]",
+      "inline-flex w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[color:var(--line)] bg-[color:var(--panel)] px-[0.9rem] py-3 text-left text-sm text-[color:var(--ink)] outline-none focus:border-[color:color-mix(in_srgb,var(--accent)_55%,var(--line))] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_18%,transparent)] disabled:cursor-not-allowed disabled:opacity-65 data-[placeholder]:text-[color:var(--muted)]",
       className,
     )}
     {...props}
@@ -45,7 +45,7 @@ export const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[var(--radius-control)] border border-[color:var(--line)] bg-[color:var(--white)] shadow-md",
+        "z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[var(--radius-control)] border border-[color:var(--line)] bg-[color:var(--panel)] shadow-md",
         className,
       )}
       {...props}

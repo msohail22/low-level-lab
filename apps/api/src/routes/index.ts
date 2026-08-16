@@ -13,7 +13,9 @@ import {
   reviewRoutes,
 } from "./questions.ts";
 
-export const routes = new Hono();
+import { graphqlRoutes } from "../graphql/index.ts";
+
+export const routes = new Hono<{ Bindings: CloudflareBindings }>();
 
 routes.route("/health", health);
 routes.route("/api/me", meRoutes);
@@ -25,4 +27,16 @@ routes.route("/api/learn", engagementRoutes);
 routes.route("/api/learn", platformRoutes);
 routes.route("/api/learn", studyRoutes);
 routes.route("/api/leaderboard", leaderboardRoutes);
+
+routes.get("/api/leaderboard/ws", (c) => {
+  if (!c.env.LEADERBOARD_DO) {
+    return c.text("Leaderboard Durable Object not configured", 503);
+  }
+  const id = c.env.LEADERBOARD_DO.idFromName("global-leaderboard");
+  const stub = c.env.LEADERBOARD_DO.get(id);
+  return stub.fetch(c.req.raw);
+});
+
+routes.route("/api/graphql", graphqlRoutes);
 routes.route("/api/reactor", reactorRoutes);
+

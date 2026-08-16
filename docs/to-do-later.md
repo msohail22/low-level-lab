@@ -17,7 +17,7 @@ Product backlog (lean) — migration `0006_study_loop_depth` + `/api/learn` stud
 **Trust** — community % correct, duplicate flags  
 **UI analytics** — `ui_event` batch ingest (dwell, hover, hints, abandon) alongside API `request_log`
 
-Still deferred (infra): Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning, richer version UI/diff.
+Now implemented (shipped v1): Redis question + user session cache, realtime DO leaderboard, GraphQL API, OpenFGA prod setup, request-log pruning worker.
 
 **Code execution (PoC):** `reactor/service` + `@llb/reactor-sdk` + authenticated `/api/reactor/*` + web `/playground`. Full production isolation / learn-sandbox wiring still later.
 

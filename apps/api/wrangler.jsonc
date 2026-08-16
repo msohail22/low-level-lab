@@ -28,6 +28,27 @@
 			}
 		]
 	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "LEADERBOARD_DO",
+				"class_name": "LeaderboardDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": [
+				"LeaderboardDO"
+			]
+		}
+	],
+	"triggers": {
+		"crons": [
+			"0 3 * * *"
+		]
+	},
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "./public"
@@ -45,7 +66,10 @@
 		"OPENFGA_STORE_ID": "",
 		"OPENFGA_MODEL_ID": "",
 		"OPENFGA_API_TOKEN": "",
-		"REACTOR_URL": "http://127.0.0.1:18080"
+		"REACTOR_URL": "http://127.0.0.1:18080",
+		"REQUEST_LOG_RETENTION_DAYS": "90",
+		"UPSTASH_REDIS_REST_URL": "",
+		"UPSTASH_REDIS_REST_TOKEN": ""
 	},
 	"env": {
 		"dev": {

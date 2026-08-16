@@ -2,6 +2,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useState, type FormEvent } from "react";
 
 import { Alert, Button, Input } from "@/components/ui";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { authClient } from "@/lib/auth";
 
 export default function Register() {
@@ -39,7 +40,10 @@ export default function Register() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-12">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-12">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <p className="section-eyebrow">Low-Level Lab</p>
       <h1 className="section-title mt-2">Create account</h1>
       <p className="section-copy mt-2">
