@@ -39,10 +39,20 @@ learnRoutes.get("/topics", async (c) => {
 
 learnRoutes.get("/topics/:topicId/questions", async (c) => {
   const userId = await optionalUserId(c.env, c.req.raw.headers);
+  const attemptedRaw = c.req.query("attempted");
+  const attempted =
+    attemptedRaw === "yes" || attemptedRaw === "no" || attemptedRaw === "all"
+      ? attemptedRaw
+      : "all";
   const questions = await listApprovedQuestionsForTopic(
     c.env,
     c.req.param("topicId"),
     userId,
+    {
+      type: c.req.query("type") || undefined,
+      difficulty: c.req.query("difficulty") || undefined,
+      attempted,
+    },
   );
   return c.json({ questions });
 });

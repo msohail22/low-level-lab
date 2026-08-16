@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { AppShell } from "@/components/AppShell";
+import { FilterSelect } from "@/components/QuestionFilters";
+import {
+  STATUS_FILTER_OPTIONS,
+  TYPE_FILTER_OPTIONS,
+} from "@/lib/filter-options";
 import { apiFetch } from "@/lib/api";
 
 type QuestionRow = {
@@ -15,11 +22,18 @@ type QuestionRow = {
 
 export default function MyQuestions() {
   const queryClient = useQueryClient();
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
+
   const { data, isPending, error } = useQuery({
-    queryKey: ["my-questions"],
+    queryKey: ["my-questions", type, status],
     queryFn: async () => {
+      const params = new URLSearchParams();
+      if (type) params.set("type", type);
+      if (status) params.set("status", status);
+      const qs = params.toString();
       const res = await apiFetch<{ questions: QuestionRow[] }>(
-        "/api/questions/mine",
+        `/api/questions/mine${qs ? `?${qs}` : ""}`,
       );
       if (res.error) throw new Error(res.error);
       return res.data!.questions;
@@ -38,14 +52,25 @@ export default function MyQuestions() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-      <p className="section-eyebrow">Contribute</p>
-      <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="section-title">My questions</h1>
-          <p className="section-copy mt-2">
-            Draft locally, submit for review, and track approvals.
-          </p>
+    <AppShell eyebrow="Contribute" title="My questions">
+      <p className="section-copy mt-2">
+        Draft locally, submit for review, and track approvals.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <FilterSelect
+            label="Type"
+            value={type}
+            onChange={setType}
+            options={TYPE_FILTER_OPTIONS}
+          />
+          <FilterSelect
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_FILTER_OPTIONS}
+          />
         </div>
         <Link className="auth-primary-btn shrink-0 text-center" to="/contribute/questions/new">
           New question
@@ -54,9 +79,7 @@ export default function MyQuestions() {
 
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
       {error && (
-        <p className="mt-8 text-sm text-red-700">
-          {(error as Error).message}
-        </p>
+        <p className="mt-8 text-sm text-red-700">{(error as Error).message}</p>
       )}
 
       <ul className="mt-8 space-y-3">
@@ -91,13 +114,9 @@ export default function MyQuestions() {
 
       {data?.length === 0 && (
         <p className="mt-8 text-[color:var(--muted)]">
-          No questions yet. Create your first one.
+          No questions match these filters.
         </p>
       )}
-
-      <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/dashboard">
-        ← Back to dashboard
-      </Link>
-    </main>
+    </AppShell>
   );
 }

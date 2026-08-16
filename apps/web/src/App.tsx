@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute, ReviewerRoute } from "@/components/RoleRoutes";
+import AdminHome from "@/pages/admin/AdminHome";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import MyQuestions from "@/pages/contribute/MyQuestions";
@@ -27,7 +29,12 @@ function App() {
         <Route path="/practice/:questionId" element={<PracticeQuestion />} />
         <Route path="/contribute/questions" element={<MyQuestions />} />
         <Route path="/contribute/questions/new" element={<NewQuestion />} />
-        <Route path="/review/questions" element={<ReviewQueue />} />
+        <Route element={<ReviewerRoute />}>
+          <Route path="/review/questions" element={<ReviewQueue />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminHome />} />
+        </Route>
       </Route>
       <Route path="*" element={<Home />} />
     </Routes>

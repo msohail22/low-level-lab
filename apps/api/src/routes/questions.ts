@@ -1,14 +1,18 @@
 import { Hono } from "hono";
 
 import {
+  canAdminPlatform,
   canReviewQuestions,
   ensurePlatformMember,
+  getUserRoles,
+  grantReviewer,
   writeQuestionAuthor,
 } from "../authz/openfga.ts";
 import { requireSession } from "../middleware/session.ts";
 import { createQuestionSchema, reviewActionSchema } from "../questions/schema.ts";
 import {
   createQuestionWithParts,
+  getAdminStats,
   getQuestionBundle,
   listMyQuestions,
   listPendingQuestions,
@@ -26,6 +30,23 @@ type AppEnv = {
   };
 };
 
+export const meRoutes = new Hono<AppEnv>();
+
+meRoutes.use("*", requireSession);
+meRoutes.get("/", async (c) => {
+  const userId = c.get("userId");
+  await ensurePlatformMember(c.env, userId);
+  const roles = await getUserRoles(c.env, userId);
+  return c.json({
+    user: {
+      id: userId,
+      email: c.get("userEmail"),
+      name: c.get("userName"),
+    },
+    roles,
+  });
+});
+
 export const questionsRoutes = new Hono<AppEnv>();
 
 questionsRoutes.get("/topics", async (c) => {
@@ -35,7 +56,9 @@ questionsRoutes.get("/topics", async (c) => {
 
 questionsRoutes.use("/mine", requireSession);
 questionsRoutes.get("/mine", async (c) => {
-  const rows = await listMyQuestions(c.env, c.get("userId"));
+  const type = c.req.query("type") || undefined;
+  const status = c.req.query("status") || undefined;
+  const rows = await listMyQuestions(c.env, c.get("userId"), { type, status });
   return c.json({ questions: rows });
 });
 
@@ -106,7 +129,9 @@ reviewRoutes.use("*", async (c, next) => {
 });
 
 reviewRoutes.get("/pending", async (c) => {
-  const rows = await listPendingQuestions(c.env);
+  const type = c.req.query("type") || undefined;
+  const difficulty = c.req.query("difficulty") || undefined;
+  const rows = await listPendingQuestions(c.env, { type, difficulty });
   return c.json({ questions: rows });
 });
 
@@ -150,4 +175,40 @@ reviewRoutes.post("/:id/reject", async (c) => {
     return c.json({ error: "Question is not pending" }, 409);
   }
   return c.json({ ok: true });
+});
+
+export const adminRoutes = new Hono<AppEnv>();
+
+adminRoutes.use("*", requireSession);
+adminRoutes.use("*", async (c, next) => {
+  const allowed = await canAdminPlatform(c.env, c.get("userId"));
+  if (!allowed) return c.json({ error: "Forbidden" }, 403);
+  await next();
+});
+
+adminRoutes.get("/stats", async (c) => {
+  const stats = await getAdminStats(c.env);
+  return c.json({ stats });
+});
+
+adminRoutes.post("/reviewers", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const userId =
+    body && typeof body === "object" && "userId" in body
+      ? String((body as { userId: string }).userId)
+      : "";
+  if (!userId) return c.json({ error: "userId required" }, 400);
+
+  const result = await grantReviewer(c.env, userId);
+  if (!result.ok) {
+    return c.json(
+      {
+        error:
+          "OpenFGA is not configured. Add the user id to REVIEWER_USER_IDS in wrangler for local access.",
+        mode: result.mode,
+      },
+      400,
+    );
+  }
+  return c.json({ ok: true, mode: result.mode });
 });

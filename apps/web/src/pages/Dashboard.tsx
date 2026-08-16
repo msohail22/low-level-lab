@@ -1,11 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+import { AppShell } from "@/components/AppShell";
+import { useMe } from "@/hooks/useMe";
 import { authClient } from "@/lib/auth";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
+  const { data: me } = useMe();
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function onLogout() {
@@ -16,9 +19,7 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-      <p className="section-eyebrow">Dashboard</p>
-      <h1 className="section-title mt-2">Welcome back</h1>
+    <AppShell eyebrow="Learner" title="Welcome back">
       <p className="section-copy mt-2">
         Signed in as {session?.user.name || session?.user.email}.
       </p>
@@ -26,6 +27,11 @@ export default function Dashboard() {
       <div className="surface-card mt-8 space-y-2 p-6">
         <p className="text-sm text-[color:var(--muted)]">Email</p>
         <p className="font-medium text-[color:var(--ink)]">{session?.user.email}</p>
+        <p className="pt-2 text-sm text-[color:var(--muted)]">
+          Roles: learner
+          {me?.roles.reviewer ? " · reviewer" : ""}
+          {me?.roles.admin ? " · admin" : ""}
+        </p>
       </div>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -38,9 +44,16 @@ export default function Dashboard() {
         <Link className="auth-secondary-btn text-center" to="/contribute/questions">
           Contribute questions
         </Link>
-        <Link className="auth-secondary-btn text-center" to="/review/questions">
-          Review queue
-        </Link>
+        {me?.roles.reviewer && (
+          <Link className="auth-secondary-btn text-center" to="/review/questions">
+            Review queue
+          </Link>
+        )}
+        {me?.roles.admin && (
+          <Link className="auth-secondary-btn text-center" to="/admin">
+            Admin console
+          </Link>
+        )}
       </div>
 
       <button
@@ -51,6 +64,6 @@ export default function Dashboard() {
       >
         {loggingOut ? "Signing out…" : "Sign out"}
       </button>
-    </main>
+    </AppShell>
   );
 }

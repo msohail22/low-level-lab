@@ -43,8 +43,22 @@ export async function listApprovedQuestionsForTopic(
   env: CloudflareBindings,
   topicId: string,
   userId?: string,
+  filters?: {
+    type?: string;
+    difficulty?: string;
+    attempted?: "all" | "yes" | "no";
+  },
 ) {
   const db = getDb(env);
+  const conditions = [
+    eq(question.topicId, topicId),
+    eq(question.status, "approved"),
+  ];
+  if (filters?.type) conditions.push(eq(question.type, filters.type));
+  if (filters?.difficulty) {
+    conditions.push(eq(question.difficulty, filters.difficulty));
+  }
+
   const rows = await db
     .select({
       id: question.id,
@@ -54,13 +68,15 @@ export async function listApprovedQuestionsForTopic(
       publishedAt: question.publishedAt,
     })
     .from(question)
-    .where(
-      and(eq(question.topicId, topicId), eq(question.status, "approved")),
-    )
+    .where(and(...conditions))
     .orderBy(asc(question.publishedAt));
 
   if (!userId) {
-    return rows.map((r) => ({ ...r, attempted: false, isCorrect: null as boolean | null }));
+    return rows.map((r) => ({
+      ...r,
+      attempted: false,
+      isCorrect: null as boolean | null,
+    }));
   }
 
   const attempts = await db
@@ -75,11 +91,19 @@ export async function listApprovedQuestionsForTopic(
     attempts.map((a) => [a.questionId, a.isCorrect]),
   );
 
-  return rows.map((r) => ({
+  let mapped = rows.map((r) => ({
     ...r,
     attempted: attemptMap.has(r.id),
     isCorrect: attemptMap.get(r.id) ?? null,
   }));
+
+  if (filters?.attempted === "yes") {
+    mapped = mapped.filter((r) => r.attempted);
+  } else if (filters?.attempted === "no") {
+    mapped = mapped.filter((r) => !r.attempted);
+  }
+
+  return mapped;
 }
 
 export async function getPracticeQuestion(

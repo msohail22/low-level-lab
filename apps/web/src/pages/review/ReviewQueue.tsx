@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
+import { AppShell } from "@/components/AppShell";
+import { FilterSelect } from "@/components/QuestionFilters";
+import {
+  DIFFICULTY_FILTER_OPTIONS,
+  TYPE_FILTER_OPTIONS,
+} from "@/lib/filter-options";
 import { apiFetch } from "@/lib/api";
 
 type QuestionRow = {
@@ -17,12 +22,18 @@ export default function ReviewQueue() {
   const queryClient = useQueryClient();
   const [note, setNote] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
+  const [type, setType] = useState("");
+  const [difficulty, setDifficulty] = useState("");
 
   const { data, isPending, error } = useQuery({
-    queryKey: ["review-pending"],
+    queryKey: ["review-pending", type, difficulty],
     queryFn: async () => {
+      const params = new URLSearchParams();
+      if (type) params.set("type", type);
+      if (difficulty) params.set("difficulty", difficulty);
+      const qs = params.toString();
       const res = await apiFetch<{ questions: QuestionRow[] }>(
-        "/api/review/pending",
+        `/api/review/pending${qs ? `?${qs}` : ""}`,
       );
       if (res.error) throw new Error(res.error);
       return res.data!.questions;
@@ -48,12 +59,25 @@ export default function ReviewQueue() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-      <p className="section-eyebrow">Review</p>
-      <h1 className="section-title mt-2">Pending questions</h1>
+    <AppShell eyebrow="Review" title="Pending questions">
       <p className="section-copy mt-2">
         Approve solid questions or reject with a short note for the author.
       </p>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <FilterSelect
+          label="Type"
+          value={type}
+          onChange={setType}
+          options={TYPE_FILTER_OPTIONS}
+        />
+        <FilterSelect
+          label="Difficulty"
+          value={difficulty}
+          onChange={setDifficulty}
+          options={DIFFICULTY_FILTER_OPTIONS}
+        />
+      </div>
 
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
       {error && (
@@ -110,12 +134,8 @@ export default function ReviewQueue() {
       </ul>
 
       {data?.length === 0 && (
-        <p className="mt-8 text-[color:var(--muted)]">Queue is empty.</p>
+        <p className="mt-8 text-[color:var(--muted)]">Queue is empty for these filters.</p>
       )}
-
-      <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/dashboard">
-        ← Back to dashboard
-      </Link>
-    </main>
+    </AppShell>
   );
 }

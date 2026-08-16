@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 
 import { createDb } from "../db/index.ts";
 import {
@@ -19,22 +19,58 @@ export async function listTopics(env: CloudflareBindings) {
   return db.select().from(topic).orderBy(asc(topic.sortOrder));
 }
 
-export async function listMyQuestions(env: CloudflareBindings, userId: string) {
+export async function listMyQuestions(
+  env: CloudflareBindings,
+  userId: string,
+  filters?: { type?: string; status?: string },
+) {
   const db = getDb(env);
+  const conditions = [eq(question.authorId, userId)];
+  if (filters?.type) conditions.push(eq(question.type, filters.type));
+  if (filters?.status) conditions.push(eq(question.status, filters.status));
+
   return db
     .select()
     .from(question)
-    .where(eq(question.authorId, userId))
+    .where(and(...conditions))
     .orderBy(desc(question.createdAt));
 }
 
-export async function listPendingQuestions(env: CloudflareBindings) {
+export async function listPendingQuestions(
+  env: CloudflareBindings,
+  filters?: { type?: string; difficulty?: string },
+) {
   const db = getDb(env);
+  const conditions = [eq(question.status, "pending")];
+  if (filters?.type) conditions.push(eq(question.type, filters.type));
+  if (filters?.difficulty) {
+    conditions.push(eq(question.difficulty, filters.difficulty));
+  }
+
   return db
     .select()
     .from(question)
-    .where(eq(question.status, "pending"))
+    .where(and(...conditions))
     .orderBy(asc(question.createdAt));
+}
+
+export async function getAdminStats(env: CloudflareBindings) {
+  const db = getDb(env);
+  const [pending] = await db
+    .select({ value: count() })
+    .from(question)
+    .where(eq(question.status, "pending"));
+  const [approved] = await db
+    .select({ value: count() })
+    .from(question)
+    .where(eq(question.status, "approved"));
+  const topics = await db.select().from(topic);
+
+  return {
+    pendingCount: Number(pending?.value ?? 0),
+    approvedCount: Number(approved?.value ?? 0),
+    topicCount: topics.length,
+  };
 }
 
 export async function getQuestionBundle(
