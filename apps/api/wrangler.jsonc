@@ -24,10 +24,23 @@
 			{
 				"queue": "llb-request-logs",
 				"max_batch_size": 25,
-				"max_batch_timeout": 5
+				"max_batch_timeout": 5,
+				"max_retries": 3,
+				"dead_letter_queue": "llb-request-logs-dlq"
+			},
+			{
+				"queue": "llb-request-logs-dlq",
+				"max_batch_size": 10,
+				"max_batch_timeout": 10
 			}
 		]
 	},
+	"r2_buckets": [
+		{
+			"binding": "R2_TELEMETRY_BUCKET",
+			"bucket_name": "llb-telemetry-archives"
+		}
+	],
 	"durable_objects": {
 		"bindings": [
 			{
@@ -68,6 +81,7 @@
 		"OPENFGA_API_TOKEN": "",
 		"REACTOR_URL": "http://127.0.0.1:18080",
 		"REQUEST_LOG_RETENTION_DAYS": "90",
+		"REQUEST_LOG_SAMPLE_RATE": "0.10",
 		"UPSTASH_REDIS_REST_URL": "",
 		"UPSTASH_REDIS_REST_TOKEN": ""
 	},
@@ -90,10 +104,23 @@
 					{
 						"queue": "llb-request-logs",
 						"max_batch_size": 25,
-						"max_batch_timeout": 5
+						"max_batch_timeout": 5,
+						"max_retries": 3,
+						"dead_letter_queue": "llb-request-logs-dlq"
+					},
+					{
+						"queue": "llb-request-logs-dlq",
+						"max_batch_size": 10,
+						"max_batch_timeout": 10
 					}
 				]
-			}
+			},
+			"r2_buckets": [
+				{
+					"binding": "R2_TELEMETRY_BUCKET",
+					"bucket_name": "llb-telemetry-archives"
+				}
+			]
 		}
 	}
 }

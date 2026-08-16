@@ -1023,6 +1023,140 @@ export async function getQuestionVersion(
   };
 }
 
+export type DiffToken = {
+  value: string;
+  added?: boolean;
+  removed?: boolean;
+};
+
+export function computeTokenDiff(
+  oldText: string = "",
+  newText: string = "",
+): DiffToken[] {
+  if (oldText === newText) {
+    return oldText ? [{ value: oldText, added: false, removed: false }] : [];
+  }
+
+  const tokenize = (str: string): string[] =>
+    str.match(/[\w]+|[^\w\s]+|\s+/g) || (str ? [str] : []);
+  const A = tokenize(oldText);
+  const B = tokenize(newText);
+  const m = A.length;
+  const n = B.length;
+
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    new Array(n + 1).fill(0),
+  );
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (A[i] === B[j]) {
+        dp[i + 1][j + 1] = dp[i][j] + 1;
+      } else {
+        dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+  }
+
+  let i = m;
+  let j = n;
+  const rawTokens: DiffToken[] = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && A[i - 1] === B[j - 1]) {
+      rawTokens.push({ value: A[i - 1], added: false, removed: false });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      rawTokens.push({ value: B[j - 1], added: true, removed: false });
+      j--;
+    } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+      rawTokens.push({ value: A[i - 1], added: false, removed: true });
+      i--;
+    }
+  }
+  rawTokens.reverse();
+
+  const coalesced: DiffToken[] = [];
+  for (const token of rawTokens) {
+    const last = coalesced[coalesced.length - 1];
+    if (
+      last &&
+      Boolean(last.added) === Boolean(token.added) &&
+      Boolean(last.removed) === Boolean(token.removed)
+    ) {
+      last.value += token.value;
+    } else {
+      coalesced.push({ ...token });
+    }
+  }
+
+  return coalesced;
+}
+
+export async function getQuestionVersionDiff(
+  env: CloudflareBindings,
+  questionId: string,
+  v1Num: number,
+  v2Num: number,
+) {
+  const v1Row = await getQuestionVersion(env, questionId, v1Num);
+  const v2Row = await getQuestionVersion(env, questionId, v2Num);
+
+  if (!v1Row || !v2Row) {
+    return null;
+  }
+
+  const snap1 = (v1Row.snapshot || {}) as Record<string, unknown>;
+  const snap2 = (v2Row.snapshot || {}) as Record<string, unknown>;
+
+  const q1 = (snap1.question || {}) as Record<string, unknown>;
+  const q2 = (snap2.question || {}) as Record<string, unknown>;
+
+  const title1 = String(q1.title || "");
+  const title2 = String(q2.title || "");
+
+  const diffTitle = {
+    old: title1,
+    new: title2,
+    changed: title1 !== title2,
+  };
+
+  const diffDiff = {
+    old: String(q1.difficulty || ""),
+    new: String(q2.difficulty || ""),
+    changed: String(q1.difficulty || "") !== String(q2.difficulty || ""),
+  };
+
+  const promptDiff = computeTokenDiff(
+    String(q1.prompt || ""),
+    String(q2.prompt || ""),
+  );
+  const explanationDiff = computeTokenDiff(
+    String(q1.explanation || ""),
+    String(q2.explanation || ""),
+  );
+  const codeSnippetDiff =
+    q1.codeSnippet || q2.codeSnippet
+      ? computeTokenDiff(
+          String(q1.codeSnippet || ""),
+          String(q2.codeSnippet || ""),
+        )
+      : undefined;
+
+  return {
+    questionId,
+    v1: v1Num,
+    v2: v2Num,
+    diff: {
+      title: diffTitle,
+      difficulty: diffDiff,
+      prompt: promptDiff,
+      explanation: explanationDiff,
+      codeSnippet: codeSnippetDiff,
+    },
+  };
+}
+
+
 export async function getAuthorReputation(
   env: CloudflareBindings,
   authorId: string,

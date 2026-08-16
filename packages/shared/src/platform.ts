@@ -116,3 +116,29 @@ export type FollowingFeedItem = {
   authorName: string;
   publishedAt?: string | Date | null;
 };
+
+export type DiffToken = {
+  value: string;
+  added?: boolean;
+  removed?: boolean;
+};
+
+export type FieldValueDiff = {
+  old: string;
+  new: string;
+  changed: boolean;
+};
+
+export type QuestionDiffResponse = {
+  questionId: string;
+  v1: number;
+  v2: number;
+  diff: {
+    title: FieldValueDiff;
+    difficulty: FieldValueDiff;
+    prompt: DiffToken[];
+    explanation: DiffToken[];
+    codeSnippet?: DiffToken[];
+  };
+};
+

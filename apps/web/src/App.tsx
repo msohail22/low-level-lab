@@ -25,6 +25,7 @@ import { Bookmarks, DueReviews, Mistakes } from "@/pages/learn/Queues";
 import TopicQuestions from "@/pages/learn/TopicQuestions";
 import Topics from "@/pages/learn/Topics";
 import Playground from "@/pages/Playground";
+import QuestionDiffViewer from "@/pages/review/QuestionDiffViewer";
 import ReviewQueue from "@/pages/review/ReviewQueue";
 
 function App() {
@@ -59,6 +60,7 @@ function App() {
         <Route path="/contribute/questions/:questionId/edit" element={<EditQuestion />} />
         <Route element={<ReviewerRoute />}>
           <Route path="/review/questions" element={<ReviewQueue />} />
+          <Route path="/review/questions/:questionId/diff" element={<QuestionDiffViewer />} />
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminHome />} />

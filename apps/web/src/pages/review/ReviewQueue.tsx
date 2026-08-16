@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { FilterSelect } from "@/components/QuestionFilters";
-import { Alert, Button, Card, Textarea } from "@/components/ui";
+import { Alert, Button, Card, LinkButton, Textarea } from "@/components/ui";
 import {
   DIFFICULTY_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
@@ -135,6 +135,13 @@ export default function ReviewQueue() {
                 >
                   Reject
                 </Button>
+                <LinkButton
+                  to={`/review/questions/${q.id}/diff`}
+                  variant="secondary"
+                  className="text-center shrink-0"
+                >
+                  Version Diff
+                </LinkButton>
               </div>
             </Card>
           </li>

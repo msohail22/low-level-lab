@@ -18,6 +18,8 @@ interface __BaseEnv_CloudflareBindings {
 	ADMIN_USER_IDS: string;
 	REACTOR_URL: string;
 	REQUEST_LOG_RETENTION_DAYS?: string;
+	REQUEST_LOG_SAMPLE_RATE?: string;
+	R2_TELEMETRY_BUCKET?: R2Bucket;
 	UPSTASH_REDIS_REST_URL?: string;
 	UPSTASH_REDIS_REST_TOKEN?: string;
 	REDIS_URL?: string;

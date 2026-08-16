@@ -21,6 +21,7 @@ import {
   getHintCount,
   getOrCreateDailyChallenge,
   getQuestionVersion,
+  getQuestionVersionDiff,
   getSetDetail,
   isFollowingAuthor,
   listAchievements,
@@ -232,6 +233,23 @@ platformRoutes.post("/questions/:id/report", requireSession, async (c) => {
 platformRoutes.get("/questions/:id/versions", async (c) => {
   const versions = await listQuestionVersions(c.env, c.req.param("id"));
   return c.json({ versions });
+});
+
+platformRoutes.get("/questions/:id/versions/diff", async (c) => {
+  const questionId = c.req.param("id");
+  const v1 = Number(c.req.query("v1") || 1);
+  const v2 = Number(c.req.query("v2") || 2);
+
+  if (!Number.isInteger(v1) || !Number.isInteger(v2) || v1 < 1 || v2 < 1) {
+    return c.json({ error: "Invalid version parameters" }, 400);
+  }
+
+  const diffResult = await getQuestionVersionDiff(c.env, questionId, v1, v2);
+  if (!diffResult) {
+    return c.json({ error: "Version not found" }, 404);
+  }
+
+  return c.json(diffResult);
 });
 
 platformRoutes.get("/questions/:id/versions/:version", async (c) => {

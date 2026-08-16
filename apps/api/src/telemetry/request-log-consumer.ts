@@ -67,3 +67,41 @@ export async function handleRequestLogQueue(
     for (const item of accepted) item.message.retry();
   }
 }
+
+/**
+ * Dead-Letter Queue (DLQ) Consumer Handler
+ * Captures failed telemetry items after max retries and backs them up to R2/Console
+ */
+export async function handleRequestLogDlqQueue(
+  batch: MessageBatch<RequestLogMessage>,
+  env: CloudflareBindings,
+): Promise<void> {
+  console.warn(
+    `[DLQ Consumer] Processing ${batch.messages.length} dead-letter queue messages`,
+  );
+
+  const jsonl = batch.messages
+    .map((m) => JSON.stringify({ id: m.id, timestamp: m.timestamp, body: m.body }))
+    .join("\n");
+
+  if (env.R2_TELEMETRY_BUCKET) {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const [year, month, day] = dateStr.split("-");
+      const key = `dlq/year=${year}/month=${month}/day=${day}/dlq_batch_${timestamp}.jsonl`;
+
+      await env.R2_TELEMETRY_BUCKET.put(key, jsonl, {
+        httpMetadata: { contentType: "application/x-ndjson" },
+        customMetadata: { batchSize: String(batch.messages.length) },
+      });
+      console.log(`[DLQ Consumer] Archived DLQ batch to R2: ${key}`);
+    } catch (err) {
+      console.error("[DLQ Consumer] R2 backup failed:", err);
+    }
+  }
+
+  for (const message of batch.messages) {
+    message.ack();
+  }
+}
