@@ -28,8 +28,14 @@ export default function Dashboard() {
         <p className="font-medium text-[color:var(--ink)]">{session?.user.email}</p>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link className="auth-primary-btn text-center" to="/contribute/questions">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <Link className="auth-primary-btn text-center" to="/topics">
+          Practice topics
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/leaderboard">
+          Leaderboard
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/contribute/questions">
           Contribute questions
         </Link>
         <Link className="auth-secondary-btn text-center" to="/review/questions">

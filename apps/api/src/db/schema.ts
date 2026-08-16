@@ -339,3 +339,61 @@ export const questionReviewRelations = relations(questionReview, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const attempt = pgTable(
+  "attempt",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    booleanValue: boolean("boolean_value"),
+    isCorrect: boolean("is_correct").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("attempt_userId_idx").on(table.userId),
+    index("attempt_questionId_idx").on(table.questionId),
+    uniqueIndex("attempt_user_question_uidx").on(table.userId, table.questionId),
+  ],
+);
+
+export const attemptOption = pgTable(
+  "attempt_option",
+  {
+    id: text("id").primaryKey(),
+    attemptId: text("attempt_id")
+      .notNull()
+      .references(() => attempt.id, { onDelete: "cascade" }),
+    optionId: text("option_id")
+      .notNull()
+      .references(() => questionOption.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("attempt_option_attemptId_idx").on(table.attemptId)],
+);
+
+export const attemptRelations = relations(attempt, ({ one, many }) => ({
+  user: one(user, {
+    fields: [attempt.userId],
+    references: [user.id],
+  }),
+  question: one(question, {
+    fields: [attempt.questionId],
+    references: [question.id],
+  }),
+  selectedOptions: many(attemptOption),
+}));
+
+export const attemptOptionRelations = relations(attemptOption, ({ one }) => ({
+  attempt: one(attempt, {
+    fields: [attemptOption.attemptId],
+    references: [attempt.id],
+  }),
+  option: one(questionOption, {
+    fields: [attemptOption.optionId],
+    references: [questionOption.id],
+  }),
+}));

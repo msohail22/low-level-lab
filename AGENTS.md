@@ -5,10 +5,10 @@
 - The user handles staging and commits themselves.
 
 ## Community questions (quick ref)
-- Schema: `topic`, `question`, `question_option`, `question_answer`, `question_review`
+- Schema: `topic`, `question`, `question_option`, `question_answer`, `question_review`, `attempt`, `attempt_option`
 - AuthZ: OpenFGA (`apps/api/openfga/model.fga`); local fallback `REVIEWER_USER_IDS`
-- Web: `/contribute/questions`, `/contribute/questions/new`, `/review/questions`
-- Migrate: `pnpm --dir apps/api migrate` (includes `0002_community_questions`)
+- Web: `/contribute/questions`, `/contribute/questions/new`, `/review/questions`, `/topics`, `/practice/:id`, `/leaderboard`
+- Migrate: `pnpm --dir apps/api migrate` (through `0003_attempts_leaderboard`)
 
 ## Repo Overview
 pnpm monorepo with Cloudflare Workers:
