@@ -1,5 +1,9 @@
 # AGENTS.md — low-level-lab
 
+## Agent Git Rules
+- **Never** run `git add`, `git commit`, `git push`, or amend unless the user explicitly asks in that message.
+- The user handles staging and commits themselves.
+
 ## Repo Overview
 pnpm monorepo with Cloudflare Workers:
 - **apps/api** — Hono API worker with D1 and Better Auth support

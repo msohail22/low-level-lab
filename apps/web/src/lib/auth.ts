@@ -5,4 +5,9 @@ const baseURL =
 
 export const authClient = createAuthClient({
   baseURL,
+  fetchOptions: {
+    headers: {
+      "X-Client-Platform": "web",
+    },
+  },
 });
