@@ -14,7 +14,7 @@ const app = new Hono<AppEnv>();
 
 app.use("*", requestLogMiddleware);
 
-app.use("/api/auth/*", async (c, next) => {
+app.use("/api/*", async (c, next) => {
   const origins = getTrustedOrigins(c.env);
 
   const corsMiddleware = cors({
@@ -25,7 +25,7 @@ app.use("/api/auth/*", async (c, next) => {
       "X-Client-Platform",
       "X-App-Version",
     ],
-    allowMethods: ["POST", "GET", "OPTIONS"],
+    allowMethods: ["POST", "GET", "PATCH", "OPTIONS"],
     credentials: true,
   });
 

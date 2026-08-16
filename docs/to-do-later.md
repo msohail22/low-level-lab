@@ -29,14 +29,33 @@ WHERE id IN (
 - Whether to archive to R2 before delete vs hard-delete only
 - Alerts when `request_log` row count or table size crosses a threshold
 
+## GraphQL API (leaderboard + telemetry + questions)
+
+Expose **leaderboard**, **telemetry**, and eventually **questions / topics** through a **GraphQL API** instead of (or in addition to) ad-hoc REST routes.
+
+**Scope to cover later:**
+- GraphQL schema + resolvers for leaderboard queries/mutations
+- GraphQL schema + resolvers for telemetry: devices, request logs, platform/usage aggregates
+- GraphQL for community questions (list approved, contribute mutations) once REST stabilizes
+- Auth / authorization on GraphQL (session-aware; OpenFGA checks)
+- Wire into `apps/api` (e.g. Yoga / GraphQL Yoga on Hono, or similar Workers-friendly stack)
+- Web (and future mobile) clients query GraphQL for leaderboard + telemetry views
+
+## OpenFGA production setup
+
+REST + local reviewer fallback (`REVIEWER_USER_IDS`) ships first. Later:
+- Stand up OpenFGA store and write `apps/api/openfga/model.fga`
+- Set `OPENFGA_API_URL`, `OPENFGA_STORE_ID`, `OPENFGA_MODEL_ID`, `OPENFGA_API_TOKEN`
+- Admin UI or script to grant `reviewer` / `admin` on `platform:llb`
+- On signup hook: always write `member` tuple (partially done on question create)
+
 ## Related follow-ups (optional)
 
-- Dashboard / admin UI to browse devices and request logs
+- Dashboard / admin UI to browse devices and request logs (prefer GraphQL above)
 - Sampling high-traffic paths if volume is huge (log 100% of mutations, N% of GETs)
 - PII review: IP + geo retention policy, export/delete for account deletion
 - Dead-letter queue for request-log messages that fail consumer inserts repeatedly
 - Refresh `device.lastSeenAt` on authenticated API traffic (v1 only upserts on session create)
-- Create Cloudflare Queue `llb-request-logs` in the account (`wrangler queues create llb-request-logs`) if not already created before deploy
 - Reconcile Drizzle meta snapshots: `0000` still describes old `users` table while live schema is Better Auth (`user`/`session`/…). `drizzle-kit generate` prompts interactively; prefer `db:push` or hand-written SQL until snapshots are aligned
 
 

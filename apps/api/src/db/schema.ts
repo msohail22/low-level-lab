@@ -183,3 +183,159 @@ export const deviceRelations = relations(device, ({ one }) => ({
     references: [session.id],
   }),
 }));
+
+export const topic = pgTable(
+  "topic",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("topic_sortOrder_idx").on(table.sortOrder)],
+);
+
+export const question = pgTable(
+  "question",
+  {
+    id: text("id").primaryKey(),
+    topicId: text("topic_id")
+      .notNull()
+      .references(() => topic.id, { onDelete: "restrict" }),
+    type: text("type").notNull(),
+    status: text("status").notNull().default("draft"),
+    title: text("title").notNull(),
+    prompt: text("prompt").notNull(),
+    explanation: text("explanation").notNull(),
+    difficulty: text("difficulty").notNull().default("beginner"),
+    codeSnippet: text("code_snippet"),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reviewerId: text("reviewer_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    reviewNote: text("review_note"),
+    publishedAt: timestamp("published_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("question_authorId_idx").on(table.authorId),
+    index("question_status_idx").on(table.status),
+    index("question_topicId_idx").on(table.topicId),
+  ],
+);
+
+export const questionOption = pgTable(
+  "question_option",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    body: text("body").notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+  },
+  (table) => [index("question_option_questionId_idx").on(table.questionId)],
+);
+
+export const questionAnswer = pgTable(
+  "question_answer",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    optionId: text("option_id").references(() => questionOption.id, {
+      onDelete: "cascade",
+    }),
+    booleanValue: boolean("boolean_value"),
+    isCorrect: boolean("is_correct").default(true).notNull(),
+  },
+  (table) => [index("question_answer_questionId_idx").on(table.questionId)],
+);
+
+export const questionReview = pgTable(
+  "question_review",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    reviewerId: text("reviewer_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    action: text("action").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("question_review_questionId_idx").on(table.questionId)],
+);
+
+export const topicRelations = relations(topic, ({ many }) => ({
+  questions: many(question),
+}));
+
+export const questionRelations = relations(question, ({ one, many }) => ({
+  topic: one(topic, {
+    fields: [question.topicId],
+    references: [topic.id],
+  }),
+  author: one(user, {
+    fields: [question.authorId],
+    references: [user.id],
+    relationName: "question_author",
+  }),
+  reviewer: one(user, {
+    fields: [question.reviewerId],
+    references: [user.id],
+    relationName: "question_reviewer",
+  }),
+  options: many(questionOption),
+  answers: many(questionAnswer),
+  reviews: many(questionReview),
+}));
+
+export const questionOptionRelations = relations(
+  questionOption,
+  ({ one, many }) => ({
+    question: one(question, {
+      fields: [questionOption.questionId],
+      references: [question.id],
+    }),
+    answers: many(questionAnswer),
+  }),
+);
+
+export const questionAnswerRelations = relations(questionAnswer, ({ one }) => ({
+  question: one(question, {
+    fields: [questionAnswer.questionId],
+    references: [question.id],
+  }),
+  option: one(questionOption, {
+    fields: [questionAnswer.optionId],
+    references: [questionOption.id],
+  }),
+}));
+
+export const questionReviewRelations = relations(questionReview, ({ one }) => ({
+  question: one(question, {
+    fields: [questionReview.questionId],
+    references: [question.id],
+  }),
+  reviewer: one(user, {
+    fields: [questionReview.reviewerId],
+    references: [user.id],
+  }),
+}));

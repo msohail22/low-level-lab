@@ -38,7 +38,12 @@
 	"upload_source_maps": true,
 	"vars": {
 		"BETTER_AUTH_URL": "http://localhost:8787",
-		"WEB_ORIGIN": "http://localhost:5173"
+		"WEB_ORIGIN": "http://localhost:5173",
+		"REVIEWER_USER_IDS": "",
+		"OPENFGA_API_URL": "",
+		"OPENFGA_STORE_ID": "",
+		"OPENFGA_MODEL_ID": "",
+		"OPENFGA_API_TOKEN": ""
 	},
 	"env": {
 		"dev": {

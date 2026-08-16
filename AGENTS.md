@@ -4,6 +4,12 @@
 - **Never** run `git add`, `git commit`, `git push`, or amend unless the user explicitly asks in that message.
 - The user handles staging and commits themselves.
 
+## Community questions (quick ref)
+- Schema: `topic`, `question`, `question_option`, `question_answer`, `question_review`
+- AuthZ: OpenFGA (`apps/api/openfga/model.fga`); local fallback `REVIEWER_USER_IDS`
+- Web: `/contribute/questions`, `/contribute/questions/new`, `/review/questions`
+- Migrate: `pnpm --dir apps/api migrate` (includes `0002_community_questions`)
+
 ## Repo Overview
 pnpm monorepo with Cloudflare Workers:
 - **apps/api** — Hono API worker with D1 and Better Auth support

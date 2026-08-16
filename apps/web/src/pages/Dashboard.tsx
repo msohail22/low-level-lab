@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import { authClient } from "@/lib/auth";
@@ -26,6 +26,15 @@ export default function Dashboard() {
       <div className="surface-card mt-8 space-y-2 p-6">
         <p className="text-sm text-[color:var(--muted)]">Email</p>
         <p className="font-medium text-[color:var(--ink)]">{session?.user.email}</p>
+      </div>
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Link className="auth-primary-btn text-center" to="/contribute/questions">
+          Contribute questions
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/review/questions">
+          Review queue
+        </Link>
       </div>
 
       <button

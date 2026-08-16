@@ -9,6 +9,11 @@ interface __BaseEnv_CloudflareBindings {
 	BETTER_AUTH_SECRET: string;
 	BETTER_AUTH_URL: string;
 	WEB_ORIGIN: string;
+	OPENFGA_API_URL: string;
+	OPENFGA_STORE_ID: string;
+	OPENFGA_MODEL_ID: string;
+	OPENFGA_API_TOKEN: string;
+	REVIEWER_USER_IDS: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -22,6 +27,11 @@ declare namespace Cloudflare {
 		BETTER_AUTH_SECRET: string;
 		BETTER_AUTH_URL: string;
 		WEB_ORIGIN: string;
+		OPENFGA_API_URL: string;
+		OPENFGA_STORE_ID: string;
+		OPENFGA_MODEL_ID: string;
+		OPENFGA_API_TOKEN: string;
+		REVIEWER_USER_IDS: string;
 	}
 	interface Env extends __BaseEnv_CloudflareBindings {}
 }
