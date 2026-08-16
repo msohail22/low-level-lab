@@ -185,4 +185,4 @@ INSERT INTO "glossary_term" ("id", "slug", "term", "definition", "topic_id") VAL
 	('gloss_stack', 'stack', 'Stack', 'Region of memory for automatic storage duration; frames grow and shrink with calls.', 'topic_stack_heap'),
 	('gloss_heap', 'heap', 'Heap', 'Region for dynamic allocation via new/malloc; lifetime managed explicitly or by RAII.', 'topic_stack_heap'),
 	('gloss_raii', 'raii', 'RAII', 'Resource Acquisition Is Initialization: bind resource lifetime to object lifetime.', 'topic_raii'),
-	('gloss_undefined', 'undefined-behavior', 'Undefined Behavior', 'Program behavior the C++ standard does not define; compilers may assume it never happens.');
+	('gloss_undefined', 'undefined-behavior', 'Undefined Behavior', 'Program behavior the C++ standard does not define; compilers may assume it never happens.', NULL);

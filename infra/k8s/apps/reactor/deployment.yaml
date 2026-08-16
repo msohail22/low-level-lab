@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reactor
+  namespace: llb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reactor
+  template:
+    metadata:
+      labels:
+        app: reactor
+    spec:
+      containers:
+        - name: reactor
+          # Build & push your image, then set this (CI later).
+          # Local: docker build -t llb-reactor:local ./reactor/service
+          image: llb-reactor:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 18080
+          env:
+            - name: PORT
+              value: "18080"
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: KAFKA_BROKERS
+              value: kafka:9092
+            - name: CORS_ORIGIN
+              value: "*"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reactor
+  namespace: llb
+spec:
+  selector:
+    app: reactor
+  ports:
+    - port: 18080
+      targetPort: 18080

@@ -19,6 +19,8 @@ pnpm monorepo with Cloudflare Workers:
 - **apps/web/src/components/ui** — Radix + CVA web UI kit (Button, Select, etc.)
 - **reactor/service** — local Reactor PoC (HTTP + Kafka + Redis + clang++/g++)
 - **packages/reactor-sdk** (`@llb/reactor-sdk`) — TS client for Reactor / API proxy
+- **docker-compose.yml** + `docker/` — laptop infra (Postgres, Redis, Kafka, Reactor, …)
+- **infra/** — Terraform (Cloudflare + cluster/Argo) and k8s manifests Argo syncs
 
 ## Commands
 Run from repo root unless noted otherwise:
@@ -26,9 +28,10 @@ Run from repo root unless noted otherwise:
 | Task | Command |
 |------|---------|
 | Install deps | `pnpm install` |
+| Infra (laptop) | `docker compose up -d` |
 | Dev API | `pnpm dev:api` |
 | Dev Web | `pnpm dev:web` |
-| Dev Reactor | `docker compose -f reactor/docker/compose.yml up --build redis kafka reactor` |
+| Dev Reactor | included in `docker compose up` (port 18080) |
 | Build web app | `pnpm build` |
 | Deploy both apps | `pnpm deploy` |
 | Deploy API | `pnpm deploy:api` |
