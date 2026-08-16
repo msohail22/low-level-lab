@@ -17,7 +17,9 @@ Product backlog (lean) — migration `0006_study_loop_depth` + `/api/learn` stud
 **Trust** — community % correct, duplicate flags  
 **UI analytics** — `ui_event` batch ingest (dwell, hover, hints, abandon) alongside API `request_log`
 
-Still deferred (infra): Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning, external code runner, richer version UI/diff.
+Still deferred (infra): Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning, richer version UI/diff.
+
+**Code execution:** not on Workers. Use **reactor/** (remote sandbox) + `packages/reactor-sdk`, then call it from `/api/learn/questions/:id/sandbox` (today: print_output check + stub for full compile/run).
 
 ## Request log pruning
 

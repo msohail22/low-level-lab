@@ -793,8 +793,8 @@ export async function submitSandbox(
     .limit(1);
   if (!q) return { error: "NOT_FOUND" as const };
 
-  // Full compiler sandbox is not available on Workers; print_output checks
-  // predicted stdout against the correct option body.
+  // Full compiler sandbox runs via Reactor (not on Workers). print_output
+  // checks predicted stdout against the correct option body.
   if (q.type !== "print_output") {
     const id = crypto.randomUUID();
     await db.insert(sandboxSubmission).values({
@@ -805,7 +805,7 @@ export async function submitSandbox(
       submittedOutput: input.submittedOutput ?? null,
       isCorrect: null,
       feedback:
-        "Code runner is not configured on this Worker. Use print_output questions to check predicted stdout, or configure an external sandbox later.",
+        "Code runner is not configured on this Worker. Use print_output questions to check predicted stdout, or wire Reactor (reactor/ + packages/reactor-sdk).",
       createdAt: new Date(),
     });
     return {
@@ -815,7 +815,7 @@ export async function submitSandbox(
         mode: "stub" as const,
         isCorrect: null as boolean | null,
         feedback:
-          "Code runner is not configured. Output checking is available for print_output questions.",
+          "Code runner is not configured. Output checking is available for print_output questions; full compile/run will use Reactor.",
       },
     };
   }

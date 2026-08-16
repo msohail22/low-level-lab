@@ -12,9 +12,11 @@
 
 ## Repo Overview
 pnpm monorepo with Cloudflare Workers:
-- **apps/api** — Hono API worker with D1 and Better Auth support
+- **apps/api** — Hono API worker with Postgres/Hyperdrive and Better Auth support
 - **apps/web** — React + Vite SPA worker with React Router, React Query, and Better Auth client code
-- **shared/** — shared package scaffold with `src/` for reusable code
+- **packages/shared** (`@llb/shared`) — shared Zod schemas, DTOs, and constants
+- **reactor/** — remote code-execution service (sandbox); wire via `packages/reactor-sdk` later
+- **packages/reactor-sdk** — client SDK scaffold for Reactor
 
 ## Commands
 Run from repo root unless noted otherwise:
