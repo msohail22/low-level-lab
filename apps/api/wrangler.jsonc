@@ -13,6 +13,21 @@
 			"localConnectionString": "postgres://postgres:postgres@localhost:5433/lowlevellab"
 		}
 	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "REQUEST_LOGS_QUEUE",
+				"queue": "llb-request-logs"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "llb-request-logs",
+				"max_batch_size": 25,
+				"max_batch_timeout": 5
+			}
+		]
+	},
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "./public"
@@ -32,7 +47,22 @@
 					"binding": "HYPERDRIVE",
 					"id": "99045301314f4530817f32abff2f2445"
 				}
-			]
+			],
+			"queues": {
+				"producers": [
+					{
+						"binding": "REQUEST_LOGS_QUEUE",
+						"queue": "llb-request-logs"
+					}
+				],
+				"consumers": [
+					{
+						"queue": "llb-request-logs",
+						"max_batch_size": 25,
+						"max_batch_timeout": 5
+					}
+				]
+			}
 		}
 	}
 }

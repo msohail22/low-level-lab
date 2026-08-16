@@ -4,6 +4,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createDb } from "../db/index.ts";
 import * as schema from "../db/schema.ts";
 import { getTrustedOrigins } from "./config.ts";
+import { upsertDeviceForSession } from "../telemetry/device.ts";
 
 export function createAuth(env: CloudflareBindings) {
   const db = createDb(env.HYPERDRIVE);
@@ -19,6 +20,19 @@ export function createAuth(env: CloudflareBindings) {
     trustedOrigins: getTrustedOrigins(env),
     emailAndPassword: {
       enabled: true,
+    },
+    databaseHooks: {
+      session: {
+        create: {
+          after: async (session) => {
+            await upsertDeviceForSession({
+              hyperdrive: env.HYPERDRIVE,
+              userId: session.userId,
+              sessionId: session.id,
+            });
+          },
+        },
+      },
     },
   });
 }

@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -73,9 +81,82 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const device = pgTable(
+  "device",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => session.id, {
+      onDelete: "set null",
+    }),
+    platform: text("platform").notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    browserName: text("browser_name"),
+    browserVersion: text("browser_version"),
+    osName: text("os_name"),
+    osVersion: text("os_version"),
+    deviceType: text("device_type"),
+    country: text("country"),
+    city: text("city"),
+    appVersion: text("app_version"),
+    fingerprint: text("fingerprint").notNull(),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("device_userId_idx").on(table.userId),
+    uniqueIndex("device_user_fingerprint_uidx").on(
+      table.userId,
+      table.fingerprint,
+    ),
+  ],
+);
+
+export const requestLog = pgTable(
+  "request_log",
+  {
+    id: text("id").primaryKey(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    requestId: text("request_id").notNull(),
+    platform: text("platform").notNull(),
+    method: text("method").notNull(),
+    path: text("path").notNull(),
+    statusCode: integer("status_code").notNull(),
+    latencyMs: integer("latency_ms").notNull(),
+    userId: text("user_id"),
+    deviceId: text("device_id"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    browserName: text("browser_name"),
+    browserVersion: text("browser_version"),
+    osName: text("os_name"),
+    osVersion: text("os_version"),
+    deviceType: text("device_type"),
+    country: text("country"),
+    city: text("city"),
+    appVersion: text("app_version"),
+  },
+  (table) => [
+    index("request_log_createdAt_idx").on(table.createdAt),
+    index("request_log_userId_createdAt_idx").on(table.userId, table.createdAt),
+    index("request_log_platform_createdAt_idx").on(
+      table.platform,
+      table.createdAt,
+    ),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  devices: many(device),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -89,5 +170,16 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
+  }),
+}));
+
+export const deviceRelations = relations(device, ({ one }) => ({
+  user: one(user, {
+    fields: [device.userId],
+    references: [user.id],
+  }),
+  session: one(session, {
+    fields: [device.sessionId],
+    references: [session.id],
   }),
 }));

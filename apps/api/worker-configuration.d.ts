@@ -4,9 +4,11 @@
 interface __BaseEnv_CloudflareBindings {
 	HYPERDRIVE: Hyperdrive;
 	ASSETS: Fetcher;
+	REQUEST_LOGS_QUEUE: Queue;
 	DB_URL: string;
 	BETTER_AUTH_SECRET: string;
 	BETTER_AUTH_URL: string;
+	WEB_ORIGIN: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -15,9 +17,11 @@ declare namespace Cloudflare {
 	interface DevEnv {
 		HYPERDRIVE: Hyperdrive;
 		ASSETS: Fetcher;
+		REQUEST_LOGS_QUEUE: Queue;
 		DB_URL: string;
 		BETTER_AUTH_SECRET: string;
 		BETTER_AUTH_URL: string;
+		WEB_ORIGIN: string;
 	}
 	interface Env extends __BaseEnv_CloudflareBindings {}
 }
