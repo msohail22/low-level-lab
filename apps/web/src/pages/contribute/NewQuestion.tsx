@@ -46,10 +46,12 @@ export default function NewQuestion() {
   const [codeSnippet, setCodeSnippet] = useState("");
   const [booleanAnswer, setBooleanAnswer] = useState(true);
   const [options, setOptions] = useState<OptionDraft[]>(emptyOptions);
+  const [hints, setHints] = useState(["", ""]);
   const [formError, setFormError] = useState<string | null>(null);
 
   const create = useMutation({
     mutationFn: async (status: "draft" | "pending") => {
+      const hintList = hints.map((h) => h.trim()).filter(Boolean);
       const body =
         type === "true_false"
           ? {
@@ -64,6 +66,7 @@ export default function NewQuestion() {
               status,
               booleanAnswer,
               options: [],
+              hints: hintList,
             }
           : {
               topicId,
@@ -76,6 +79,7 @@ export default function NewQuestion() {
               codeSnippet: codeSnippet || null,
               status,
               options,
+              hints: hintList,
             };
 
       const res = await apiFetch("/api/questions", {
@@ -287,6 +291,32 @@ export default function NewQuestion() {
             placeholder="Shown when the learner answers incorrectly"
           />
         </label>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Progressive hints (optional)</p>
+            <button
+              type="button"
+              className="text-sm text-[color:var(--accent)]"
+              onClick={() => setHints((prev) => [...prev, ""].slice(0, 5))}
+            >
+              Add hint
+            </button>
+          </div>
+          {hints.map((hint, index) => (
+            <input
+              key={index}
+              className="auth-input"
+              placeholder={`Hint ${index + 1}`}
+              value={hint}
+              onChange={(e) =>
+                setHints((prev) =>
+                  prev.map((h, i) => (i === index ? e.target.value : h)),
+                )
+              }
+            />
+          ))}
+        </div>
 
         {formError && <p className="text-sm text-red-700">{formError}</p>}
 

@@ -25,11 +25,17 @@ export function AppShell({ title, eyebrow, children }: AppShellProps) {
             <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/topics">
               Practice
             </Link>
+            <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/challenge">
+              Challenge
+            </Link>
             <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/due">
               Due
             </Link>
-            <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/bookmarks">
-              Bookmarks
+            <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/sets">
+              Sets
+            </Link>
+            <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/glossary">
+              Glossary
             </Link>
             <Link className="text-[color:var(--muted)] hover:text-[color:var(--ink)]" to="/leaderboard">
               Leaderboard

@@ -30,6 +30,7 @@ export const createQuestionSchema = z
     status: z.enum(["draft", "pending"]).default("draft"),
     options: z.array(optionInput).default([]),
     booleanAnswer: z.boolean().optional(),
+    hints: z.array(z.string().min(1).max(2000)).max(5).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === "true_false") {

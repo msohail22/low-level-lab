@@ -130,6 +130,10 @@ export async function getPracticeQuestion(
     .where(eq(questionOption.questionId, questionId))
     .orderBy(asc(questionOption.sortOrder));
 
+  const { getHintCount, getQuestionAuthorMeta } = await import("./platform.ts");
+  const hintCount = await getHintCount(env, questionId);
+  const author = await getQuestionAuthorMeta(env, questionId);
+
   return {
     id: row.id,
     topicId: row.topicId,
@@ -139,6 +143,9 @@ export async function getPracticeQuestion(
     difficulty: row.difficulty,
     codeSnippet: row.codeSnippet,
     relatedQuestionId: row.relatedQuestionId,
+    hintCount,
+    authorId: author?.authorId ?? row.authorId,
+    authorName: author?.authorName ?? null,
     options,
   };
 }
@@ -239,8 +246,18 @@ export async function submitAttempt(
   const { recordActivityStreak, upsertSpacedReview } = await import(
     "./engagement.ts"
   );
+  const { evaluateAchievements, getOrCreateDailyChallenge } = await import(
+    "./platform.ts"
+  );
   await recordActivityStreak(env, userId);
   await upsertSpacedReview(env, userId, questionId, isCorrect);
+
+  let dailyChallengeCorrect = false;
+  if (isCorrect) {
+    const challenge = await getOrCreateDailyChallenge(env);
+    dailyChallengeCorrect = challenge?.questionId === questionId;
+  }
+  await evaluateAchievements(env, userId, { dailyChallengeCorrect });
 
   const correctOptionIds = answers
     .map((a) => a.optionId)
@@ -258,6 +275,7 @@ export async function submitAttempt(
         row.type === "true_false" ? (answers[0]?.booleanValue ?? null) : null,
       correctOptionIds,
       reattempted: Boolean(existing),
+      dailyChallengeCorrect,
     },
   };
 }

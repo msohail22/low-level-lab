@@ -101,6 +101,9 @@ export default function Dashboard() {
         <Link className="auth-primary-btn text-center" to="/paths">
           Learning paths
         </Link>
+        <Link className="auth-secondary-btn text-center" to="/challenge">
+          Daily challenge
+        </Link>
         <Link className="auth-secondary-btn text-center" to="/topics">
           Practice topics
         </Link>
@@ -112,6 +115,18 @@ export default function Dashboard() {
         </Link>
         <Link className="auth-secondary-btn text-center" to="/bookmarks">
           Bookmarks
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/achievements">
+          Achievements
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/feed">
+          Following feed
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/sets">
+          Curated sets
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/glossary">
+          Glossary
         </Link>
         <Link className="auth-secondary-btn text-center" to="/leaderboard">
           Leaderboard

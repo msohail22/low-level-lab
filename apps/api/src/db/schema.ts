@@ -517,3 +517,202 @@ export const learningPathTopicRelations = relations(
     }),
   }),
 );
+
+export const dailyChallenge = pgTable(
+  "daily_challenge",
+  {
+    id: text("id").primaryKey(),
+    challengeDate: date("challenge_date").notNull().unique(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("daily_challenge_date_idx").on(table.challengeDate)],
+);
+
+export const achievement = pgTable("achievement", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userAchievement = pgTable(
+  "user_achievement",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    achievementId: text("achievement_id")
+      .notNull()
+      .references(() => achievement.id, { onDelete: "cascade" }),
+    earnedAt: timestamp("earned_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_achievement_uidx").on(table.userId, table.achievementId),
+    index("user_achievement_userId_idx").on(table.userId),
+  ],
+);
+
+export const questionComment = pgTable(
+  "question_comment",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("question_comment_questionId_idx").on(table.questionId),
+    index("question_comment_status_idx").on(table.status),
+  ],
+);
+
+export const authorFollow = pgTable(
+  "author_follow",
+  {
+    id: text("id").primaryKey(),
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("author_follow_uidx").on(table.followerId, table.authorId),
+    index("author_follow_followerId_idx").on(table.followerId),
+  ],
+);
+
+export const questionSet = pgTable("question_set", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  isPublic: boolean("is_public").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const questionSetItem = pgTable(
+  "question_set_item",
+  {
+    id: text("id").primaryKey(),
+    setId: text("set_id")
+      .notNull()
+      .references(() => questionSet.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").default(0).notNull(),
+  },
+  (table) => [
+    uniqueIndex("question_set_item_uidx").on(table.setId, table.questionId),
+    index("question_set_item_setId_idx").on(table.setId),
+  ],
+);
+
+export const questionHint = pgTable(
+  "question_hint",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    body: text("body").notNull(),
+  },
+  (table) => [index("question_hint_questionId_idx").on(table.questionId)],
+);
+
+export const glossaryTerm = pgTable(
+  "glossary_term",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    term: text("term").notNull(),
+    definition: text("definition").notNull(),
+    topicId: text("topic_id").references(() => topic.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("glossary_term_topicId_idx").on(table.topicId)],
+);
+
+export const questionReport = pgTable(
+  "question_report",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    details: text("details"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("question_report_questionId_idx").on(table.questionId),
+    index("question_report_status_idx").on(table.status),
+  ],
+);
+
+export const questionVersion = pgTable(
+  "question_version",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    snapshot: text("snapshot").notNull(),
+    editorId: text("editor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("question_version_uidx").on(table.questionId, table.version),
+    index("question_version_questionId_idx").on(table.questionId),
+  ],
+);
+
+export const sandboxSubmission = pgTable(
+  "sandbox_submission",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sourceCode: text("source_code"),
+    submittedOutput: text("submitted_output"),
+    isCorrect: boolean("is_correct"),
+    feedback: text("feedback"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("sandbox_submission_questionId_idx").on(table.questionId)],
+);

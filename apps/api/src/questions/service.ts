@@ -167,6 +167,17 @@ export async function createQuestionWithParts(
     }
   }
 
+  if (input.hints?.length) {
+    const { insertHints, snapshotQuestionVersion } = await import(
+      "../learn/platform.ts"
+    );
+    await insertHints(env, questionId, input.hints);
+    await snapshotQuestionVersion(env, questionId, authorId);
+  } else {
+    const { snapshotQuestionVersion } = await import("../learn/platform.ts");
+    await snapshotQuestionVersion(env, questionId, authorId);
+  }
+
   return questionId;
 }
 
@@ -237,6 +248,14 @@ export async function reviewQuestion(
       updatedAt: now,
     })
     .where(eq(question.id, opts.questionId));
+
+  const { snapshotQuestionVersion, evaluateAchievements } = await import(
+    "../learn/platform.ts"
+  );
+  await snapshotQuestionVersion(env, opts.questionId, opts.reviewerId);
+  if (opts.action === "approve") {
+    await evaluateAchievements(env, row.authorId);
+  }
 
   return { error: null };
 }

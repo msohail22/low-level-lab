@@ -2,13 +2,15 @@
 
 Deferred work that is intentionally out of scope for the current client-telemetry / request-logging design. Come back to these when the feature is stable in production.
 
-## Learning platform phases 2–4 (deferred)
+## Learning platform phases 2–4 (shipped v1)
 
-See full roadmap: `docs/superpowers/specs/2026-08-16-learning-platform-roadmap.md`.
+Implemented in migration `0005_engagement_pedagogy_trust` + `/api/learn` platform routes:
 
-**Phase 2 — Engagement:** daily challenge, achievements/badges, moderated discussion, follow authors / curated sets  
-**Phase 3 — Pedagogy:** progressive hints, adaptive next question, code sandbox, glossary/concept cards  
-**Phase 4 — Trust:** report question, version history, author reputation  
+**Phase 2:** daily challenge + day board, achievements, moderated comments, follow authors / curated sets  
+**Phase 3:** progressive hints, adaptive next question, glossary; sandbox is output-check for `print_output` (full compiler stubbed)  
+**Phase 4:** report question → reviewer queue, question version snapshots, author reputation  
+
+Still later: external code runner, richer version UI/diff, Redis cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning.
 
 ## Request log pruning
 

@@ -19,6 +19,9 @@ type PracticeQuestion = {
   difficulty: string;
   codeSnippet: string | null;
   relatedQuestionId: string | null;
+  hintCount: number;
+  authorId: string;
+  authorName: string | null;
   options: PracticeOption[];
 };
 
@@ -31,6 +34,14 @@ type AttemptView = {
   correctOptionIds: string[];
   selectedOptionIds?: string[];
   booleanValue?: boolean | null;
+  dailyChallengeCorrect?: boolean;
+};
+
+type Comment = {
+  id: string;
+  body: string;
+  authorName: string;
+  createdAt: string;
 };
 
 export default function PracticeQuestionPage() {
@@ -41,6 +52,12 @@ export default function PracticeQuestionPage() {
   const [result, setResult] = useState<AttemptView | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hintsRevealed, setHintsRevealed] = useState<string[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [sandboxOutput, setSandboxOutput] = useState("");
+  const [sandboxMsg, setSandboxMsg] = useState<string | null>(null);
 
   const { data, isPending } = useQuery({
     queryKey: ["practice-question", questionId],
@@ -63,6 +80,43 @@ export default function PracticeQuestionPage() {
         `/api/learn/bookmarks/${questionId}/status`,
       );
       if (res.status === 401) return { bookmarked: false };
+      if (res.error) throw new Error(res.error);
+      return res.data!;
+    },
+  });
+
+  const comments = useQuery({
+    queryKey: ["question-comments", questionId],
+    enabled: Boolean(questionId),
+    queryFn: async () => {
+      const res = await apiFetch<{ comments: Comment[] }>(
+        `/api/learn/questions/${questionId}/comments`,
+      );
+      if (res.error) throw new Error(res.error);
+      return res.data!.comments;
+    },
+  });
+
+  const nextQuestion = useQuery({
+    queryKey: ["next-question", questionId],
+    enabled: Boolean(questionId),
+    queryFn: async () => {
+      const res = await apiFetch<{
+        next: { id: string; title: string; reason: string } | null;
+      }>(`/api/learn/questions/${questionId}/next`);
+      if (res.error) throw new Error(res.error);
+      return res.data!.next;
+    },
+  });
+
+  const followStatus = useQuery({
+    queryKey: ["follow-status", data?.question.authorId],
+    enabled: Boolean(data?.question.authorId),
+    queryFn: async () => {
+      const res = await apiFetch<{ following: boolean }>(
+        `/api/learn/authors/${data!.question.authorId}/follow/status`,
+      );
+      if (res.status === 401) return { following: false };
       if (res.error) throw new Error(res.error);
       return res.data!;
     },
@@ -100,7 +154,10 @@ export default function PracticeQuestionPage() {
       queryClient.invalidateQueries({ queryKey: ["learning-stats"] });
       queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
       queryClient.invalidateQueries({ queryKey: ["mistakes"] });
+      queryClient.invalidateQueries({ queryKey: ["achievements"] });
+      queryClient.invalidateQueries({ queryKey: ["daily-challenge"] });
       queryClient.invalidateQueries({ queryKey: ["practice-question", questionId] });
+      queryClient.invalidateQueries({ queryKey: ["next-question", questionId] });
     },
     onError: (err: Error) => setError(err.message),
   });
@@ -124,6 +181,102 @@ export default function PracticeQuestionPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookmark-status", questionId] });
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    },
+  });
+
+  const revealHint = useMutation({
+    mutationFn: async () => {
+      const index = hintsRevealed.length;
+      const res = await apiFetch<{
+        hint: { index: number; body: string; remaining: number };
+      }>(`/api/learn/questions/${questionId}/hints/${index}`);
+      if (res.error) throw new Error(res.error);
+      return res.data!.hint;
+    },
+    onSuccess: (hint) => {
+      setHintsRevealed((prev) => [...prev, hint.body]);
+      setError(null);
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const postComment = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/learn/questions/${questionId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body: commentBody }),
+      });
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () => {
+      setCommentBody("");
+      setError(null);
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const report = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/learn/questions/${questionId}/report`, {
+        method: "POST",
+        body: JSON.stringify({
+          reason: reportReason,
+          details: reportDetails || undefined,
+        }),
+      });
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () => {
+      setReportReason("");
+      setReportDetails("");
+      setError(null);
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const sandbox = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch<{
+        mode: string;
+        isCorrect: boolean | null;
+        feedback: string;
+      }>(`/api/learn/questions/${questionId}/sandbox`, {
+        method: "POST",
+        body: JSON.stringify({
+          sourceCode: question?.codeSnippet ?? undefined,
+          submittedOutput: sandboxOutput,
+        }),
+      });
+      if (res.error) throw new Error(res.error);
+      return res.data!;
+    },
+    onSuccess: (payload) => {
+      setSandboxMsg(payload.feedback);
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const toggleFollow = useMutation({
+    mutationFn: async () => {
+      const authorId = question!.authorId;
+      if (followStatus.data?.following) {
+        const res = await apiFetch(`/api/learn/authors/${authorId}/follow`, {
+          method: "DELETE",
+        });
+        if (res.error) throw new Error(res.error);
+        return false;
+      }
+      const res = await apiFetch(`/api/learn/authors/${authorId}/follow`, {
+        method: "POST",
+      });
+      if (res.error) throw new Error(res.error);
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["follow-status", question?.authorId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["following-feed"] });
     },
   });
 
@@ -163,23 +316,65 @@ export default function PracticeQuestionPage() {
         <>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <h1 className="section-title">{question.title}</h1>
-            <button
-              type="button"
-              className="auth-secondary-btn shrink-0"
-              onClick={() => toggleBookmark.mutate()}
-              disabled={toggleBookmark.isPending}
-            >
-              {bookmarkStatus.data?.bookmarked ? "Bookmarked" : "Bookmark"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="auth-secondary-btn shrink-0"
+                onClick={() => toggleBookmark.mutate()}
+                disabled={toggleBookmark.isPending}
+              >
+                {bookmarkStatus.data?.bookmarked ? "Bookmarked" : "Bookmark"}
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn shrink-0"
+                onClick={() => toggleFollow.mutate()}
+                disabled={toggleFollow.isPending}
+              >
+                {followStatus.data?.following ? "Following" : "Follow author"}
+              </button>
+            </div>
           </div>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
             {question.type} · {question.difficulty}
+            {question.authorName && (
+              <>
+                {" "}
+                ·{" "}
+                <Link
+                  className="text-[color:var(--accent)]"
+                  to={`/authors/${question.authorId}`}
+                >
+                  {question.authorName}
+                </Link>
+              </>
+            )}
           </p>
           <p className="section-copy mt-4 whitespace-pre-wrap">{question.prompt}</p>
           {question.codeSnippet && (
             <pre className="surface-card mt-4 overflow-x-auto p-4 font-mono text-sm">
               {question.codeSnippet}
             </pre>
+          )}
+
+          {question.hintCount > 0 && !shown && (
+            <div className="mt-6 space-y-2">
+              {hintsRevealed.map((body, i) => (
+                <p key={i} className="surface-card p-3 text-sm text-[color:var(--muted)]">
+                  Hint {i + 1}: {body}
+                </p>
+              ))}
+              {hintsRevealed.length < question.hintCount && (
+                <button
+                  type="button"
+                  className="auth-secondary-btn"
+                  onClick={() => revealHint.mutate()}
+                  disabled={revealHint.isPending}
+                >
+                  Reveal hint ({hintsRevealed.length}/{question.hintCount})
+                </button>
+              )}
+            </div>
           )}
 
           {question.type === "true_false" ? (
@@ -249,6 +444,11 @@ export default function PracticeQuestionPage() {
               <p className="font-semibold text-[color:var(--ink)]">
                 {shown.isCorrect ? "Correct" : "Not quite"}
               </p>
+              {shown.dailyChallengeCorrect && (
+                <p className="text-sm text-[color:var(--accent)]">
+                  Daily challenge completed.
+                </p>
+              )}
               <p className="whitespace-pre-wrap text-sm text-[color:var(--muted)]">
                 {shown.explanation}
               </p>
@@ -265,6 +465,14 @@ export default function PracticeQuestionPage() {
                   Related follow-up →
                 </Link>
               )}
+              {nextQuestion.data && (
+                <Link
+                  className="block text-sm text-[color:var(--accent)]"
+                  to={`/practice/${nextQuestion.data.id}`}
+                >
+                  Suggested next: {nextQuestion.data.title} →
+                </Link>
+              )}
               <button
                 type="button"
                 className="auth-secondary-btn"
@@ -279,6 +487,100 @@ export default function PracticeQuestionPage() {
               </button>
             </div>
           )}
+
+          {(question.type === "print_output" || question.codeSnippet) && (
+            <div className="surface-card mt-8 space-y-3 p-5">
+              <p className="font-semibold">Sandbox</p>
+              <p className="text-sm text-[color:var(--muted)]">
+                {question.type === "print_output"
+                  ? "Predict stdout and check it against the expected output."
+                  : "Full compile/run is not configured on Workers; submissions are recorded as stubs."}
+              </p>
+              <textarea
+                className="auth-input min-h-24 font-mono text-sm"
+                placeholder="Predicted output"
+                value={sandboxOutput}
+                onChange={(e) => setSandboxOutput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() => sandbox.mutate()}
+                disabled={sandbox.isPending}
+              >
+                {sandbox.isPending ? "Checking…" : "Check output"}
+              </button>
+              {sandboxMsg && (
+                <p className="text-sm text-[color:var(--ink)]">{sandboxMsg}</p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-10 space-y-4">
+            <h2 className="text-lg font-semibold">Discussion</h2>
+            <ul className="space-y-3">
+              {comments.data?.map((c) => (
+                <li key={c.id} className="border-b border-[color:var(--line)] py-3 text-sm">
+                  <p className="font-medium">{c.authorName}</p>
+                  <p className="mt-1 text-[color:var(--muted)]">{c.body}</p>
+                </li>
+              ))}
+            </ul>
+            <form
+              className="space-y-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                postComment.mutate();
+              }}
+            >
+              <textarea
+                className="auth-input min-h-20"
+                placeholder="Comment (moderated before publish)"
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                required
+                minLength={2}
+              />
+              <button
+                type="submit"
+                className="auth-secondary-btn"
+                disabled={postComment.isPending || commentBody.trim().length < 2}
+              >
+                Submit for moderation
+              </button>
+            </form>
+          </div>
+
+          <form
+            className="surface-card mt-10 space-y-2 p-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              report.mutate();
+            }}
+          >
+            <p className="font-semibold">Report question</p>
+            <input
+              className="auth-input"
+              placeholder="Reason"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              required
+              minLength={3}
+            />
+            <textarea
+              className="auth-input min-h-16"
+              placeholder="Details (optional)"
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="auth-secondary-btn"
+              disabled={report.isPending || reportReason.trim().length < 3}
+            >
+              Send report
+            </button>
+          </form>
 
           <Link
             className="mt-8 inline-block text-sm text-[color:var(--accent)]"

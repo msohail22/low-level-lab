@@ -136,6 +136,147 @@ export default function ReviewQueue() {
       {data?.length === 0 && (
         <p className="mt-8 text-[color:var(--muted)]">Queue is empty for these filters.</p>
       )}
+
+      <ModerationPanels />
     </AppShell>
+  );
+}
+
+function ModerationPanels() {
+  const queryClient = useQueryClient();
+
+  const comments = useQuery({
+    queryKey: ["mod-comments"],
+    queryFn: async () => {
+      const res = await apiFetch<{
+        comments: {
+          id: string;
+          body: string;
+          questionTitle: string;
+          authorName: string;
+        }[];
+      }>("/api/learn/moderation/comments");
+      if (res.error) throw new Error(res.error);
+      return res.data!.comments;
+    },
+  });
+
+  const reports = useQuery({
+    queryKey: ["mod-reports"],
+    queryFn: async () => {
+      const res = await apiFetch<{
+        reports: {
+          id: string;
+          reason: string;
+          details: string | null;
+          questionTitle: string;
+          reporterName: string;
+        }[];
+      }>("/api/learn/moderation/reports");
+      if (res.error) throw new Error(res.error);
+      return res.data!.reports;
+    },
+  });
+
+  const commentAction = useMutation({
+    mutationFn: async (opts: { id: string; action: "approve" | "reject" }) => {
+      const res = await apiFetch(
+        `/api/learn/moderation/comments/${opts.id}/${opts.action}`,
+        { method: "POST" },
+      );
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["mod-comments"] }),
+  });
+
+  const reportAction = useMutation({
+    mutationFn: async (opts: {
+      id: string;
+      action: "resolve" | "dismiss";
+    }) => {
+      const res = await apiFetch(
+        `/api/learn/moderation/reports/${opts.id}/${opts.action}`,
+        { method: "POST" },
+      );
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["mod-reports"] }),
+  });
+
+  return (
+    <>
+      <h2 className="mt-12 text-lg font-semibold">Pending comments</h2>
+      <ul className="mt-4 space-y-3">
+        {comments.data?.map((c) => (
+          <li key={c.id} className="surface-card space-y-3 p-4">
+            <p className="text-sm text-[color:var(--muted)]">
+              {c.authorName} on {c.questionTitle}
+            </p>
+            <p className="text-sm">{c.body}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="auth-primary-btn"
+                onClick={() =>
+                  commentAction.mutate({ id: c.id, action: "approve" })
+                }
+              >
+                Approve
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() =>
+                  commentAction.mutate({ id: c.id, action: "reject" })
+                }
+              >
+                Reject
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {comments.data?.length === 0 && (
+        <p className="mt-2 text-sm text-[color:var(--muted)]">No pending comments.</p>
+      )}
+
+      <h2 className="mt-12 text-lg font-semibold">Open reports</h2>
+      <ul className="mt-4 space-y-3">
+        {reports.data?.map((r) => (
+          <li key={r.id} className="surface-card space-y-3 p-4">
+            <p className="font-medium">{r.questionTitle}</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              {r.reason} — {r.reporterName}
+            </p>
+            {r.details && <p className="text-sm">{r.details}</p>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="auth-primary-btn"
+                onClick={() =>
+                  reportAction.mutate({ id: r.id, action: "resolve" })
+                }
+              >
+                Resolve
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() =>
+                  reportAction.mutate({ id: r.id, action: "dismiss" })
+                }
+              >
+                Dismiss
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {reports.data?.length === 0 && (
+        <p className="mt-2 text-sm text-[color:var(--muted)]">No open reports.</p>
+      )}
+    </>
   );
 }

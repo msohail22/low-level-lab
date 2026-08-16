@@ -1,0 +1,63 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+
+import { AppShell } from "@/components/AppShell";
+import { apiFetch } from "@/lib/api";
+
+type FeedItem = {
+  id: string;
+  title: string;
+  type: string;
+  difficulty: string;
+  authorId: string;
+  authorName: string;
+};
+
+export default function FollowingFeed() {
+  const { data, isPending, error } = useQuery({
+    queryKey: ["following-feed"],
+    queryFn: async () => {
+      const res = await apiFetch<{ items: FeedItem[] }>("/api/learn/feed");
+      if (res.error) throw new Error(res.error);
+      return res.data!.items;
+    },
+  });
+
+  return (
+    <AppShell eyebrow="Engagement" title="Following">
+      <p className="section-copy mt-2">
+        Approved questions from authors you follow.
+      </p>
+      {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
+      {error && (
+        <p className="mt-8 text-sm text-red-700">{(error as Error).message}</p>
+      )}
+      <ul className="mt-8 space-y-3">
+        {data?.map((item) => (
+          <li key={item.id}>
+            <Link
+              to={`/practice/${item.id}`}
+              className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
+            >
+              <p className="font-semibold">{item.title}</p>
+              <p className="mt-1 text-sm text-[color:var(--muted)]">
+                {item.type} · {item.difficulty} ·{" "}
+                <span
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[color:var(--accent)]"
+                >
+                  {item.authorName}
+                </span>
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {data?.length === 0 && (
+        <p className="mt-8 text-sm text-[color:var(--muted)]">
+          Follow an author from any practice question to fill this feed.
+        </p>
+      )}
+    </AppShell>
+  );
+}
