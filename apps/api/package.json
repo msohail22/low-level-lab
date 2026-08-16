@@ -13,10 +13,11 @@
 		"deploy:dev": "wrangler deploy --env dev --minify"
 	},
 	"dependencies": {
+		"@better-auth/core": "1.6.26",
 		"@better-auth/drizzle-adapter": "^1.6.26",
 		"@openfga/sdk": "^0.9.6",
 		"@types/pg": "^8.20.4",
-		"better-auth": "^1.6.23",
+		"better-auth": "^1.6.26",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.19",
 		"pg": "^8.22.0",

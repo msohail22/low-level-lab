@@ -1,1 +1,108 @@
 @import "tailwindcss";
+
+:root {
+  --ink: #1a1a1a;
+  --accent: #2f6f5e;
+  --accent-btn: #3a8571;
+  --surface: #f7f7f5;
+  --surface-2: #eceae4;
+  --line: #ddd9d0;
+  --muted: #6b6560;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%),
+    linear-gradient(180deg, #fbfaf7 0%, var(--surface) 100%);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+.section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.section-copy {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.surface-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(26 26 26 / 4%);
+}
+
+.auth-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.75rem 0.9rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.auth-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.auth-primary-btn,
+.auth-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.auth-primary-btn {
+  width: 100%;
+  border: 1px solid transparent;
+  background: var(--accent-btn);
+  color: #fff;
+}
+
+.auth-primary-btn:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.auth-primary-btn:disabled,
+.auth-secondary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-secondary-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.auth-secondary-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+}

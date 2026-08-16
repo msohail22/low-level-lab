@@ -21,6 +21,10 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"vars": {
+		"BETTER_AUTH_URL": "http://localhost:8787",
+		"WEB_ORIGIN": "http://localhost:5173"
+	},
 	"env": {
 		"dev": {
 			"hyperdrive": [

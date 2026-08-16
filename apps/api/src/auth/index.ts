@@ -2,18 +2,25 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 
 import { createDb } from "../db/index.ts";
-import { authConfig } from "./config.ts";
+import * as schema from "../db/schema.ts";
+import { getTrustedOrigins } from "./config.ts";
 
-export const auth = betterAuth({
-  database: drizzleAdapter(createDb, {
-    provider: "pg"
-  }),
+export function createAuth(env: CloudflareBindings) {
+  const db = createDb(env.HYPERDRIVE);
 
-  ...authConfig,
+  return betterAuth({
+    appName: "Low-Level Lab",
+    baseURL: env.BETTER_AUTH_URL,
+    secret: env.BETTER_AUTH_SECRET,
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema,
+    }),
+    trustedOrigins: getTrustedOrigins(env),
+    emailAndPassword: {
+      enabled: true,
+    },
+  });
+}
 
-  emailAndPassword: {
-    enabled: true,
-  }
-});
-
-
+export type Auth = ReturnType<typeof createAuth>;

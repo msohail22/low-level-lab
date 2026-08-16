@@ -1,17 +1,32 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+
+import { createAuth } from "./auth/index.ts";
+import { getTrustedOrigins } from "./auth/config.ts";
 import { routes } from "./routes/index.ts";
-import { auth } from "./auth/index.ts";
 
-const app = new Hono();
+type AppEnv = {
+  Bindings: CloudflareBindings;
+};
 
-app.on(
-  [
-    "GET",
-    "POST"
-  ], "/api/auth/*", (c) => {
-    return auth.handler(c.req.raw);
-  }
-);
+const app = new Hono<AppEnv>();
+
+app.use("/api/auth/*", async (c, next) => {
+  const origins = getTrustedOrigins(c.env);
+
+  const corsMiddleware = cors({
+    origin: (origin) => (origins.includes(origin) ? origin : origins[0]),
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["POST", "GET", "OPTIONS"],
+    credentials: true,
+  });
+
+  return corsMiddleware(c, next);
+});
+
+app.on(["GET", "POST"], "/api/auth/*", (c) => {
+  return createAuth(c.env).handler(c.req.raw);
+});
 
 app.route("/", routes);
 
