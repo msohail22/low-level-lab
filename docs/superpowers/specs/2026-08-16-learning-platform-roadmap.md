@@ -1,7 +1,7 @@
 # Learning Platform Feature Roadmap
 
 **Date:** 2026-08-16  
-**Status:** Phases 1–4 shipped (v1); infra items remain deferred
+**Status:** Phases 1–5 shipped (v1); infra items remain deferred
 
 ## Phase 1 — High impact (shipped)
 
@@ -31,4 +31,20 @@
 15. Question version history (snapshots on create/approve)  
 16. Author reputation  
 
-Infra already in `docs/to-do-later.md`: Redis question cache, realtime DO leaderboard, GraphQL, OpenFGA prod, pruning, external code runner.
+## Phase 5 — Study loop & depth (shipped v1)
+
+17. Continue where left off  
+18. Topic mastery %  
+19. Weak-topic drill  
+20. Timed mode (soft)  
+21. Worked solutions + diagram markdown  
+22. Prerequisite topic soft-warn  
+23. Confidence → spaced review  
+24. Explanation helpful votes  
+25. Edit question + version / re-review  
+26. Playlist sequential runner  
+27. Community % correct  
+28. Duplicate flags for reviewers  
+29. UI product analytics (`ui_event`)  
+
+Infra still in `docs/to-do-later.md`: Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, pruning, external code runner.

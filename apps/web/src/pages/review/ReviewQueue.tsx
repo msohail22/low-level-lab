@@ -178,6 +178,23 @@ function ModerationPanels() {
     },
   });
 
+  const duplicates = useQuery({
+    queryKey: ["mod-duplicates"],
+    queryFn: async () => {
+      const res = await apiFetch<{
+        flags: {
+          id: string;
+          questionId: string;
+          questionTitle: string;
+          similarQuestionId: string | null;
+          note: string | null;
+        }[];
+      }>("/api/learn/moderation/duplicates");
+      if (res.error) throw new Error(res.error);
+      return res.data!.flags;
+    },
+  });
+
   const commentAction = useMutation({
     mutationFn: async (opts: { id: string; action: "approve" | "reject" }) => {
       const res = await apiFetch(
@@ -203,6 +220,21 @@ function ModerationPanels() {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["mod-reports"] }),
+  });
+
+  const duplicateAction = useMutation({
+    mutationFn: async (opts: {
+      id: string;
+      action: "resolve" | "dismiss";
+    }) => {
+      const res = await apiFetch(
+        `/api/learn/moderation/duplicates/${opts.id}/${opts.action}`,
+        { method: "POST" },
+      );
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["mod-duplicates"] }),
   });
 
   return (
@@ -276,6 +308,44 @@ function ModerationPanels() {
       </ul>
       {reports.data?.length === 0 && (
         <p className="mt-2 text-sm text-[color:var(--muted)]">No open reports.</p>
+      )}
+
+      <h2 className="mt-12 text-lg font-semibold">Duplicate flags</h2>
+      <ul className="mt-4 space-y-3">
+        {duplicates.data?.map((f) => (
+          <li key={f.id} className="surface-card space-y-3 p-4">
+            <p className="font-medium">{f.questionTitle}</p>
+            {f.note && <p className="text-sm text-[color:var(--muted)]">{f.note}</p>}
+            {f.similarQuestionId && (
+              <p className="text-sm text-[color:var(--muted)]">
+                Similar: {f.similarQuestionId}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="auth-primary-btn"
+                onClick={() =>
+                  duplicateAction.mutate({ id: f.id, action: "resolve" })
+                }
+              >
+                Resolve
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() =>
+                  duplicateAction.mutate({ id: f.id, action: "dismiss" })
+                }
+              >
+                Dismiss
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {duplicates.data?.length === 0 && (
+        <p className="mt-2 text-sm text-[color:var(--muted)]">No duplicate flags.</p>
       )}
     </>
   );

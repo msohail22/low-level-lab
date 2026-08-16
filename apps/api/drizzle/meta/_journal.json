@@ -43,6 +43,13 @@
       "when": 1786878000000,
       "tag": "0005_engagement_pedagogy_trust",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786880000000,
+      "tag": "0006_study_loop_depth",
+      "breakpoints": true
     }
   ]
 }

@@ -194,6 +194,10 @@ export const topic = pgTable(
     slug: text("slug").notNull().unique(),
     title: text("title").notNull(),
     description: text("description"),
+    prerequisiteTopicId: text("prerequisite_topic_id").references(
+      (): AnyPgColumn => topic.id,
+      { onDelete: "set null" },
+    ),
     sortOrder: integer("sort_order").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -217,7 +221,13 @@ export const question = pgTable(
     prompt: text("prompt").notNull(),
     explanation: text("explanation").notNull(),
     whyWrong: text("why_wrong"),
+    workedSolution: text("worked_solution"),
+    diagramMarkdown: text("diagram_markdown"),
     relatedQuestionId: text("related_question_id").references(
+      (): AnyPgColumn => question.id,
+      { onDelete: "set null" },
+    ),
+    similarQuestionId: text("similar_question_id").references(
       (): AnyPgColumn => question.id,
       { onDelete: "set null" },
     ),
@@ -360,6 +370,7 @@ export const attempt = pgTable(
       .references(() => question.id, { onDelete: "cascade" }),
     booleanValue: boolean("boolean_value"),
     isCorrect: boolean("is_correct").notNull(),
+    confidence: integer("confidence"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -444,6 +455,16 @@ export const userLearning = pgTable("user_learning", {
   currentStreak: integer("current_streak").default(0).notNull(),
   longestStreak: integer("longest_streak").default(0).notNull(),
   lastActiveDate: date("last_active_date"),
+  lastQuestionId: text("last_question_id").references(() => question.id, {
+    onDelete: "set null",
+  }),
+  lastTopicId: text("last_topic_id").references(() => topic.id, {
+    onDelete: "set null",
+  }),
+  lastPathId: text("last_path_id").references(() => learningPath.id, {
+    onDelete: "set null",
+  }),
+  lastActivityAt: timestamp("last_activity_at"),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())
@@ -715,4 +736,70 @@ export const sandboxSubmission = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("sandbox_submission_questionId_idx").on(table.questionId)],
+);
+
+export const explanationVote = pgTable(
+  "explanation_vote",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    helpful: boolean("helpful").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("explanation_vote_uidx").on(table.questionId, table.userId),
+    index("explanation_vote_questionId_idx").on(table.questionId),
+  ],
+);
+
+export const questionDuplicateFlag = pgTable(
+  "question_duplicate_flag",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    similarQuestionId: text("similar_question_id").references(() => question.id, {
+      onDelete: "set null",
+    }),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    note: text("note"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("question_duplicate_flag_status_idx").on(table.status),
+    index("question_duplicate_flag_questionId_idx").on(table.questionId),
+  ],
+);
+
+export const uiEvent = pgTable(
+  "ui_event",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    sessionKey: text("session_key"),
+    route: text("route"),
+    questionId: text("question_id").references(() => question.id, {
+      onDelete: "set null",
+    }),
+    eventName: text("event_name").notNull(),
+    targetId: text("target_id"),
+    durationMs: integer("duration_ms"),
+    meta: text("meta"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("ui_event_userId_idx").on(table.userId),
+    index("ui_event_eventName_idx").on(table.eventName),
+    index("ui_event_createdAt_idx").on(table.createdAt),
+    index("ui_event_questionId_idx").on(table.questionId),
+  ],
 );

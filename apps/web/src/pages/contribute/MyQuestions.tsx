@@ -97,16 +97,24 @@ export default function MyQuestions() {
                   </p>
                 )}
               </div>
-              {(q.status === "draft" || q.status === "rejected") && (
-                <button
-                  type="button"
-                  className="auth-secondary-btn"
-                  disabled={submit.isPending}
-                  onClick={() => submit.mutate(q.id)}
+              <div className="flex flex-col gap-2 sm:items-end">
+                <Link
+                  className="auth-secondary-btn text-center"
+                  to={`/contribute/questions/${q.id}/edit`}
                 >
-                  Submit for review
-                </button>
-              )}
+                  Edit
+                </Link>
+                {(q.status === "draft" || q.status === "rejected") && (
+                  <button
+                    type="button"
+                    className="auth-secondary-btn"
+                    disabled={submit.isPending}
+                    onClick={() => submit.mutate(q.id)}
+                  >
+                    Submit for review
+                  </button>
+                )}
+              </div>
             </div>
           </li>
         ))}

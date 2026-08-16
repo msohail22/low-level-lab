@@ -19,6 +19,8 @@ import PathDetailPage from "@/pages/learn/PathDetail";
 import Paths from "@/pages/learn/Paths";
 import PracticeQuestion from "@/pages/learn/PracticeQuestion";
 import QuestionSets from "@/pages/learn/QuestionSets";
+import WeakDrill from "@/pages/learn/WeakDrill";
+import EditQuestion from "@/pages/contribute/EditQuestion";
 import { Bookmarks, DueReviews, Mistakes } from "@/pages/learn/Queues";
 import TopicQuestions from "@/pages/learn/TopicQuestions";
 import Topics from "@/pages/learn/Topics";
@@ -47,10 +49,12 @@ function App() {
         <Route path="/practice/:questionId" element={<PracticeQuestion />} />
         <Route path="/due" element={<DueReviews />} />
         <Route path="/mistakes" element={<Mistakes />} />
+        <Route path="/drill" element={<WeakDrill />} />
         <Route path="/bookmarks" element={<Bookmarks />} />
         <Route path="/feed" element={<FollowingFeed />} />
         <Route path="/contribute/questions" element={<MyQuestions />} />
         <Route path="/contribute/questions/new" element={<NewQuestion />} />
+        <Route path="/contribute/questions/:questionId/edit" element={<EditQuestion />} />
         <Route element={<ReviewerRoute />}>
           <Route path="/review/questions" element={<ReviewQueue />} />
         </Route>

@@ -87,7 +87,7 @@ export default function QuestionSets() {
               {set.items.map((item) => (
                 <li key={item.questionId}>
                   <Link
-                    to={`/practice/${item.questionId}`}
+                    to={`/practice/${item.questionId}?playlist=${set.slug}`}
                     className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
                   >
                     <p className="font-semibold">{item.title}</p>
@@ -98,6 +98,14 @@ export default function QuestionSets() {
                 </li>
               ))}
             </ul>
+            {set.items[0] && (
+              <Link
+                className="auth-primary-btn mt-6 inline-flex"
+                to={`/practice/${set.items[0].questionId}?playlist=${set.slug}`}
+              >
+                Practice this playlist
+              </Link>
+            )}
             <Link className="mt-8 inline-block text-sm text-[color:var(--accent)]" to="/sets">
               ← All sets
             </Link>

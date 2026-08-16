@@ -131,8 +131,10 @@ export async function getPracticeQuestion(
     .orderBy(asc(questionOption.sortOrder));
 
   const { getHintCount, getQuestionAuthorMeta } = await import("./platform.ts");
+  const { getCommunityCalibration } = await import("./study.ts");
   const hintCount = await getHintCount(env, questionId);
   const author = await getQuestionAuthorMeta(env, questionId);
+  const calibration = await getCommunityCalibration(env, questionId);
 
   return {
     id: row.id,
@@ -142,10 +144,13 @@ export async function getPracticeQuestion(
     prompt: row.prompt,
     difficulty: row.difficulty,
     codeSnippet: row.codeSnippet,
+    diagramMarkdown: row.diagramMarkdown,
     relatedQuestionId: row.relatedQuestionId,
+    similarQuestionId: row.similarQuestionId,
     hintCount,
     authorId: author?.authorId ?? row.authorId,
     authorName: author?.authorName ?? null,
+    calibration,
     options,
   };
 }
@@ -215,6 +220,7 @@ export async function submitAttempt(
         booleanValue:
           row.type === "true_false" ? (input.booleanValue ?? null) : null,
         isCorrect,
+        confidence: input.confidence ?? null,
         createdAt: now,
       })
       .where(eq(attempt.id, existing.id));
@@ -229,6 +235,7 @@ export async function submitAttempt(
       booleanValue:
         row.type === "true_false" ? (input.booleanValue ?? null) : null,
       isCorrect,
+      confidence: input.confidence ?? null,
       createdAt: now,
     });
   }
@@ -249,8 +256,19 @@ export async function submitAttempt(
   const { evaluateAchievements, getOrCreateDailyChallenge } = await import(
     "./platform.ts"
   );
+  const { recordContinuePointer } = await import("./study.ts");
   await recordActivityStreak(env, userId);
-  await upsertSpacedReview(env, userId, questionId, isCorrect);
+  await upsertSpacedReview(
+    env,
+    userId,
+    questionId,
+    isCorrect,
+    input.confidence,
+  );
+  await recordContinuePointer(env, userId, {
+    questionId,
+    topicId: row.topicId,
+  });
 
   let dailyChallengeCorrect = false;
   if (isCorrect) {
@@ -270,12 +288,14 @@ export async function submitAttempt(
       isCorrect,
       explanation: row.explanation,
       whyWrong: isCorrect ? null : (row.whyWrong ?? null),
+      workedSolution: isCorrect ? (row.workedSolution ?? null) : null,
       relatedQuestionId: row.relatedQuestionId,
       correctBooleanValue:
         row.type === "true_false" ? (answers[0]?.booleanValue ?? null) : null,
       correctOptionIds,
       reattempted: Boolean(existing),
       dailyChallengeCorrect,
+      confidence: input.confidence ?? null,
     },
   };
 }
@@ -337,6 +357,7 @@ export async function getMyAttempt(
     .select({
       explanation: question.explanation,
       whyWrong: question.whyWrong,
+      workedSolution: question.workedSolution,
       relatedQuestionId: question.relatedQuestionId,
       type: question.type,
     })
@@ -358,9 +379,11 @@ export async function getMyAttempt(
     attemptId: row.id,
     isCorrect: row.isCorrect,
     booleanValue: row.booleanValue,
+    confidence: row.confidence,
     selectedOptionIds: selected.map((s) => s.optionId),
     explanation: q?.explanation ?? "",
     whyWrong: row.isCorrect ? null : (q?.whyWrong ?? null),
+    workedSolution: row.isCorrect ? (q?.workedSolution ?? null) : null,
     relatedQuestionId: q?.relatedQuestionId ?? null,
     correctBooleanValue:
       q?.type === "true_false" ? (answers[0]?.booleanValue ?? null) : null,

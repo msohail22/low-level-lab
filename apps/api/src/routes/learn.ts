@@ -66,7 +66,23 @@ learnRoutes.get("/questions/:id", async (c) => {
     ? await getMyAttempt(c.env, userId, c.req.param("id"))
     : null;
 
-  return c.json({ question: practice, attempt: prior });
+  const { getExplanationVoteStats, getTopicPrerequisiteGate, recordContinuePointer } =
+    await import("../learn/study.ts");
+  const votes = await getExplanationVoteStats(
+    c.env,
+    c.req.param("id"),
+    userId,
+  );
+  const gate = await getTopicPrerequisiteGate(c.env, practice.topicId, userId);
+
+  if (userId) {
+    await recordContinuePointer(c.env, userId, {
+      questionId: practice.id,
+      topicId: practice.topicId,
+    });
+  }
+
+  return c.json({ question: practice, attempt: prior, votes, prerequisite: gate });
 });
 
 learnRoutes.use("/questions/:id/attempt", requireSession);

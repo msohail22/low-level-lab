@@ -136,6 +136,7 @@ export async function upsertSpacedReview(
   userId: string,
   questionId: string,
   isCorrect: boolean,
+  confidence?: number | null,
 ) {
   const db = getDb(env);
   const [existing] = await db
@@ -150,16 +151,18 @@ export async function upsertSpacedReview(
     .limit(1);
 
   const now = new Date();
+  const conf = confidence === 1 || confidence === 2 || confidence === 3 ? confidence : null;
 
   if (!isCorrect) {
     const dueAt = addDays(now, 1);
+    const easeBump = conf === 1 ? -0.25 : conf === 2 ? -0.2 : -0.15;
     if (existing) {
       await db
         .update(spacedReview)
         .set({
           dueAt,
           intervalDays: 1,
-          easeFactor: Math.max(1.3, existing.easeFactor - 0.2),
+          easeFactor: Math.max(1.3, existing.easeFactor + easeBump),
           repetitions: 0,
           updatedAt: now,
         })
@@ -171,7 +174,7 @@ export async function upsertSpacedReview(
         questionId,
         dueAt,
         intervalDays: 1,
-        easeFactor: 2.3,
+        easeFactor: 2.3 + easeBump,
         repetitions: 0,
         updatedAt: now,
       });
@@ -179,11 +182,17 @@ export async function upsertSpacedReview(
     return;
   }
 
-  const intervalDays = existing
+  const confEase =
+    conf === 1 ? -0.1 : conf === 3 ? 0.12 : 0.05;
+  let intervalDays = existing
     ? Math.max(1, Math.round(existing.intervalDays * existing.easeFactor))
     : 3;
+  if (conf === 1) intervalDays = Math.max(1, Math.round(intervalDays * 0.7));
+  if (conf === 3) intervalDays = Math.max(1, Math.round(intervalDays * 1.2));
   const dueAt = addDays(now, intervalDays);
-  const easeFactor = existing ? existing.easeFactor + 0.05 : 2.5;
+  const easeFactor = existing
+    ? Math.max(1.3, existing.easeFactor + confEase)
+    : 2.5 + confEase;
   const repetitions = (existing?.repetitions ?? 0) + 1;
 
   if (existing) {

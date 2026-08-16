@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 
 import {
   canAdminPlatform,
@@ -19,6 +20,7 @@ import {
   listTopics,
   reviewQuestion,
   submitQuestion,
+  updateQuestionContent,
 } from "../questions/service.ts";
 
 type AppEnv = {
@@ -117,6 +119,39 @@ questionsRoutes.get("/:id", async (c) => {
   }
 
   return c.json({ question: bundle });
+});
+
+questionsRoutes.patch("/:id", requireSession, async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = z
+    .object({
+      title: z.string().min(3).max(200).optional(),
+      prompt: z.string().min(3).max(5000).optional(),
+      explanation: z.string().min(3).max(5000).optional(),
+      whyWrong: z.string().max(5000).nullable().optional(),
+      workedSolution: z.string().max(8000).nullable().optional(),
+      diagramMarkdown: z.string().max(8000).nullable().optional(),
+      difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+      codeSnippet: z.string().max(8000).nullable().optional(),
+      relatedQuestionId: z.string().nullable().optional(),
+      similarQuestionId: z.string().nullable().optional(),
+      requireReReview: z.boolean().optional(),
+    })
+    .safeParse(body);
+  if (!parsed.success) return c.json({ error: "Invalid body" }, 400);
+
+  const userId = c.get("userId");
+  const isReviewer = await canReviewQuestions(c.env, userId);
+  const result = await updateQuestionContent(c.env, {
+    questionId: c.req.param("id"),
+    editorId: userId,
+    isReviewer,
+    patch: parsed.data,
+  });
+  if (result.error === "NOT_FOUND") return c.json({ error: "Not found" }, 404);
+  if (result.error === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
+  const bundle = await getQuestionBundle(c.env, c.req.param("id"));
+  return c.json({ question: bundle, status: result.status });
 });
 
 export const reviewRoutes = new Hono<AppEnv>();

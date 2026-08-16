@@ -4,17 +4,22 @@ import { Link } from "react-router-dom";
 import { apiFetch } from "@/lib/api";
 
 type Topic = {
-  id: string;
+  topicId: string;
   title: string;
   description: string | null;
   approvedCount: number;
+  attempted: number;
+  correct: number;
+  remaining: number;
+  masteryPercent: number;
+  prerequisiteTopicId: string | null;
 };
 
 export default function Topics() {
   const { data, isPending, error } = useQuery({
-    queryKey: ["learn-topics"],
+    queryKey: ["mastery"],
     queryFn: async () => {
-      const res = await apiFetch<{ topics: Topic[] }>("/api/learn/topics");
+      const res = await apiFetch<{ topics: Topic[] }>("/api/learn/mastery");
       if (res.error) throw new Error(res.error);
       return res.data!.topics;
     },
@@ -25,7 +30,8 @@ export default function Topics() {
       <p className="section-eyebrow">Learn</p>
       <h1 className="section-title mt-2">Topics</h1>
       <p className="section-copy mt-2">
-        Practice approved C++ and low-level questions by topic.
+        Practice approved C++ and low-level questions by topic. Mastery is
+        correct answers over approved count.
       </p>
 
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
@@ -35,20 +41,27 @@ export default function Topics() {
 
       <ul className="mt-8 space-y-3">
         {data?.map((topic) => (
-          <li key={topic.id}>
+          <li key={topic.topicId}>
             <Link
-              to={`/topics/${topic.id}`}
+              to={`/topics/${topic.topicId}`}
               className="surface-card block p-5 transition hover:border-[color:var(--accent)]"
             >
-              <p className="font-semibold text-[color:var(--ink)]">{topic.title}</p>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-semibold text-[color:var(--ink)]">
+                  {topic.title}
+                </p>
+                <p className="text-sm text-[color:var(--accent)]">
+                  {topic.masteryPercent}% mastery
+                </p>
+              </div>
               {topic.description && (
                 <p className="mt-1 text-sm text-[color:var(--muted)]">
                   {topic.description}
                 </p>
               )}
-              <p className="mt-3 text-sm text-[color:var(--accent)]">
-                {topic.approvedCount} approved question
-                {topic.approvedCount === 1 ? "" : "s"}
+              <p className="mt-3 text-sm text-[color:var(--muted)]">
+                {topic.correct}/{topic.approvedCount} correct · {topic.attempted}{" "}
+                attempted · {topic.remaining} remaining
               </p>
             </Link>
           </li>

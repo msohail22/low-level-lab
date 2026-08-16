@@ -126,7 +126,10 @@ export async function createQuestionWithParts(
     prompt: input.prompt,
     explanation: input.explanation,
     whyWrong: input.whyWrong ?? null,
+    workedSolution: input.workedSolution ?? null,
+    diagramMarkdown: input.diagramMarkdown ?? null,
     relatedQuestionId: input.relatedQuestionId ?? null,
+    similarQuestionId: input.similarQuestionId ?? null,
     difficulty: input.difficulty,
     codeSnippet: input.codeSnippet ?? null,
     authorId,
@@ -258,4 +261,81 @@ export async function reviewQuestion(
   }
 
   return { error: null };
+}
+
+export async function updateQuestionContent(
+  env: CloudflareBindings,
+  opts: {
+    questionId: string;
+    editorId: string;
+    isReviewer: boolean;
+    patch: {
+      title?: string;
+      prompt?: string;
+      explanation?: string;
+      whyWrong?: string | null;
+      workedSolution?: string | null;
+      diagramMarkdown?: string | null;
+      difficulty?: string;
+      codeSnippet?: string | null;
+      relatedQuestionId?: string | null;
+      similarQuestionId?: string | null;
+      requireReReview?: boolean;
+    };
+  },
+) {
+  const db = getDb(env);
+  const [row] = await db
+    .select()
+    .from(question)
+    .where(eq(question.id, opts.questionId))
+    .limit(1);
+  if (!row) return { error: "NOT_FOUND" as const };
+  if (row.authorId !== opts.editorId && !opts.isReviewer) {
+    return { error: "FORBIDDEN" as const };
+  }
+
+  const now = new Date();
+  const wasApproved = row.status === "approved";
+  const needsReReview = Boolean(opts.patch.requireReReview) && wasApproved;
+
+  await db
+    .update(question)
+    .set({
+      title: opts.patch.title ?? row.title,
+      prompt: opts.patch.prompt ?? row.prompt,
+      explanation: opts.patch.explanation ?? row.explanation,
+      whyWrong:
+        opts.patch.whyWrong !== undefined ? opts.patch.whyWrong : row.whyWrong,
+      workedSolution:
+        opts.patch.workedSolution !== undefined
+          ? opts.patch.workedSolution
+          : row.workedSolution,
+      diagramMarkdown:
+        opts.patch.diagramMarkdown !== undefined
+          ? opts.patch.diagramMarkdown
+          : row.diagramMarkdown,
+      difficulty: opts.patch.difficulty ?? row.difficulty,
+      codeSnippet:
+        opts.patch.codeSnippet !== undefined
+          ? opts.patch.codeSnippet
+          : row.codeSnippet,
+      relatedQuestionId:
+        opts.patch.relatedQuestionId !== undefined
+          ? opts.patch.relatedQuestionId
+          : row.relatedQuestionId,
+      similarQuestionId:
+        opts.patch.similarQuestionId !== undefined
+          ? opts.patch.similarQuestionId
+          : row.similarQuestionId,
+      status: needsReReview ? "pending" : row.status,
+      publishedAt: needsReReview ? null : row.publishedAt,
+      updatedAt: now,
+    })
+    .where(eq(question.id, opts.questionId));
+
+  const { snapshotQuestionVersion } = await import("../learn/platform.ts");
+  await snapshotQuestionVersion(env, opts.questionId, opts.editorId);
+
+  return { error: null, status: needsReReview ? "pending" : row.status };
 }

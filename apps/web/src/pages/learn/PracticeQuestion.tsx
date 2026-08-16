@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { apiFetch } from "@/lib/api";
+import { flushUiEvents, trackUiEvent } from "@/lib/ui-analytics";
 
 type PracticeOption = {
   id: string;
@@ -18,10 +19,17 @@ type PracticeQuestion = {
   prompt: string;
   difficulty: string;
   codeSnippet: string | null;
+  diagramMarkdown: string | null;
   relatedQuestionId: string | null;
+  similarQuestionId: string | null;
   hintCount: number;
   authorId: string;
   authorName: string | null;
+  calibration: {
+    attempts: number;
+    correct: number;
+    percentCorrect: number | null;
+  };
   options: PracticeOption[];
 };
 
@@ -29,23 +37,20 @@ type AttemptView = {
   isCorrect: boolean;
   explanation: string;
   whyWrong?: string | null;
+  workedSolution?: string | null;
   relatedQuestionId?: string | null;
   correctBooleanValue: boolean | null;
   correctOptionIds: string[];
   selectedOptionIds?: string[];
   booleanValue?: boolean | null;
   dailyChallengeCorrect?: boolean;
-};
-
-type Comment = {
-  id: string;
-  body: string;
-  authorName: string;
-  createdAt: string;
+  confidence?: number | null;
 };
 
 export default function PracticeQuestionPage() {
   const { questionId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const playlistId = searchParams.get("playlist");
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [booleanValue, setBooleanValue] = useState<boolean | null>(null);
@@ -58,6 +63,48 @@ export default function PracticeQuestionPage() {
   const [reportDetails, setReportDetails] = useState("");
   const [sandboxOutput, setSandboxOutput] = useState("");
   const [sandboxMsg, setSandboxMsg] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [timedMode, setTimedMode] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const viewStarted = useRef(0);
+  const submittedRef = useRef(false);
+  const hoverAccum = useRef<Record<string, number>>({});
+  const hoverStart = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    viewStarted.current = Date.now();
+    submittedRef.current = false;
+    hoverAccum.current = {};
+    hoverStart.current = {};
+    const hoverSnapshot = hoverAccum;
+    return () => {
+      const durationMs = Date.now() - viewStarted.current;
+      trackUiEvent({
+        eventName: submittedRef.current ? "question_view" : "abandon",
+        questionId,
+        durationMs,
+      });
+      for (const [targetId, ms] of Object.entries(hoverSnapshot.current)) {
+        if (ms > 0) {
+          trackUiEvent({
+            eventName: "option_hover",
+            questionId,
+            targetId,
+            durationMs: Math.round(ms),
+          });
+        }
+      }
+      void flushUiEvents();
+    };
+  }, [questionId]);
+
+  useEffect(() => {
+    if (!timedMode || result) return;
+    const id = window.setInterval(() => {
+      setElapsedMs(Date.now() - viewStarted.current);
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [timedMode, result, questionId]);
 
   const { data, isPending } = useQuery({
     queryKey: ["practice-question", questionId],
@@ -66,9 +113,30 @@ export default function PracticeQuestionPage() {
       const res = await apiFetch<{
         question: PracticeQuestion;
         attempt: AttemptView | null;
+        votes: { helpful: number; unhelpful: number; mine: boolean | null };
+        prerequisite: {
+          warn?: boolean;
+          prerequisite: { id: string; title: string } | null;
+          masteryPercent?: number;
+        };
       }>(`/api/learn/questions/${questionId}`);
       if (res.error) throw new Error(res.error);
       return res.data!;
+    },
+  });
+
+  const playlist = useQuery({
+    queryKey: ["playlist-play", playlistId],
+    enabled: Boolean(playlistId),
+    queryFn: async () => {
+      const res = await apiFetch<{
+        play: {
+          nextQuestionId: string | null;
+          items: { questionId: string }[];
+        };
+      }>(`/api/learn/sets/${playlistId}/play`);
+      if (res.error) throw new Error(res.error);
+      return res.data!.play;
     },
   });
 
@@ -89,9 +157,9 @@ export default function PracticeQuestionPage() {
     queryKey: ["question-comments", questionId],
     enabled: Boolean(questionId),
     queryFn: async () => {
-      const res = await apiFetch<{ comments: Comment[] }>(
-        `/api/learn/questions/${questionId}/comments`,
-      );
+      const res = await apiFetch<{
+        comments: { id: string; body: string; authorName: string }[];
+      }>(`/api/learn/questions/${questionId}/comments`);
       if (res.error) throw new Error(res.error);
       return res.data!.comments;
     },
@@ -128,10 +196,21 @@ export default function PracticeQuestionPage() {
 
   const submit = useMutation({
     mutationFn: async () => {
+      trackUiEvent({ eventName: "submit_click", questionId });
       const body =
         question?.type === "true_false"
-          ? { booleanValue: booleanValue === true }
-          : { optionIds: selected };
+          ? {
+              booleanValue: booleanValue === true,
+              confidence: confidence ?? undefined,
+              timedMode,
+              elapsedMs: timedMode ? elapsedMs : undefined,
+            }
+          : {
+              optionIds: selected,
+              confidence: confidence ?? undefined,
+              timedMode,
+              elapsedMs: timedMode ? elapsedMs : undefined,
+            };
 
       const res = await apiFetch<AttemptView>(
         `/api/learn/questions/${questionId}/attempt`,
@@ -146,24 +225,27 @@ export default function PracticeQuestionPage() {
     onSuccess: (payload) => {
       setResult(payload);
       setRetrying(false);
+      submittedRef.current = true;
       setError(null);
       queryClient.invalidateQueries({
         queryKey: ["learn-topic-questions", question?.topicId],
       });
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["learning-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
-      queryClient.invalidateQueries({ queryKey: ["mistakes"] });
-      queryClient.invalidateQueries({ queryKey: ["achievements"] });
-      queryClient.invalidateQueries({ queryKey: ["daily-challenge"] });
+      queryClient.invalidateQueries({ queryKey: ["continue"] });
+      queryClient.invalidateQueries({ queryKey: ["mastery"] });
       queryClient.invalidateQueries({ queryKey: ["practice-question", questionId] });
       queryClient.invalidateQueries({ queryKey: ["next-question", questionId] });
+      if (playlistId) {
+        queryClient.invalidateQueries({ queryKey: ["playlist-play", playlistId] });
+      }
     },
     onError: (err: Error) => setError(err.message),
   });
 
   const toggleBookmark = useMutation({
     mutationFn: async () => {
+      trackUiEvent({ eventName: "bookmark_toggle", questionId });
       if (bookmarkStatus.data?.bookmarked) {
         const res = await apiFetch(`/api/learn/bookmarks/${questionId}`, {
           method: "DELETE",
@@ -187,6 +269,11 @@ export default function PracticeQuestionPage() {
   const revealHint = useMutation({
     mutationFn: async () => {
       const index = hintsRevealed.length;
+      trackUiEvent({
+        eventName: "hint_reveal",
+        questionId,
+        meta: { index },
+      });
       const res = await apiFetch<{
         hint: { index: number; body: string; remaining: number };
       }>(`/api/learn/questions/${questionId}/hints/${index}`);
@@ -198,6 +285,23 @@ export default function PracticeQuestionPage() {
       setError(null);
     },
     onError: (err: Error) => setError(err.message),
+  });
+
+  const vote = useMutation({
+    mutationFn: async (helpful: boolean) => {
+      const res = await apiFetch(
+        `/api/learn/questions/${questionId}/explanation-vote`,
+        {
+          method: "POST",
+          body: JSON.stringify({ helpful }),
+        },
+      );
+      if (res.error) throw new Error(res.error);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["practice-question", questionId],
+      }),
   });
 
   const postComment = useMutation({
@@ -234,8 +338,25 @@ export default function PracticeQuestionPage() {
     onError: (err: Error) => setError(err.message),
   });
 
+  const flagDup = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(
+        `/api/learn/questions/${questionId}/duplicate-flag`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            similarQuestionId: question?.similarQuestionId || undefined,
+            note: "Possible duplicate",
+          }),
+        },
+      );
+      if (res.error) throw new Error(res.error);
+    },
+  });
+
   const sandbox = useMutation({
     mutationFn: async () => {
+      trackUiEvent({ eventName: "sandbox_check", questionId });
       const res = await apiFetch<{
         mode: string;
         isCorrect: boolean | null;
@@ -250,9 +371,7 @@ export default function PracticeQuestionPage() {
       if (res.error) throw new Error(res.error);
       return res.data!;
     },
-    onSuccess: (payload) => {
-      setSandboxMsg(payload.feedback);
-    },
+    onSuccess: (payload) => setSandboxMsg(payload.feedback),
     onError: (err: Error) => setError(err.message),
   });
 
@@ -276,7 +395,6 @@ export default function PracticeQuestionPage() {
       queryClient.invalidateQueries({
         queryKey: ["follow-status", question?.authorId],
       });
-      queryClient.invalidateQueries({ queryKey: ["following-feed"] });
     },
   });
 
@@ -307,16 +425,48 @@ export default function PracticeQuestionPage() {
     setSelected([id]);
   }
 
+  const playlistNext =
+    playlist.data?.items.find((i) => i.questionId === questionId) &&
+    playlist.data.items[
+      playlist.data.items.findIndex((i) => i.questionId === questionId) + 1
+    ]?.questionId;
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
       <p className="section-eyebrow">Practice</p>
       {isPending && <p className="mt-8 text-[color:var(--muted)]">Loading…</p>}
+
+      {data?.prerequisite?.warn && data.prerequisite.prerequisite && (
+        <p className="surface-card mt-4 p-4 text-sm text-[color:var(--muted)]">
+          Soft prerequisite:{" "}
+          <Link
+            className="text-[color:var(--accent)]"
+            to={`/topics/${data.prerequisite.prerequisite.id}`}
+          >
+            {data.prerequisite.prerequisite.title}
+          </Link>{" "}
+          (your mastery there is {data.prerequisite.masteryPercent ?? 0}%).
+        </p>
+      )}
 
       {question && (
         <>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <h1 className="section-title">{question.title}</h1>
             <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="auth-secondary-btn shrink-0"
+                onClick={() => {
+                  setTimedMode((v) => !v);
+                  viewStarted.current = Date.now();
+                  setElapsedMs(0);
+                }}
+              >
+                {timedMode
+                  ? `Timer ${(elapsedMs / 1000).toFixed(0)}s`
+                  : "Timed mode"}
+              </button>
               <button
                 type="button"
                 className="auth-secondary-btn shrink-0"
@@ -337,6 +487,13 @@ export default function PracticeQuestionPage() {
           </div>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
             {question.type} · {question.difficulty}
+            {question.calibration.percentCorrect != null && (
+              <>
+                {" "}
+                · Community {question.calibration.percentCorrect}% correct (
+                {question.calibration.attempts})
+              </>
+            )}
             {question.authorName && (
               <>
                 {" "}
@@ -354,6 +511,11 @@ export default function PracticeQuestionPage() {
           {question.codeSnippet && (
             <pre className="surface-card mt-4 overflow-x-auto p-4 font-mono text-sm">
               {question.codeSnippet}
+            </pre>
+          )}
+          {question.diagramMarkdown && (
+            <pre className="surface-card mt-4 overflow-x-auto p-4 text-sm">
+              {question.diagramMarkdown}
             </pre>
           )}
 
@@ -406,6 +568,17 @@ export default function PracticeQuestionPage() {
                       type="button"
                       disabled={Boolean(shown)}
                       onClick={() => toggleOption(opt.id)}
+                      onMouseEnter={() => {
+                        hoverStart.current[opt.id] = Date.now();
+                      }}
+                      onMouseLeave={() => {
+                        const start = hoverStart.current[opt.id];
+                        if (!start) return;
+                        hoverAccum.current[opt.id] =
+                          (hoverAccum.current[opt.id] ?? 0) +
+                          (Date.now() - start);
+                        delete hoverStart.current[opt.id];
+                      }}
                       className={`surface-card flex w-full items-start gap-3 p-4 text-left ${
                         checked || state !== "idle"
                           ? "border-[color:var(--accent)]"
@@ -422,19 +595,38 @@ export default function PracticeQuestionPage() {
           )}
 
           {!shown && (
-            <button
-              type="button"
-              className="auth-primary-btn mt-8"
-              disabled={
-                submit.isPending ||
-                (question.type === "true_false"
-                  ? booleanValue === null
-                  : selected.length === 0)
-              }
-              onClick={() => submit.mutate()}
-            >
-              {submit.isPending ? "Checking…" : "Submit answer"}
-            </button>
+            <div className="mt-6 space-y-3">
+              <p className="text-sm text-[color:var(--muted)]">
+                Confidence (feeds spaced review)
+              </p>
+              <div className="flex gap-2">
+                {[1, 2, 3].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`auth-secondary-btn ${
+                      confidence === n ? "border-[color:var(--accent)]" : ""
+                    }`}
+                    onClick={() => setConfidence(n)}
+                  >
+                    {n === 1 ? "Guessing" : n === 2 ? "Okay" : "Sure"}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="auth-primary-btn"
+                disabled={
+                  submit.isPending ||
+                  (question.type === "true_false"
+                    ? booleanValue === null
+                    : selected.length === 0)
+                }
+                onClick={() => submit.mutate()}
+              >
+                {submit.isPending ? "Checking…" : "Submit answer"}
+              </button>
+            </div>
           )}
 
           {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
@@ -452,11 +644,35 @@ export default function PracticeQuestionPage() {
               <p className="whitespace-pre-wrap text-sm text-[color:var(--muted)]">
                 {shown.explanation}
               </p>
+              {shown.isCorrect && shown.workedSolution && (
+                <p className="whitespace-pre-wrap text-sm text-[color:var(--ink)]">
+                  Worked solution: {shown.workedSolution}
+                </p>
+              )}
               {!shown.isCorrect && shown.whyWrong && (
                 <p className="whitespace-pre-wrap text-sm text-[color:var(--ink)]">
                   Why this is wrong: {shown.whyWrong}
                 </p>
               )}
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="text-[color:var(--muted)]">
+                  Explanation helpful?
+                </span>
+                <button
+                  type="button"
+                  className="auth-secondary-btn"
+                  onClick={() => vote.mutate(true)}
+                >
+                  Yes ({data.votes.helpful})
+                </button>
+                <button
+                  type="button"
+                  className="auth-secondary-btn"
+                  onClick={() => vote.mutate(false)}
+                >
+                  No ({data.votes.unhelpful})
+                </button>
+              </div>
               {(shown.relatedQuestionId || question.relatedQuestionId) && (
                 <Link
                   className="inline-block text-sm text-[color:var(--accent)]"
@@ -465,22 +681,33 @@ export default function PracticeQuestionPage() {
                   Related follow-up →
                 </Link>
               )}
-              {nextQuestion.data && (
+              {playlistNext ? (
+                <Link
+                  className="block text-sm text-[color:var(--accent)]"
+                  to={`/practice/${playlistNext}?playlist=${playlistId}`}
+                >
+                  Next in playlist →
+                </Link>
+              ) : nextQuestion.data ? (
                 <Link
                   className="block text-sm text-[color:var(--accent)]"
                   to={`/practice/${nextQuestion.data.id}`}
                 >
                   Suggested next: {nextQuestion.data.title} →
                 </Link>
-              )}
+              ) : null}
               <button
                 type="button"
                 className="auth-secondary-btn"
                 onClick={() => {
+                  trackUiEvent({ eventName: "retry_click", questionId });
                   setRetrying(true);
                   setResult(null);
                   setSelected([]);
                   setBooleanValue(null);
+                  setConfidence(null);
+                  viewStarted.current = Date.now();
+                  setElapsedMs(0);
                 }}
               >
                 Try again
@@ -491,11 +718,6 @@ export default function PracticeQuestionPage() {
           {(question.type === "print_output" || question.codeSnippet) && (
             <div className="surface-card mt-8 space-y-3 p-5">
               <p className="font-semibold">Sandbox</p>
-              <p className="text-sm text-[color:var(--muted)]">
-                {question.type === "print_output"
-                  ? "Predict stdout and check it against the expected output."
-                  : "Full compile/run is not configured on Workers; submissions are recorded as stubs."}
-              </p>
               <textarea
                 className="auth-input min-h-24 font-mono text-sm"
                 placeholder="Predicted output"
@@ -508,7 +730,7 @@ export default function PracticeQuestionPage() {
                 onClick={() => sandbox.mutate()}
                 disabled={sandbox.isPending}
               >
-                {sandbox.isPending ? "Checking…" : "Check output"}
+                Check output
               </button>
               {sandboxMsg && (
                 <p className="text-sm text-[color:var(--ink)]">{sandboxMsg}</p>
@@ -541,46 +763,54 @@ export default function PracticeQuestionPage() {
                 required
                 minLength={2}
               />
-              <button
-                type="submit"
-                className="auth-secondary-btn"
-                disabled={postComment.isPending || commentBody.trim().length < 2}
-              >
+              <button type="submit" className="auth-secondary-btn">
                 Submit for moderation
               </button>
             </form>
           </div>
 
-          <form
-            className="surface-card mt-10 space-y-2 p-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              report.mutate();
-            }}
-          >
-            <p className="font-semibold">Report question</p>
-            <input
-              className="auth-input"
-              placeholder="Reason"
-              value={reportReason}
-              onChange={(e) => setReportReason(e.target.value)}
-              required
-              minLength={3}
-            />
-            <textarea
-              className="auth-input min-h-16"
-              placeholder="Details (optional)"
-              value={reportDetails}
-              onChange={(e) => setReportDetails(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="auth-secondary-btn"
-              disabled={report.isPending || reportReason.trim().length < 3}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <form
+              className="surface-card flex-1 space-y-2 p-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                report.mutate();
+              }}
             >
-              Send report
-            </button>
-          </form>
+              <p className="font-semibold">Report question</p>
+              <input
+                className="auth-input"
+                placeholder="Reason"
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                required
+                minLength={3}
+              />
+              <textarea
+                className="auth-input min-h-16"
+                placeholder="Details (optional)"
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+              />
+              <button type="submit" className="auth-secondary-btn">
+                Send report
+              </button>
+            </form>
+            <div className="surface-card flex-1 space-y-2 p-5">
+              <p className="font-semibold">Duplicate?</p>
+              <p className="text-sm text-[color:var(--muted)]">
+                Flag for reviewers if this looks like another question.
+              </p>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() => flagDup.mutate()}
+                disabled={flagDup.isPending}
+              >
+                Flag as duplicate
+              </button>
+            </div>
+          </div>
 
           <Link
             className="mt-8 inline-block text-sm text-[color:var(--accent)]"

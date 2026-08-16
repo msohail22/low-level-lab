@@ -1,16 +1,23 @@
 # To-do later
 
-Deferred work that is intentionally out of scope for the current client-telemetry / request-logging design. Come back to these when the feature is stable in production.
+Deferred / queued work. Product Phase 5 items below are **in implementation** (or just shipped); infra that needs external services stays deferred until wired.
 
 ## Learning platform phases 2–4 (shipped v1)
 
-Implemented in migration `0005_engagement_pedagogy_trust` + `/api/learn` platform routes:
+See migration `0005` + `/api/learn` platform routes.
 
-**Phase 2:** daily challenge + day board, achievements, moderated comments, follow authors / curated sets  
-**Phase 3:** progressive hints, adaptive next question, glossary; sandbox is output-check for `print_output` (full compiler stubbed)  
-**Phase 4:** report question → reviewer queue, question version snapshots, author reputation  
+## Phase 5 — Study loop, depth, feedback, trust (shipped v1)
 
-Still later: external code runner, richer version UI/diff, Redis cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning.
+Product backlog (lean) — migration `0006_study_loop_depth` + `/api/learn` study routes + UI analytics:
+
+**Study loop** — continue CTA, topic mastery %, weak drill, timed mode  
+**Content depth** — worked solutions, diagram markdown, prerequisite soft-warn  
+**Feedback** — confidence → spaced review, explanation thumbs  
+**Author / community** — edit + version/re-review, playlist runner  
+**Trust** — community % correct, duplicate flags  
+**UI analytics** — `ui_event` batch ingest (dwell, hover, hints, abandon) alongside API `request_log`
+
+Still deferred (infra): Redis question + user session cache, realtime DO leaderboard, GraphQL, OpenFGA prod, request-log pruning, external code runner, richer version UI/diff.
 
 ## Request log pruning
 
@@ -45,7 +52,7 @@ Expose **leaderboard**, **telemetry**, and eventually **questions / topics** thr
 
 **Scope to cover later:**
 - GraphQL schema + resolvers for leaderboard queries/mutations
-- GraphQL schema + resolvers for telemetry: devices, request logs, platform/usage aggregates
+- GraphQL schema + resolvers for telemetry: devices, request logs, platform/usage aggregates, **ui_event** aggregates
 - GraphQL for community questions (list approved, contribute mutations) once REST stabilizes
 - Auth / authorization on GraphQL (session-aware; OpenFGA checks)
 - Wire into `apps/api` (e.g. Yoga / GraphQL Yoga on Hono, or similar Workers-friendly stack)
@@ -86,7 +93,45 @@ Expose **leaderboard**, **telemetry**, and eventually **questions / topics** thr
 - Approve / reject
 - Any admin edit that changes type, difficulty, topic, prompt, or options for an approved question
 
-**Out of scope for this item:** caching individual attempt grading payloads or user-specific “attempted” flags inside the same Redis blob (those stay user-scoped; either merge at read time from Postgres/attempts, or use separate per-user keys later).
+## Redis cache for signed-in user data
+
+**Why:** After login, the app repeatedly needs the same learner bundle (roles/`/api/me`, learning stats/streak/goal, bookmarks, due count, achievements earned, follow list, recent attempts, continue-where-left-off). Hitting Postgres for each of those on every page load is wasteful once Redis exists.
+
+**Idea:**
+- On **successful sign-in** (and optionally on first authenticated API hit if cache miss): load a **user session profile** from Postgres once and store it in Redis.
+- Subsequent reads for that user prefer Redis; mutations that change the bundle **invalidate or patch** the user key so the next request refills from Postgres.
+- Keep Postgres as source of truth; Redis is a hot read cache, not the system of record.
+
+**Suggested keys / payload:**
+- `user:{userId}:session` — compact JSON: roles flags, learning stats (streak, daily goal, today count), continue pointers, bookmark ids (or count + recent), due-review count, earned achievement slugs, following author ids
+- Optional splits if the blob gets large: `user:{userId}:stats`, `user:{userId}:bookmarks`, `user:{userId}:achievements`
+- TTL e.g. 15–60 minutes + explicit invalidation on write
+
+**Invalidate / refresh on (at minimum):**
+- Attempt submit (stats, streak, due, achievements, continue pointers)
+- Bookmark add/remove
+- Daily goal change
+- Follow / unfollow
+- Role grant/revoke (admin)
+- Sign-out → delete `user:{userId}:*` (or let TTL expire)
+
+**Notes:**
+- Do **not** put secrets / session tokens in Redis user blobs; session remains Better Auth.
+- Question-list cache (above) stays shared/global; user cache stays per-user. Merge “attempted” flags at read time from user cache + question list cache when possible.
+
+## UI / client product analytics (learner UX stats)
+
+**Status:** shipped v1 with Phase 5 (`ui_event` table + `POST /api/learn/ui-events` + web batch collector on practice). Complements API `request_log` / device telemetry.
+
+**Why:** Server logs cover HTTP; product learning needs UI signals (dwell, hints, hovers, abandon).
+
+**Lean v1 events:**
+- `question_view` (duration_ms on leave)
+- `hint_reveal`, `option_hover` (debounced aggregate), `submit_click`, `retry_click`, `bookmark_toggle`, `sandbox_check`, `abandon`
+
+**Out of scope for v1:** heatmaps, full clickstreams, third-party SDKs, every mouseenter.
+
+**Privacy:** light payload; retention TBD; no answer correctness in UI events.
 
 ## OpenFGA production setup
 
@@ -98,11 +143,9 @@ REST + local reviewer/admin fallback (`REVIEWER_USER_IDS` / `ADMIN_USER_IDS`) sh
 
 ## Related follow-ups (optional)
 
-- Dashboard / admin UI to browse devices and request logs (prefer GraphQL above)
+- Dashboard / admin UI to browse devices, request logs, and **ui_event** aggregates (prefer GraphQL above)
 - Sampling high-traffic paths if volume is huge (log 100% of mutations, N% of GETs)
 - PII review: IP + geo retention policy, export/delete for account deletion
 - Dead-letter queue for request-log messages that fail consumer inserts repeatedly
 - Refresh `device.lastSeenAt` on authenticated API traffic (v1 only upserts on session create)
 - Reconcile Drizzle meta snapshots: `0000` still describes old `users` table while live schema is Better Auth (`user`/`session`/…). `drizzle-kit generate` prompts interactively; prefer `db:push` or hand-written SQL until snapshots are aligned
-
-

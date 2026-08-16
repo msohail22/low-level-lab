@@ -47,6 +47,8 @@ export default function NewQuestion() {
   const [booleanAnswer, setBooleanAnswer] = useState(true);
   const [options, setOptions] = useState<OptionDraft[]>(emptyOptions);
   const [hints, setHints] = useState(["", ""]);
+  const [workedSolution, setWorkedSolution] = useState("");
+  const [diagramMarkdown, setDiagramMarkdown] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   const create = useMutation({
@@ -61,6 +63,8 @@ export default function NewQuestion() {
               prompt,
               explanation,
               whyWrong: whyWrong || null,
+              workedSolution: workedSolution || null,
+              diagramMarkdown: diagramMarkdown || null,
               difficulty,
               codeSnippet: codeSnippet || null,
               status,
@@ -75,6 +79,8 @@ export default function NewQuestion() {
               prompt,
               explanation,
               whyWrong: whyWrong || null,
+              workedSolution: workedSolution || null,
+              diagramMarkdown: diagramMarkdown || null,
               difficulty,
               codeSnippet: codeSnippet || null,
               status,
@@ -289,6 +295,26 @@ export default function NewQuestion() {
             value={whyWrong}
             onChange={(e) => setWhyWrong(e.target.value)}
             placeholder="Shown when the learner answers incorrectly"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Worked solution (optional)</span>
+          <textarea
+            className="auth-input min-h-24"
+            value={workedSolution}
+            onChange={(e) => setWorkedSolution(e.target.value)}
+            placeholder="Shown after a correct answer"
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Diagram markdown (optional)</span>
+          <textarea
+            className="auth-input min-h-24 font-mono text-sm"
+            value={diagramMarkdown}
+            onChange={(e) => setDiagramMarkdown(e.target.value)}
+            placeholder="Mermaid or SVG markup"
           />
         </label>
 

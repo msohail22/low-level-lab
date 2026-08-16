@@ -32,6 +32,25 @@ export default function Dashboard() {
     },
   });
 
+  const { data: cont } = useQuery({
+    queryKey: ["continue"],
+    queryFn: async () => {
+      const res = await apiFetch<{
+        continue: {
+          lastQuestionId: string | null;
+          lastQuestionTitle: string | null;
+          lastTopicId: string | null;
+          lastTopicTitle: string | null;
+          lastPathId: string | null;
+          lastPathTitle: string | null;
+          dueCount: number;
+        } | null;
+      }>("/api/learn/continue");
+      if (res.error) throw new Error(res.error);
+      return res.data!.continue;
+    },
+  });
+
   const saveGoal = useMutation({
     mutationFn: async () => {
       const res = await apiFetch<{ stats: Stats }>("/api/learn/stats/goal", {
@@ -97,6 +116,41 @@ export default function Dashboard() {
         </form>
       </div>
 
+      {cont && (cont.lastQuestionId || cont.dueCount > 0 || cont.lastTopicId) && (
+        <div className="surface-card mt-6 space-y-3 p-5">
+          <p className="font-semibold">Continue where you left off</p>
+          {cont.dueCount > 0 && (
+            <Link className="block text-sm text-[color:var(--accent)]" to="/due">
+              {cont.dueCount} review{cont.dueCount === 1 ? "" : "s"} due →
+            </Link>
+          )}
+          {cont.lastQuestionId && (
+            <Link
+              className="block text-sm text-[color:var(--accent)]"
+              to={`/practice/${cont.lastQuestionId}`}
+            >
+              Resume: {cont.lastQuestionTitle ?? "last question"} →
+            </Link>
+          )}
+          {cont.lastTopicId && (
+            <Link
+              className="block text-sm text-[color:var(--accent)]"
+              to={`/topics/${cont.lastTopicId}`}
+            >
+              Topic: {cont.lastTopicTitle ?? "last topic"} →
+            </Link>
+          )}
+          {cont.lastPathId && (
+            <Link
+              className="block text-sm text-[color:var(--accent)]"
+              to={`/paths/${cont.lastPathId}`}
+            >
+              Path: {cont.lastPathTitle ?? "last path"} →
+            </Link>
+          )}
+        </div>
+      )}
+
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <Link className="auth-primary-btn text-center" to="/paths">
           Learning paths
@@ -106,6 +160,9 @@ export default function Dashboard() {
         </Link>
         <Link className="auth-secondary-btn text-center" to="/topics">
           Practice topics
+        </Link>
+        <Link className="auth-secondary-btn text-center" to="/drill">
+          Weak-topic drill
         </Link>
         <Link className="auth-secondary-btn text-center" to="/due">
           Spaced review
