@@ -17,9 +17,9 @@ pnpm monorepo with Cloudflare Workers:
 - **packages/shared** (`@llb/shared`) — shared Zod schemas, DTOs, and constants
 - **packages/ui-tokens** (`@llb/ui-tokens`) — shared design tokens (colors, radii, type)
 - **apps/web/src/components/ui** — Radix + CVA web UI kit (Button, Select, etc.)
-- **reactor/service** — local Reactor PoC (HTTP + Kafka + Redis + clang++/g++)
-- **packages/reactor-sdk** (`@llb/reactor-sdk`) — TS client for Reactor / API proxy
-- **docker-compose.yml** + `docker/` — laptop infra (Postgres, Redis, Kafka, Reactor, …)
+- **reactor** — pure C++20 execution engine service (compiled with `clang++`, CMake, Redis & Kafka integration)
+- **packages/reactor-sdk** (`@llb/reactor-sdk`) — TS client SDK for Reactor; all code execution requests MUST go through `reactor-sdk`
+- **docker-compose.yml** + `docker/` — unified single location for all Docker container configs and infra
 - **infra/** — Terraform (Cloudflare + cluster/Argo) and k8s manifests Argo syncs
 
 ## Commands
@@ -62,6 +62,14 @@ Run from repo root unless noted otherwise:
 - `packages/shared` (`@llb/shared`) holds cross-app API contracts; do not put Hono env or React component props there.
 - API uses Hono + Drizzle (Postgres via Hyperdrive). Web uses React + Vite + Cloudflare Workers.
 - Keep custom web CSS centralized in `apps/web/src/index.css`.
+
+## Docker & Containerization Rule
+- All Docker definitions, services, and container infrastructure for this repository are unified in one place (`docker-compose.yml` and the `docker/` directory).
+
+## Reactor & Execution Rules
+- **Pure C++20 & Clang**: All code in/from the `reactor` folder must be strictly pure C++20 (`std::c++20`) using `clang++` as the compiler toolchain.
+- **Reactor SDK Interface**: Any caller attempting code execution via Reactor MUST route through `packages/reactor-sdk` (`@llb/reactor-sdk`).
+
 
 ## Design Requirements
 - **Responsive design mandatory** — all web pages must work on mobile, tablet, desktop, and ultra-wide screens. Use Tailwind CSS responsive utilities (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`) and test across breakpoints.

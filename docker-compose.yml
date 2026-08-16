@@ -71,7 +71,7 @@ services:
 
   reactor:
     build:
-      context: ./reactor/service
+      context: ./reactor
       dockerfile: Dockerfile
     container_name: llb-reactor
     ports:

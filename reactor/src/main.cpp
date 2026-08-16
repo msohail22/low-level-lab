@@ -1,35 +1,54 @@
-#include <spdlog/spdlog.h>
+#include <reactor/compiler.hpp>
+#include <reactor/http_server.hpp>
+#include <reactor/redis_client.hpp>
+
+#include <csignal>
 #include <cstdlib>
-#include <string>
-#include <chrono>
+#include <iostream>
+#include <memory>
+#include <spdlog/spdlog.h>
 
-constexpr auto SOURCE_FILE = "yo.cpp";
-constexpr auto OUTPUT_FILE = "yo";
-constexpr auto COMPILER = "clang++";
-constexpr auto COMPILE_FLAGS = "-std=c++17";
+std::shared_ptr<reactor::HttpServer> g_server;
 
+void signalHandler(int signum) {
+    spdlog::info("[Main] Received signal {}, shutting down Reactor...", signum);
+    if (g_server) {
+        g_server->stop();
+    }
+    exit(0);
+}
 
 int main() {
-    spdlog::set_pattern("[%H:%M:%S] [%^%l%$] %v");
-    spdlog::info("Starting compilation...");
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+    spdlog::info("=== Starting Native C++20 Reactor Execution Engine ===");
 
-    std::string compileCommand =std::string(COMPILER) + " " + SOURCE_FILE + " " + " -o " + OUTPUT_FILE;
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
 
-    auto start = std::chrono::steady_clock::now();
-
-    int result = std::system(compileCommand.c_str());
-   
-    auto end = std::chrono::steady_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-    if (result == 0) {
-      spdlog::info("Compilation successfull");  
-    } else {
-      spdlog::error("Compilation failed (exit code: {})", result);
+    int port = 18080;
+    if (const char* portEnv = std::getenv("PORT")) {
+        try {
+            port = std::stoi(portEnv);
+        } catch (...) {
+            port = 18080;
+        }
     }
 
-    spdlog::info("Compilation took {} ms", duration.count());
+    std::string redisUrl = "redis://127.0.0.1:6379";
+    if (const char* redisEnv = std::getenv("REDIS_URL")) {
+        redisUrl = redisEnv;
+    }
 
-    return result;
+    auto redis = std::make_shared<reactor::RedisClient>(redisUrl);
+    redis->connect();
+
+    auto compiler = std::make_shared<reactor::CompilerEngine>();
+    g_server = std::make_shared<reactor::HttpServer>(port, redis, compiler);
+
+    if (!g_server->start()) {
+        spdlog::error("[Main] Failed to start Reactor HTTP server on port {}", port);
+        return 1;
+    }
+
+    return 0;
 }
