@@ -41,6 +41,7 @@ export default function NewQuestion() {
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const [explanation, setExplanation] = useState("");
+  const [whyWrong, setWhyWrong] = useState("");
   const [difficulty, setDifficulty] = useState("beginner");
   const [codeSnippet, setCodeSnippet] = useState("");
   const [booleanAnswer, setBooleanAnswer] = useState(true);
@@ -57,6 +58,7 @@ export default function NewQuestion() {
               title,
               prompt,
               explanation,
+              whyWrong: whyWrong || null,
               difficulty,
               codeSnippet: codeSnippet || null,
               status,
@@ -69,6 +71,7 @@ export default function NewQuestion() {
               title,
               prompt,
               explanation,
+              whyWrong: whyWrong || null,
               difficulty,
               codeSnippet: codeSnippet || null,
               status,
@@ -272,6 +275,16 @@ export default function NewQuestion() {
             required
             value={explanation}
             onChange={(e) => setExplanation(e.target.value)}
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium">Why wrong (optional)</span>
+          <textarea
+            className="auth-input min-h-20"
+            value={whyWrong}
+            onChange={(e) => setWhyWrong(e.target.value)}
+            placeholder="Shown when the learner answers incorrectly"
           />
         </label>
 

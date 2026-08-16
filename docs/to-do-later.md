@@ -2,6 +2,14 @@
 
 Deferred work that is intentionally out of scope for the current client-telemetry / request-logging design. Come back to these when the feature is stable in production.
 
+## Learning platform phases 2–4 (deferred)
+
+See full roadmap: `docs/superpowers/specs/2026-08-16-learning-platform-roadmap.md`.
+
+**Phase 2 — Engagement:** daily challenge, achievements/badges, moderated discussion, follow authors / curated sets  
+**Phase 3 — Pedagogy:** progressive hints, adaptive next question, code sandbox, glossary/concept cards  
+**Phase 4 — Trust:** report question, version history, author reputation  
+
 ## Request log pruning
 
 **Why:** v1 keeps every API request log in Postgres forever. Volume will grow; pruning will be needed before storage/cost becomes painful.

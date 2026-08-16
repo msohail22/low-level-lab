@@ -29,6 +29,13 @@
       "when": 1786874000000,
       "tag": "0003_attempts_leaderboard",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786876000000,
+      "tag": "0004_learning_engagement",
+      "breakpoints": true
     }
   ]
 }

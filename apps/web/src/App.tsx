@@ -10,7 +10,10 @@ import NewQuestion from "@/pages/contribute/NewQuestion";
 import Dashboard from "@/pages/Dashboard";
 import Home from "@/pages/Home";
 import Leaderboard from "@/pages/learn/Leaderboard";
+import PathDetailPage from "@/pages/learn/PathDetail";
+import Paths from "@/pages/learn/Paths";
 import PracticeQuestion from "@/pages/learn/PracticeQuestion";
+import { Bookmarks, DueReviews, Mistakes } from "@/pages/learn/Queues";
 import TopicQuestions from "@/pages/learn/TopicQuestions";
 import Topics from "@/pages/learn/Topics";
 import ReviewQueue from "@/pages/review/ReviewQueue";
@@ -23,10 +26,15 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/topics" element={<Topics />} />
       <Route path="/topics/:topicId" element={<TopicQuestions />} />
+      <Route path="/paths" element={<Paths />} />
+      <Route path="/paths/:pathId" element={<PathDetailPage />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/practice/:questionId" element={<PracticeQuestion />} />
+        <Route path="/due" element={<DueReviews />} />
+        <Route path="/mistakes" element={<Mistakes />} />
+        <Route path="/bookmarks" element={<Bookmarks />} />
         <Route path="/contribute/questions" element={<MyQuestions />} />
         <Route path="/contribute/questions/new" element={<NewQuestion />} />
         <Route element={<ReviewerRoute />}>

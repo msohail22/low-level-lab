@@ -23,6 +23,8 @@ export const createQuestionSchema = z
     title: z.string().min(3).max(200),
     prompt: z.string().min(3).max(5000),
     explanation: z.string().min(3).max(5000),
+    whyWrong: z.string().max(5000).nullable().optional(),
+    relatedQuestionId: z.string().nullable().optional(),
     difficulty: z.enum(difficulties).default("beginner"),
     codeSnippet: z.string().max(8000).nullable().optional(),
     status: z.enum(["draft", "pending"]).default("draft"),

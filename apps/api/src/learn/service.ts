@@ -138,6 +138,7 @@ export async function getPracticeQuestion(
     prompt: row.prompt,
     difficulty: row.difficulty,
     codeSnippet: row.codeSnippet,
+    relatedQuestionId: row.relatedQuestionId,
     options,
   };
 }
@@ -163,10 +164,6 @@ export async function submitAttempt(
     .from(attempt)
     .where(and(eq(attempt.userId, userId), eq(attempt.questionId, questionId)))
     .limit(1);
-
-  if (existing) {
-    return { error: "ALREADY_ATTEMPTED" as const };
-  }
 
   const [row] = await db
     .select()
@@ -201,18 +198,33 @@ export async function submitAttempt(
     isCorrect = setsEqual(expected, selected);
   }
 
-  const attemptId = crypto.randomUUID();
   const now = new Date();
+  let attemptId = existing?.id ?? crypto.randomUUID();
 
-  await db.insert(attempt).values({
-    id: attemptId,
-    userId,
-    questionId,
-    booleanValue:
-      row.type === "true_false" ? (input.booleanValue ?? null) : null,
-    isCorrect,
-    createdAt: now,
-  });
+  if (existing) {
+    await db
+      .update(attempt)
+      .set({
+        booleanValue:
+          row.type === "true_false" ? (input.booleanValue ?? null) : null,
+        isCorrect,
+        createdAt: now,
+      })
+      .where(eq(attempt.id, existing.id));
+    await db
+      .delete(attemptOption)
+      .where(eq(attemptOption.attemptId, existing.id));
+  } else {
+    await db.insert(attempt).values({
+      id: attemptId,
+      userId,
+      questionId,
+      booleanValue:
+        row.type === "true_false" ? (input.booleanValue ?? null) : null,
+      isCorrect,
+      createdAt: now,
+    });
+  }
 
   if (row.type !== "true_false") {
     for (const optionId of input.optionIds) {
@@ -224,6 +236,12 @@ export async function submitAttempt(
     }
   }
 
+  const { recordActivityStreak, upsertSpacedReview } = await import(
+    "./engagement.ts"
+  );
+  await recordActivityStreak(env, userId);
+  await upsertSpacedReview(env, userId, questionId, isCorrect);
+
   const correctOptionIds = answers
     .map((a) => a.optionId)
     .filter((id): id is string => typeof id === "string");
@@ -234,9 +252,12 @@ export async function submitAttempt(
       attemptId,
       isCorrect,
       explanation: row.explanation,
+      whyWrong: isCorrect ? null : (row.whyWrong ?? null),
+      relatedQuestionId: row.relatedQuestionId,
       correctBooleanValue:
         row.type === "true_false" ? (answers[0]?.booleanValue ?? null) : null,
       correctOptionIds,
+      reattempted: Boolean(existing),
     },
   };
 }
@@ -295,7 +316,12 @@ export async function getMyAttempt(
     .where(eq(attemptOption.attemptId, row.id));
 
   const [q] = await db
-    .select({ explanation: question.explanation, type: question.type })
+    .select({
+      explanation: question.explanation,
+      whyWrong: question.whyWrong,
+      relatedQuestionId: question.relatedQuestionId,
+      type: question.type,
+    })
     .from(question)
     .where(eq(question.id, questionId))
     .limit(1);
@@ -316,6 +342,8 @@ export async function getMyAttempt(
     booleanValue: row.booleanValue,
     selectedOptionIds: selected.map((s) => s.optionId),
     explanation: q?.explanation ?? "",
+    whyWrong: row.isCorrect ? null : (q?.whyWrong ?? null),
+    relatedQuestionId: q?.relatedQuestionId ?? null,
     correctBooleanValue:
       q?.type === "true_false" ? (answers[0]?.booleanValue ?? null) : null,
     correctOptionIds: answers

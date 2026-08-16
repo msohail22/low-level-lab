@@ -85,9 +85,6 @@ learnRoutes.post("/questions/:id/attempt", async (c) => {
   );
 
   if (result.error === "NOT_FOUND") return c.json({ error: "Not found" }, 404);
-  if (result.error === "ALREADY_ATTEMPTED") {
-    return c.json({ error: "Already attempted" }, 409);
-  }
 
   return c.json(result.result, 201);
 });

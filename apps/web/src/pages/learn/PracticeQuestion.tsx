@@ -18,12 +18,15 @@ type PracticeQuestion = {
   prompt: string;
   difficulty: string;
   codeSnippet: string | null;
+  relatedQuestionId: string | null;
   options: PracticeOption[];
 };
 
 type AttemptView = {
   isCorrect: boolean;
   explanation: string;
+  whyWrong?: string | null;
+  relatedQuestionId?: string | null;
   correctBooleanValue: boolean | null;
   correctOptionIds: string[];
   selectedOptionIds?: string[];
@@ -36,6 +39,7 @@ export default function PracticeQuestionPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [booleanValue, setBooleanValue] = useState<boolean | null>(null);
   const [result, setResult] = useState<AttemptView | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isPending } = useQuery({
@@ -51,9 +55,22 @@ export default function PracticeQuestionPage() {
     },
   });
 
+  const bookmarkStatus = useQuery({
+    queryKey: ["bookmark-status", questionId],
+    enabled: Boolean(questionId),
+    queryFn: async () => {
+      const res = await apiFetch<{ bookmarked: boolean }>(
+        `/api/learn/bookmarks/${questionId}/status`,
+      );
+      if (res.status === 401) return { bookmarked: false };
+      if (res.error) throw new Error(res.error);
+      return res.data!;
+    },
+  });
+
   const prior = data?.attempt;
   const question = data?.question;
-  const shown = result ?? prior;
+  const shown = retrying ? null : (result ?? prior);
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -74,13 +91,40 @@ export default function PracticeQuestionPage() {
     },
     onSuccess: (payload) => {
       setResult(payload);
+      setRetrying(false);
       setError(null);
       queryClient.invalidateQueries({
         queryKey: ["learn-topic-questions", question?.topicId],
       });
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["mistakes"] });
+      queryClient.invalidateQueries({ queryKey: ["practice-question", questionId] });
     },
     onError: (err: Error) => setError(err.message),
+  });
+
+  const toggleBookmark = useMutation({
+    mutationFn: async () => {
+      if (bookmarkStatus.data?.bookmarked) {
+        const res = await apiFetch(`/api/learn/bookmarks/${questionId}`, {
+          method: "DELETE",
+        });
+        if (res.error) throw new Error(res.error);
+        return false;
+      }
+      const res = await apiFetch("/api/learn/bookmarks", {
+        method: "POST",
+        body: JSON.stringify({ questionId }),
+      });
+      if (res.error) throw new Error(res.error);
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookmark-status", questionId] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    },
   });
 
   const isMulti = question?.type === "multi_select";
@@ -117,7 +161,17 @@ export default function PracticeQuestionPage() {
 
       {question && (
         <>
-          <h1 className="section-title mt-2">{question.title}</h1>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <h1 className="section-title">{question.title}</h1>
+            <button
+              type="button"
+              className="auth-secondary-btn shrink-0"
+              onClick={() => toggleBookmark.mutate()}
+              disabled={toggleBookmark.isPending}
+            >
+              {bookmarkStatus.data?.bookmarked ? "Bookmarked" : "Bookmark"}
+            </button>
+          </div>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
             {question.type} · {question.difficulty}
           </p>
@@ -198,6 +252,31 @@ export default function PracticeQuestionPage() {
               <p className="whitespace-pre-wrap text-sm text-[color:var(--muted)]">
                 {shown.explanation}
               </p>
+              {!shown.isCorrect && shown.whyWrong && (
+                <p className="whitespace-pre-wrap text-sm text-[color:var(--ink)]">
+                  Why this is wrong: {shown.whyWrong}
+                </p>
+              )}
+              {(shown.relatedQuestionId || question.relatedQuestionId) && (
+                <Link
+                  className="inline-block text-sm text-[color:var(--accent)]"
+                  to={`/practice/${shown.relatedQuestionId || question.relatedQuestionId}`}
+                >
+                  Related follow-up →
+                </Link>
+              )}
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() => {
+                  setRetrying(true);
+                  setResult(null);
+                  setSelected([]);
+                  setBooleanValue(null);
+                }}
+              >
+                Try again
+              </button>
             </div>
           )}
 

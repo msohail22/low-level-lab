@@ -7,6 +7,9 @@ import {
   index,
   integer,
   uniqueIndex,
+  doublePrecision,
+  date,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -213,6 +216,11 @@ export const question = pgTable(
     title: text("title").notNull(),
     prompt: text("prompt").notNull(),
     explanation: text("explanation").notNull(),
+    whyWrong: text("why_wrong"),
+    relatedQuestionId: text("related_question_id").references(
+      (): AnyPgColumn => question.id,
+      { onDelete: "set null" },
+    ),
     difficulty: text("difficulty").notNull().default("beginner"),
     codeSnippet: text("code_snippet"),
     authorId: text("author_id")
@@ -397,3 +405,115 @@ export const attemptOptionRelations = relations(attemptOption, ({ one }) => ({
     references: [questionOption.id],
   }),
 }));
+export const learningPath = pgTable("learning_path", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const learningPathTopic = pgTable(
+  "learning_path_topic",
+  {
+    id: text("id").primaryKey(),
+    pathId: text("path_id")
+      .notNull()
+      .references(() => learningPath.id, { onDelete: "cascade" }),
+    topicId: text("topic_id")
+      .notNull()
+      .references(() => topic.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").default(0).notNull(),
+  },
+  (table) => [
+    index("learning_path_topic_pathId_idx").on(table.pathId),
+    uniqueIndex("learning_path_topic_uidx").on(table.pathId, table.topicId),
+  ],
+);
+
+export const userLearning = pgTable("user_learning", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  dailyGoal: integer("daily_goal").default(3).notNull(),
+  currentStreak: integer("current_streak").default(0).notNull(),
+  longestStreak: integer("longest_streak").default(0).notNull(),
+  lastActiveDate: date("last_active_date"),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const bookmark = pgTable(
+  "bookmark",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("bookmark_user_question_uidx").on(
+      table.userId,
+      table.questionId,
+    ),
+    index("bookmark_userId_idx").on(table.userId),
+  ],
+);
+
+export const spacedReview = pgTable(
+  "spaced_review",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    dueAt: timestamp("due_at").notNull(),
+    intervalDays: integer("interval_days").default(1).notNull(),
+    easeFactor: doublePrecision("ease_factor").default(2.5).notNull(),
+    repetitions: integer("repetitions").default(0).notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("spaced_review_user_question_uidx").on(
+      table.userId,
+      table.questionId,
+    ),
+    index("spaced_review_dueAt_idx").on(table.dueAt),
+    index("spaced_review_userId_idx").on(table.userId),
+  ],
+);
+
+export const learningPathRelations = relations(learningPath, ({ many }) => ({
+  topics: many(learningPathTopic),
+}));
+
+export const learningPathTopicRelations = relations(
+  learningPathTopic,
+  ({ one }) => ({
+    path: one(learningPath, {
+      fields: [learningPathTopic.pathId],
+      references: [learningPath.id],
+    }),
+    topic: one(topic, {
+      fields: [learningPathTopic.topicId],
+      references: [topic.id],
+    }),
+  }),
+);

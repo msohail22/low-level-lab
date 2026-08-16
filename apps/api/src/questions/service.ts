@@ -125,6 +125,8 @@ export async function createQuestionWithParts(
     title: input.title,
     prompt: input.prompt,
     explanation: input.explanation,
+    whyWrong: input.whyWrong ?? null,
+    relatedQuestionId: input.relatedQuestionId ?? null,
     difficulty: input.difficulty,
     codeSnippet: input.codeSnippet ?? null,
     authorId,
