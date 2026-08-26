@@ -1,42 +1,16 @@
 {
-	"name": "llb-api",
+	"name": "api",
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
-		"dev:remote": "wrangler dev --remote",
 		"deploy": "wrangler deploy --minify",
-		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
-		"typecheck": "tsc --noEmit",
-		"build": "wrangler deploy --dry-run --env dev",
-		"migrate": "drizzle-kit migrate",
-		"db:push": "drizzle-kit push --force",
-		"deploy:dev": "wrangler deploy --env dev --minify",
-		"test": "vitest run",
-		"test:watch": "vitest"
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
 	"dependencies": {
-		"@better-auth/core": "1.6.26",
-		"@better-auth/drizzle-adapter": "^1.6.26",
-		"@llb/reactor-sdk": "workspace:*",
-		"@llb/shared": "workspace:*",
-		"@openfga/sdk": "^0.9.6",
-		"@types/pg": "^8.20.4",
-		"better-auth": "^1.6.26",
-		"drizzle-orm": "^0.45.2",
-		"graphql": "^17.0.2",
-		"hono": "^4.12.19",
-		"pg": "^8.22.0",
-		"ua-parser-js": "^2.0.10",
-		"zod": "^4.4.3"
+		"hono": "^4.13.5"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^5.20260804.1",
-		"@types/node": "^25.9.0",
-		"@types/ua-parser-js": "^0.7.39",
-		"dotenv": "^17.4.2",
-		"drizzle-kit": "^0.31.10",
-		"typescript": "^6.0.2",
-		"vitest": "^4.1.10",
-		"wrangler": "^4.92.0"
+		"@types/node": "^26.3.0",
+		"wrangler": "^4.126.0"
 	}
 }
