@@ -1,6 +1,0 @@
-# Moved: use the monorepo root compose file.
-#
-#   cd ../..   # repo root
-#   docker compose up -d
-#
-# Config files live in /docker/. Kubernetes + Argo: see /infra/
