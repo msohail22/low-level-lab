@@ -5,7 +5,8 @@ import { authSchema } from './schema.js'
 
 export function createDatabase(env: Env) {
 	const pool = new Pool({
-		connectionString: env.LOW_LEVEL_LAB_DB.connectionString,
+		connectionString:
+			env.DATABASE_URL ?? env.LOW_LEVEL_LAB_DB.connectionString,
 		max: 1,
 	})
 

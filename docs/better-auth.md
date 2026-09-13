@@ -24,7 +24,8 @@ be the public origin of the deployed Worker, such as
 `https://low-level-lab.example.workers.dev`.
 
 For local development, provide the same names through the local Wrangler
-environment without committing a `.dev.vars` file.
+environment without committing a `.dev.vars` file. Add the local PostgreSQL
+connection string as `DATABASE_URL`; production continues to use Hyperdrive.
 
 Configure each provider's OAuth callback URL as
 `https://<your-origin>/api/auth/callback/google` and
@@ -77,6 +78,10 @@ The UI supports account creation, email/password sign-in, Google and GitHub
 sign-in, session loading, sign-out, and requesting a password reset. Reset
 links are queued through the existing Cloudflare Queue and delivered through
 Resend. The reset form is available at `/reset-password?token=...`.
+
+Email/password accounts must verify their email before they can sign in.
+Verification links are queued through the same Resend integration and handled
+by Better Auth at `/api/auth/verify-email`.
 
 The password reset API endpoints are provided by Better Auth:
 

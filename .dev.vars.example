@@ -1,3 +1,4 @@
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
 BETTER_AUTH_SECRET=replace-with-a-local-secret
 BETTER_AUTH_URL=http://localhost:8787
 GOOGLE_CLIENT_ID=replace-with-google-client-id

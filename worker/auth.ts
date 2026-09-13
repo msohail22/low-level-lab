@@ -15,9 +15,19 @@ export function createAuth(env: Env, request: Request) {
 		}),
 		emailAndPassword: {
 			enabled: true,
+			requireEmailVerification: true,
 			sendResetPassword: async ({ user, url }) => {
 				await env.LOW_LEVEL_LAB_QUEUE.send({
 					type: 'password-reset',
+					to: user.email,
+					url,
+				})
+			},
+		},
+		emailVerification: {
+			sendVerificationEmail: async ({ user, url }) => {
+				await env.LOW_LEVEL_LAB_QUEUE.send({
+					type: 'email-verification',
 					to: user.email,
 					url,
 				})
