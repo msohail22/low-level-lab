@@ -2,7 +2,7 @@ import { topicInputSchema } from '@low-level-lab/shared/content'
 
 import { createDatabase } from '../db/client.js'
 import { createTopicService } from '../services/topic-service.js'
-import { jsonResponse, parseBody, requireUser } from './request-utils.js'
+import { jsonResponse, parseBody, requireContentManager } from './request-utils.js'
 
 export async function handleTopicRequest(request: Request, env: Env, topicId?: string): Promise<Response> {
 	const service = createTopicService(createDatabase(env))
@@ -12,8 +12,8 @@ export async function handleTopicRequest(request: Request, env: Env, topicId?: s
 		return item ? jsonResponse(item) : jsonResponse({ error: 'Topic not found' }, 404)
 	}
 
-	const user = await requireUser(request, env)
-	if (!user) return jsonResponse({ error: 'Authentication required' }, 401)
+	const user = await requireContentManager(request, env)
+	if (!user) return jsonResponse({ error: 'Content management permission required' }, 403)
 
 	if (!topicId && request.method === 'POST') {
 		const parsed = await parseBody(request, topicInputSchema)

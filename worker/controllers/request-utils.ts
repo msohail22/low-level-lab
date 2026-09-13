@@ -1,14 +1,11 @@
-import { createAuth } from '../auth.js'
+import { requirePermission } from '../authorization/openfga.js'
 
 export function jsonResponse(data: unknown, status = 200) {
 	return Response.json(data, { status })
 }
 
-export async function requireUser(request: Request, env: Env) {
-	const session = await createAuth(env, request).api.getSession({
-		headers: request.headers,
-	})
-	return session?.user ?? null
+export async function requireContentManager(request: Request, env: Env) {
+	return requirePermission(request, env, 'manage_content')
 }
 
 export async function parseBody<T>(request: Request, schema: { safeParse: (body: unknown) => { success: true; data: T } | { success: false; error: unknown } }) {

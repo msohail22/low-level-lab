@@ -47,6 +47,12 @@ shared/
 Keep database-only models and internal service/repository types in `worker/`;
 only transport-safe contracts intended for both sides belong in `shared/`.
 
+OpenFGA integration must live only in `worker/authorization/openfga.ts`.
+Controllers may call a named authorization helper, but must not build OpenFGA
+HTTP requests or duplicate permission rules. OpenFGA is Worker-compatible via
+HTTP `fetch`; keep its URL, store/model identifiers, and token in Worker
+configuration or secrets.
+
 Keep authentication tables in `worker/db/auth-schema.ts` and product/content
 tables in `worker/db/content-schema.ts`. The database client may combine both
 schema objects for Drizzle, but they must remain separate modules. Put

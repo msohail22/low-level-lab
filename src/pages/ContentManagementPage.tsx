@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Archive, Plus, Save, Trash2 } from 'lucide-react'
+import { Archive, Ellipsis, Plus, Save, Trash2, X } from 'lucide-react'
 
 import { questionInputSchema, topicInputSchema } from '@low-level-lab/shared/content'
 import { questions as initialQuestions } from '@data/questions'
@@ -32,6 +32,7 @@ export function ContentManagementPage() {
 	const [notice, setNotice] = useState('')
 	const [topicCount, setTopicCount] = useState(initialTopics.length)
 	const [questionCount, setQuestionCount] = useState(initialQuestions.length)
+	const [editing, setEditing] = useState<{ kind: 'topic' | 'question'; title: string } | null>(null)
 
 	const topicOptions = useMemo(() => initialTopics.slice(0, topicCount), [topicCount])
 
@@ -72,8 +73,8 @@ export function ContentManagementPage() {
 				<div className="panel management-list">
 					<div className="panel-heading"><div><span className="eyebrow">Draft workspace</span><h2>{section === 'questions' ? 'Question drafts' : 'Topic drafts'}</h2></div><span className="draft-badge">Draft</span></div>
 					{section === 'questions'
-						? initialQuestions.map((item) => <ManagementRow key={item.id} title={item.title} detail={`${item.topic} · ${item.type}`} />)
-						: initialTopics.map((item) => <ManagementRow key={item.name} title={item.name} detail={`${item.count} questions`} />)}
+						? initialQuestions.map((item) => <ManagementRow key={item.id} title={item.title} detail={`${item.topic} · ${item.type}`} onEdit={() => setEditing({ kind: 'question', title: item.title })} />)
+						: initialTopics.map((item) => <ManagementRow key={item.name} title={item.name} detail={`${item.count} questions`} onEdit={() => setEditing({ kind: 'topic', title: item.name })} />)}
 				</div>
 				<div className="panel management-form">
 					<div className="panel-heading"><div><span className="eyebrow">Create draft</span><h2>New {section === 'questions' ? 'question' : 'topic'}</h2></div></div>
@@ -81,12 +82,18 @@ export function ContentManagementPage() {
 					{notice && <p className="form-notice">{notice}</p>}
 				</div>
 			</div>
+			{editing && <EditModal item={editing} onClose={() => setEditing(null)} />}
 		</section>
 	)
 }
 
-function ManagementRow({ title, detail }: { title: string; detail: string }) {
-	return <div className="management-row"><span><strong>{title}</strong><small>{detail}</small></span><span className="row-actions"><button aria-label="Archive draft"><Archive size={15} /></button><button aria-label="Delete draft"><Trash2 size={15} /></button></span></div>
+function ManagementRow({ title, detail, onEdit }: { title: string; detail: string; onEdit: () => void }) {
+	return <div className="management-row"><span><strong>{title}</strong><small>{detail}</small></span><span className="row-actions"><button aria-label={`Open actions for ${title}`} onClick={onEdit}><Ellipsis size={17} /></button><button aria-label="Archive draft"><Archive size={15} /></button><button aria-label="Delete draft"><Trash2 size={15} /></button></span></div>
+}
+
+function EditModal({ item, onClose }: { item: { kind: 'topic' | 'question'; title: string }; onClose: () => void }) {
+	const [title, setTitle] = useState(item.title)
+	return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}><div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="modal-heading"><div><span className="eyebrow">Edit draft</span><h2 id="edit-title">{item.kind === 'topic' ? 'Edit topic' : 'Edit question'}</h2></div><button className="icon-button" onClick={onClose} aria-label="Close edit dialog"><X size={18} /></button></div><form className="content-form" onSubmit={(event) => { event.preventDefault(); onClose() }}><label>{item.kind === 'topic' ? 'Topic name' : 'Question title'}<input value={title} onChange={(event) => setTitle(event.target.value)} /></label>{item.kind === 'topic' ? <label>Description<textarea placeholder="Topic description" /></label> : <><label>Question body<textarea placeholder="Question prompt" /></label><label>Explanation<textarea placeholder="Answer explanation" /></label></>}<div className="modal-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button className="primary-button" type="submit"><Save size={16} /> Save changes</button></div></form></div></div>
 }
 
 function TopicForm({ value, onChange, onSave }: { value: TopicDraft; onChange: (value: TopicDraft) => void; onSave: () => void }) {

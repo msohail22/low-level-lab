@@ -12,6 +12,7 @@ This slice adds the first UI surface for managing question and topic drafts.
 - Client-side validation using the shared `@low-level-lab/shared/content`
   schemas.
 - Archive and delete affordances for the draft list.
+- Menu-triggered edit modals for topic and question drafts.
 
 ## Deliberate boundary
 
