@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.7.4",
 		"@hookform/resolvers": "^5.9.1",
+		"@low-level-lab/shared": "workspace:*",
 		"@tanstack/react-query": "^5.102.8",
 		"better-auth": "^1.7.4",
 		"class-variance-authority": "^0.7.1",

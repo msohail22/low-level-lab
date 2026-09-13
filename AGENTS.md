@@ -4,6 +4,67 @@
 
 This repository is a React + TypeScript app built with Vite and deployed as a Cloudflare Worker. Frontend source lives in `src/`, with the app entry at `src/main.tsx`, UI logic in `src/App.tsx`, and global styles/Tailwind import in `src/index.css`. Worker code lives in `worker/index.ts`. Cloudflare deployment settings are in `wrangler.jsonc`, and Vite configuration is in `vite.config.ts`.
 
+Keep all React Router `<Routes>` and `<Route>` definitions in `src/App.tsx`.
+Do not create a separate `AppRoutes` module; page and layout components may
+remain in their own files and be imported into `App.tsx`.
+
+Backend code should follow this flow:
+
+```text
+worker/index.ts
+  -> routes
+  -> controllers
+  -> services
+  -> repositories
+  -> Drizzle database
+```
+
+Use controllers for HTTP parsing and responses, services for business rules,
+repositories for database queries, and Zod schemas for validating external
+input. Keep shared request/response contracts in the root `shared/` workspace
+package and add that package to `pnpm-workspace.yaml`; do not duplicate
+question or topic validation between the client and Worker.
+
+Use the shared package as the single source of truth for frontend and backend
+API contracts. Define request schemas, response schemas, enums, and inferred
+TypeScript types in `shared/`, then import those contracts from both `src/`
+and `worker/`. Frontend forms should validate and submit the same request
+shape that controllers parse, and frontend API clients should type responses
+from the same shared response schemas used by backend handlers. Do not
+redeclare equivalent question/topic payloads, status values, or response types
+inside the frontend or Worker.
+
+Organize shared contracts by domain, for example:
+
+```text
+shared/
+└── src/
+    ├── questions.ts
+    ├── topics.ts
+    └── index.ts
+```
+
+Keep database-only models and internal service/repository types in `worker/`;
+only transport-safe contracts intended for both sides belong in `shared/`.
+
+Authorization must live in `worker/authorization/authorization.ts`.
+Controllers may call named authorization helpers, but must not duplicate role
+rules. Roles and topic-scoped assignments are stored in `user_role`; permission
+decisions must fail closed when the user is unauthenticated or unassigned.
+
+Question workflow is `draft -> submitted -> in_review -> approved -> published`.
+Authenticated members may submit questions; reviewers review them; admins
+approve within their assigned topic scope; only super admins publish, unless
+the policy is explicitly changed. Super admins may bypass review. Keep
+workflow transitions and authorization checks server-side.
+
+Keep authentication tables in `worker/db/auth-schema.ts` and product/content
+tables in `worker/db/content-schema.ts`. The database client may combine both
+schema objects for Drizzle, but they must remain separate modules. Put
+cross-cutting request helpers in `worker/controllers/request-utils.ts` or a
+focused `worker/lib/` module. Avoid putting routing, validation, business
+rules, and database queries into one handler.
+
 There is currently no dedicated test directory. Add future tests near the code they cover or under a clear `src/__tests__/` directory.
 
 ## Build, Test, and Development Commands

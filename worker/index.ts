@@ -1,4 +1,8 @@
 import { createAuth } from './auth.js'
+import { handleQuestionRequest } from './controllers/question-controller.js'
+import { handleProgressRequest } from './controllers/progress-controller.js'
+import { codingExecutionPlaceholder, socialPublishingPlaceholder } from './controllers/placeholder-controller.js'
+import { handleTopicRequest } from './controllers/topic-controller.js'
 import { Resend } from 'resend'
 
 type EmailMessage = {
@@ -30,13 +34,32 @@ export default {
 			return auth.handler(request)
 		}
 
+		if (url.pathname.startsWith('/api/topics')) {
+			const topicId = url.pathname.split('/')[3]
+			return handleTopicRequest(request, env, topicId)
+		}
+
+		if (url.pathname === '/api/progress') {
+			return handleProgressRequest(request, env)
+		}
+
+		if (url.pathname.startsWith('/api/social/')) return socialPublishingPlaceholder()
+		if (url.pathname.endsWith('/execute')) return codingExecutionPlaceholder()
+
+		if (url.pathname.startsWith('/api/questions')) {
+			const segments = url.pathname.split('/').filter(Boolean)
+			const questionId = segments[2]
+			const action = segments[3]
+			return handleQuestionRequest(request, env, questionId, action)
+		}
+
 		if (url.pathname.startsWith('/api/')) {
 			return Response.json({
 				name: 'Cloudflare',
 			})
 		}
 
-		return new Response(null, { status: 404 });
+		return new Response(null, { status: 404 })
 	},
 	async queue(batch, env) {
 		const resend = new Resend(env.RESEND_API_KEY)
