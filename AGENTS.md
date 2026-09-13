@@ -4,6 +4,10 @@
 
 This repository is a React + TypeScript app built with Vite and deployed as a Cloudflare Worker. Frontend source lives in `src/`, with the app entry at `src/main.tsx`, UI logic in `src/App.tsx`, and global styles/Tailwind import in `src/index.css`. Worker code lives in `worker/index.ts`. Cloudflare deployment settings are in `wrangler.jsonc`, and Vite configuration is in `vite.config.ts`.
 
+Keep all React Router `<Routes>` and `<Route>` definitions in `src/App.tsx`.
+Do not create a separate `AppRoutes` module; page and layout components may
+remain in their own files and be imported into `App.tsx`.
+
 There is currently no dedicated test directory. Add future tests near the code they cover or under a clear `src/__tests__/` directory.
 
 ## Build, Test, and Development Commands
