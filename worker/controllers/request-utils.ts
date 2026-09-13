@@ -1,4 +1,4 @@
-import { requirePermission, type Permission } from '../authorization/authorization.js'
+import { requirePermission, type Permission } from '../authorization/openfga.js'
 
 export function jsonResponse(data: unknown, status = 200) {
 	return Response.json(data, { status })

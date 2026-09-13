@@ -1,0 +1,42 @@
+model
+  schema 1.1
+
+type user
+
+type organization
+  relations
+    define super_admin: [user]
+    define admin: [user]
+    define reviewer: [user]
+    define member: [user]
+  permissions
+    define can_manage_users: super_admin
+    define can_assign_roles: super_admin
+    define can_manage_topics: super_admin or admin
+    define can_create_question: super_admin or admin or reviewer or member
+    define can_submit_question: super_admin or member
+    define can_review_question: super_admin or reviewer
+    define can_approve_question: super_admin or admin
+    define can_publish_question: super_admin
+
+type topic
+  relations
+    define organization: [organization]
+    define admin: [user]
+    define reviewer: [user]
+  permissions
+    define can_manage_topics: admin or super_admin from organization
+    define can_review_question: reviewer or reviewer from organization or super_admin from organization
+    define can_approve_question: admin or admin from organization or super_admin from organization
+
+type question
+  relations
+    define author: [user]
+    define topic: [topic]
+    define organization: [organization]
+  permissions
+    define can_edit_question: author or super_admin from topic
+    define can_submit_question: author or member from organization
+    define can_review_question: reviewer from topic or reviewer from organization or super_admin from organization
+    define can_approve_question: admin from topic or admin from organization or super_admin from organization
+    define can_publish_question: super_admin from organization

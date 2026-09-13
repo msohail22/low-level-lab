@@ -11,5 +11,12 @@ declare global {
 		GITHUB_CLIENT_SECRET?: string
 		RESEND_API_KEY: string
 		RESEND_FROM_EMAIL: string
+		OPENFGA_API_URL: string
+		OPENFGA_STORE_ID: string
+		OPENFGA_MODEL_ID: string
+		OPENFGA_TOKEN_ISSUER: string
+		OPENFGA_AUDIENCE: string
+		OPENFGA_CLIENT_ID: string
+		OPENFGA_CLIENT_SECRET: string
 	}
 }

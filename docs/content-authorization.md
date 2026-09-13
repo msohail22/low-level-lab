@@ -1,7 +1,7 @@
 # Content authorization
 
-Authorization is implemented inside the Worker with database-backed roles. It
-does not require a separately deployed authorization service.
+Authorization is implemented through OpenFGA Cloud. The Worker is an HTTP
+client and keeps all OpenFGA calls in `worker/authorization/openfga.ts`.
 
 ## Roles
 
@@ -10,16 +10,10 @@ does not require a separately deployed authorization service.
 - `reviewer`: reviews questions for assigned topics.
 - `member`: authenticated learner who can create and submit questions.
 
-Assignments are stored in `user_role`. A null `topic_id` is an
-organization-wide assignment; a topic ID scopes an admin or reviewer to that
-topic. Permission checks are centralized in
-`worker/authorization/authorization.ts`.
+Assignments are OpenFGA tuples. The first super admin must be assigned:
 
-The first super admin must be inserted through a controlled database operation:
-
-```sql
-INSERT INTO user_role (id, user_id, role)
-VALUES ('role_<user-id>', '<better-auth-user-id>', 'super_admin');
+```text
+organization:low-level-lab#super_admin@user:<better-auth-user-id>
 ```
 
 Never grant authorization based only on a client-provided role or email.

@@ -27,8 +27,8 @@ does not include backend, authentication, persistence, or moderation work.
 - [x] Add topic detail pages and full pagination.
 - [x] Add question creation, revisions, and moderation workflows.
 - [x] Connect content-management forms to the authenticated CRUD API.
-- [x] Add centralized database-backed role authorization.
-- [ ] Add role-assignment management and bootstrap the first super-admin.
+- [x] Add centralized OpenFGA authorization.
+- [ ] Add role-assignment management and bootstrap the first super-admin tuple.
 - [x] Add search indexing and production-scale filtering.
 - [x] Add an explicit social-publishing boundary (provider integration remains unimplemented).
 - [x] Add an explicit coding-execution boundary (sandbox execution remains unimplemented).

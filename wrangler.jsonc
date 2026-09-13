@@ -10,7 +10,13 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"vars": {
 		"BETTER_AUTH_URL": "https://low-level-lab.msohail22.workers.dev",
-		"RESEND_FROM_EMAIL": "onboarding@resend.dev"
+		"RESEND_FROM_EMAIL": "onboarding@resend.dev",
+		"OPENFGA_API_URL": "https://api.au1.fga.dev",
+		"OPENFGA_STORE_ID": "01M2E2FHWFEYD6R7E5GYSXXE8H",
+		"OPENFGA_MODEL_ID": "01M2E2MYH1682QETA8QX07JA6Q",
+		"OPENFGA_TOKEN_ISSUER": "auth.fga.dev",
+		"OPENFGA_AUDIENCE": "https://api.au1.fga.dev/",
+		"OPENFGA_CLIENT_ID": "Voar8grnTrp7fay37lCOhH9m1X8j6qcN"
 	},
 	"assets": {
 		"directory": "./dist/client",

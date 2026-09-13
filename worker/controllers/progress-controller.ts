@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from '../authorization/authorization.js'
+import { getAuthenticatedUser } from '../authorization/openfga.js'
 import { createDatabase } from '../db/client.js'
 import { createQuestionService } from '../services/question-service.js'
 import { jsonResponse } from './request-utils.js'

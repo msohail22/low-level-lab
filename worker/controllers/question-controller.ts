@@ -2,7 +2,7 @@ import { answerSubmissionSchema, questionInputSchema, questionSearchSchema, work
 
 import { createDatabase } from '../db/client.js'
 import { createQuestionService } from '../services/question-service.js'
-import { requireQuestionPermission } from '../authorization/authorization.js'
+import { requireQuestionPermission } from '../authorization/openfga.js'
 import { jsonResponse, parseBody, requirePermissionFor } from './request-utils.js'
 
 function publicQuestion(item: Record<string, unknown>) {
