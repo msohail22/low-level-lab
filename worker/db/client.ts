@@ -3,12 +3,17 @@ import { Pool } from 'pg'
 
 import { authSchema } from './schema.js'
 
-export function createDatabase(env: Env) {
-	const pool = new Pool({
-		connectionString:
-			env.DATABASE_URL ?? env.LOW_LEVEL_LAB_DB.connectionString,
-		max: 1,
-	})
+let cachedConnectionString: string | undefined
+let cachedPool: Pool | undefined
 
-	return drizzle(pool, { schema: authSchema })
+export function createDatabase(env: Env) {
+	const connectionString =
+		env.DATABASE_URL ?? env.LOW_LEVEL_LAB_DB.connectionString
+
+	if (!cachedPool || cachedConnectionString !== connectionString) {
+		cachedConnectionString = connectionString
+		cachedPool = new Pool({ connectionString, max: 1 })
+	}
+
+	return drizzle(cachedPool, { schema: authSchema })
 }

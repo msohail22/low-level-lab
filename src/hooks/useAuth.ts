@@ -9,6 +9,7 @@ export function useAuth() {
 		signInSocial: authClient.signIn.social,
 		signUp: authClient.signUp.email,
 		signOut: authClient.signOut,
-		requestPasswordReset: authClient.$fetch,
+		requestPasswordReset: authClient.requestPasswordReset,
+		resetPassword: authClient.resetPassword,
 	}
 }

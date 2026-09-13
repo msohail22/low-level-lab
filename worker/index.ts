@@ -7,6 +7,20 @@ type EmailMessage = {
 	url: string
 }
 
+function isEmailMessage(value: unknown): value is EmailMessage {
+	if (!value || typeof value !== 'object') {
+		return false
+	}
+
+	const message = value as Record<string, unknown>
+	return (
+		(message.type === 'password-reset' ||
+			message.type === 'email-verification') &&
+		typeof message.to === 'string' &&
+		typeof message.url === 'string'
+	)
+}
+
 export default {
 	async fetch(request, env) {
 		const url = new URL(request.url)
@@ -28,16 +42,13 @@ export default {
 		const resend = new Resend(env.RESEND_API_KEY)
 
 		for (const message of batch.messages) {
-			const payload = message.body as EmailMessage
-
-			if (
-				payload.type !== 'password-reset' &&
-				payload.type !== 'email-verification'
-			) {
-				message.retry()
+			if (!isEmailMessage(message.body)) {
+				console.error('Ignoring unsupported auth email queue message')
+				message.ack()
 				continue
 			}
 
+			const payload = message.body
 			const isVerification = payload.type === 'email-verification'
 			const { error } = await resend.emails.send({
 				from: env.RESEND_FROM_EMAIL,
@@ -51,7 +62,10 @@ export default {
 			})
 
 			if (error) {
-				throw new Error(`Resend password reset email failed: ${error.message}`)
+				const emailType = isVerification ? 'verification' : 'password reset'
+				throw new Error(
+					`Resend ${emailType} email failed: ${error.message}`,
+				)
 			}
 		}
 	},

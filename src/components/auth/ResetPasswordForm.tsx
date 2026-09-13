@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react'
 
-import { authClient } from '@services/auth-client'
+import { useAuth } from '@hooks/useAuth'
 
 export function ResetPasswordForm({ token }: { token: string }) {
+	const { resetPassword } = useAuth()
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [complete, setComplete] = useState(false)
@@ -10,9 +11,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
 		setError('')
-		const result = await authClient.$fetch('/reset-password', {
-			method: 'POST',
-			body: { token, newPassword: password },
+		const result = await resetPassword({
+			newPassword: password,
+			token,
 		})
 		if (result.error) {
 			setError(result.error.message ?? 'Unable to reset password')

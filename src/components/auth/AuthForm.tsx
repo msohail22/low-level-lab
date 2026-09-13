@@ -29,12 +29,9 @@ export function AuthForm() {
 	) {
 		event.preventDefault()
 		setError('')
-		const result = await requestPasswordReset('/request-password-reset', {
-			method: 'POST',
-			body: {
-				email,
-				redirectTo: `${window.location.origin}/reset-password`,
-			},
+		const result = await requestPasswordReset({
+			email,
+			redirectTo: `${window.location.origin}/reset-password`,
 		})
 		if (result.error) {
 			setError(result.error.message ?? 'Unable to send reset email')
