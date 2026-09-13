@@ -35,8 +35,8 @@ with the existing Hyperdrive database binding.
 ## Delivery sequence
 
 1. Create the feature branch and record this plan.
-2. Implement server configuration, schema/migration, Worker routing, and the
-   browser client/UI.
+2. Implement server configuration, generated schema/migration, Worker routing,
+   and the browser client/UI.
 3. Add setup and API documentation under `docs/`.
 4. Validate linting, type-checking/build output, and Wrangler dry-run output.
 5. Commit the focused changes, push the branch, and open a PR targeting

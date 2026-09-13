@@ -21,11 +21,24 @@ be the public origin of the deployed Worker, such as
 For local development, provide the same names through the local Wrangler
 environment without committing a `.dev.vars` file.
 
-## Database migration
+## Database schema and migration
+
+Better Auth's CLI is the source of truth for the Drizzle schema. The checked-in
+`worker/db/schema.ts` file is generated application code, not a separately
+invented auth model. Regenerate it after changing Better Auth options:
+
+```sh
+pnpm dlx auth@latest generate
+```
+
+Review the generated output before committing it, especially if table names,
+plugins, or custom fields change.
 
 Apply `worker/migrations/0000_better_auth.sql` to the PostgreSQL database
 behind Hyperdrive before the first sign-up. The migration creates Better Auth's
-`user`, `session`, `account`, and `verification` tables.
+`user`, `session`, `account`, and `verification` tables and uses
+`CREATE TABLE IF NOT EXISTS` so rerunning it does not fail when those tables
+already exist.
 
 The migration is plain PostgreSQL SQL so it can be applied with the database's
 normal migration tooling or a one-off administrative connection. Do not put
