@@ -7,6 +7,7 @@
 	"name": "low-level-lab",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-09-11",
+	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
