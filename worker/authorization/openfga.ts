@@ -1,6 +1,14 @@
 import { createAuth } from '../auth.js'
 
-type Permission = 'manage_content'
+export type Permission =
+	| 'create_question'
+	| 'edit_question'
+	| 'submit_question'
+	| 'review_question'
+	| 'approve_question'
+	| 'publish_question'
+	| 'manage_topics'
+	| 'manage_users'
 
 type OpenFgaCheckResponse = {
 	allowed?: boolean
@@ -10,15 +18,14 @@ export async function requirePermission(
 	request: Request,
 	env: Env,
 	permission: Permission,
+	object = 'organization:low-level-lab',
 ) {
 	const session = await createAuth(env, request).api.getSession({
 		headers: request.headers,
 	})
 	if (!session?.user) return null
 
-	if (!env.OPENFGA_API_URL || !env.OPENFGA_STORE_ID || !env.OPENFGA_MODEL_ID) {
-		return session.user
-	}
+	if (!env.OPENFGA_API_URL || !env.OPENFGA_STORE_ID || !env.OPENFGA_MODEL_ID) return null
 
 	const response = await fetch(
 		`${env.OPENFGA_API_URL}/stores/${env.OPENFGA_STORE_ID}/check`,
@@ -33,7 +40,7 @@ export async function requirePermission(
 			body: JSON.stringify({
 				user: `user:${session.user.id}`,
 				relation: permission,
-				object: 'content:catalog',
+				object,
 				model_id: env.OPENFGA_MODEL_ID,
 			}),
 		},

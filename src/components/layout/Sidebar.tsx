@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, CircleHelp, Code2, LayoutDashboard, Settings2, Target, X } from 'lucide-react'
+import { BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UsersRound, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 
 const navItems = [
@@ -35,10 +35,11 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 						{label}
 					</NavLink>
 				))}
-				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage" onClick={onClose}>
-					<Settings2 size={18} />
-					Manage content
-				</NavLink>
+				<span className="nav-label nav-label-spaced">Content workspace</span>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=submit" onClick={onClose}><FilePlus2 size={18} />Submit a question</NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review questions</NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=topics" onClick={onClose}><Settings2 size={18} />Manage topics</NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=super-admin" onClick={onClose}><UsersRound size={18} />Super admin</NavLink>
 				<span className="nav-label nav-label-spaced">Coming soon</span>
 				<div className="nav-item disabled">
 					<Code2 size={18} />

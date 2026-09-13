@@ -53,6 +53,12 @@ HTTP requests or duplicate permission rules. OpenFGA is Worker-compatible via
 HTTP `fetch`; keep its URL, store/model identifiers, and token in Worker
 configuration or secrets.
 
+Question workflow is `draft -> submitted -> in_review -> approved -> published`.
+Authenticated members may submit questions; reviewers review them; admins
+approve within their assigned topic scope; only super admins publish, unless
+the policy is explicitly changed. Super admins may bypass review. Keep
+workflow transitions and authorization checks server-side.
+
 Keep authentication tables in `worker/db/auth-schema.ts` and product/content
 tables in `worker/db/content-schema.ts`. The database client may combine both
 schema objects for Drizzle, but they must remain separate modules. Put
