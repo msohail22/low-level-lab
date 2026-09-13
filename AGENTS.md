@@ -25,6 +25,28 @@ input. Keep shared request/response contracts in the root `shared/` workspace
 package and add that package to `pnpm-workspace.yaml`; do not duplicate
 question or topic validation between the client and Worker.
 
+Use the shared package as the single source of truth for frontend and backend
+API contracts. Define request schemas, response schemas, enums, and inferred
+TypeScript types in `shared/`, then import those contracts from both `src/`
+and `worker/`. Frontend forms should validate and submit the same request
+shape that controllers parse, and frontend API clients should type responses
+from the same shared response schemas used by backend handlers. Do not
+redeclare equivalent question/topic payloads, status values, or response types
+inside the frontend or Worker.
+
+Organize shared contracts by domain, for example:
+
+```text
+shared/
+└── src/
+    ├── questions.ts
+    ├── topics.ts
+    └── index.ts
+```
+
+Keep database-only models and internal service/repository types in `worker/`;
+only transport-safe contracts intended for both sides belong in `shared/`.
+
 Keep authentication tables in `worker/db/auth-schema.ts` and product/content
 tables in `worker/db/content-schema.ts`. The database client may combine both
 schema objects for Drizzle, but they must remain separate modules. Put
