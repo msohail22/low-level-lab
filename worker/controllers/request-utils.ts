@@ -1,9 +1,5 @@
 import { createAuth } from '../auth.js'
 
-export function createId() {
-	return crypto.randomUUID()
-}
-
 export function jsonResponse(data: unknown, status = 200) {
 	return Response.json(data, { status })
 }

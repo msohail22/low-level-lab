@@ -8,6 +8,30 @@ Keep all React Router `<Routes>` and `<Route>` definitions in `src/App.tsx`.
 Do not create a separate `AppRoutes` module; page and layout components may
 remain in their own files and be imported into `App.tsx`.
 
+Backend code should follow this flow:
+
+```text
+worker/index.ts
+  -> routes
+  -> controllers
+  -> services
+  -> repositories
+  -> Drizzle database
+```
+
+Use controllers for HTTP parsing and responses, services for business rules,
+repositories for database queries, and Zod schemas for validating external
+input. Keep shared request/response contracts in the root `shared/` workspace
+package and add that package to `pnpm-workspace.yaml`; do not duplicate
+question or topic validation between the client and Worker.
+
+Keep authentication tables in `worker/db/auth-schema.ts` and product/content
+tables in `worker/db/content-schema.ts`. The database client may combine both
+schema objects for Drizzle, but they must remain separate modules. Put
+cross-cutting request helpers in `worker/controllers/request-utils.ts` or a
+focused `worker/lib/` module. Avoid putting routing, validation, business
+rules, and database queries into one handler.
+
 There is currently no dedicated test directory. Add future tests near the code they cover or under a clear `src/__tests__/` directory.
 
 ## Build, Test, and Development Commands

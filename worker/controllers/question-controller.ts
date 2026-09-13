@@ -1,23 +1,15 @@
-import { asc, desc, eq } from 'drizzle-orm'
+import { questionInputSchema } from '@low-level-lab/shared/content'
 
 import { createDatabase } from '../db/client.js'
-import { question } from '../db/schema.js'
-import { questionInputSchema } from '../schemas/content.js'
-import { createId, jsonResponse, parseBody, requireUser } from './request-utils.js'
+import { createQuestionService } from '../services/question-service.js'
+import { jsonResponse, parseBody, requireUser } from './request-utils.js'
 
 export async function handleQuestionRequest(request: Request, env: Env, questionId?: string): Promise<Response> {
-	const db = createDatabase(env)
+	const service = createQuestionService(createDatabase(env))
 
 	if (request.method === 'GET') {
-		if (questionId) {
-			const item = await db.query.question.findFirst({ where: eq(question.id, questionId) })
-			return item ? jsonResponse(item) : jsonResponse({ error: 'Question not found' }, 404)
-		}
-
-		return jsonResponse(await db.query.question.findMany({
-			where: eq(question.status, 'draft'),
-			orderBy: [desc(question.updatedAt), asc(question.title)],
-		}))
+		const item = questionId ? await service.get(questionId) : await service.list()
+		return item ? jsonResponse(item) : jsonResponse({ error: 'Question not found' }, 404)
 	}
 
 	const user = await requireUser(request, env)
@@ -26,23 +18,19 @@ export async function handleQuestionRequest(request: Request, env: Env, question
 	if (!questionId && request.method === 'POST') {
 		const parsed = await parseBody(request, questionInputSchema)
 		if ('error' in parsed) return parsed.error ?? jsonResponse({ error: 'Invalid request' }, 400)
-		const [created] = await db.insert(question).values({
-			id: createId(),
-			authorId: user.id,
-			...parsed.data,
-		}).returning()
+		const [created] = await service.create(parsed.data, user.id)
 		return jsonResponse(created, 201)
 	}
 
 	if (questionId && request.method === 'PUT') {
 		const parsed = await parseBody(request, questionInputSchema)
 		if ('error' in parsed) return parsed.error ?? jsonResponse({ error: 'Invalid request' }, 400)
-		const [updated] = await db.update(question).set({ ...parsed.data, updatedAt: new Date() }).where(eq(question.id, questionId)).returning()
+		const [updated] = await service.update(questionId, parsed.data)
 		return updated ? jsonResponse(updated) : jsonResponse({ error: 'Question not found' }, 404)
 	}
 
 	if (questionId && request.method === 'DELETE') {
-		const [archived] = await db.update(question).set({ status: 'archived', archivedAt: new Date(), updatedAt: new Date() }).where(eq(question.id, questionId)).returning()
+		const [archived] = await service.archive(questionId)
 		return archived ? jsonResponse(archived) : jsonResponse({ error: 'Question not found' }, 404)
 	}
 

@@ -35,3 +35,6 @@ export const questionInputSchema = z.object({
 		context.addIssue({ code: 'custom', path: ['correctAnswer'], message: 'True/false questions must use true or false as the answer.' })
 	}
 })
+
+export type QuestionInput = z.infer<typeof questionInputSchema>
+export type TopicInput = z.infer<typeof topicInputSchema>

@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 
-import { authSchema, contentSchema } from './schema.js'
+import { authSchema } from './auth-schema.js'
+import { contentSchema } from './content-schema.js'
 
 let cachedConnectionString: string | undefined
 let cachedPool: Pool | undefined
