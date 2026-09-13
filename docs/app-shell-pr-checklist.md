@@ -14,6 +14,8 @@ does not include backend, authentication, persistence, or moderation work.
 - [x] Add Mathematics and Artificial Intelligence topic examples.
 - [x] Add a responsive mobile navigation drawer.
 - [x] Add a light/dark theme toggle for the shell.
+- [x] Add a draft content-management UI for questions and topics.
+- [x] Reuse shared Zod validation in the content forms.
 
 ## Still missing
 
@@ -23,6 +25,7 @@ does not include backend, authentication, persistence, or moderation work.
 - [ ] Add server-side answer validation and real explanations.
 - [ ] Add topic detail pages and full pagination.
 - [ ] Add question creation, revisions, and moderation workflows.
+- [ ] Connect content-management forms to the authenticated CRUD API.
 - [ ] Add OpenFGA authorization.
 - [ ] Add search indexing and production-scale filtering.
 - [ ] Add social publishing and operational observability.
