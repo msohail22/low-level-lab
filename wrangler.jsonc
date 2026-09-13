@@ -17,6 +17,7 @@
 		"OPENFGA_TOKEN_ISSUER": "auth.fga.dev",
 		"OPENFGA_AUDIENCE": "https://api.au1.fga.dev/",
 		"OPENFGA_CLIENT_ID": "Voar8grnTrp7fay37lCOhH9m1X8j6qcN"
+		,"SOCIAL_PUBLISH_WEBHOOK_URL": ""
 	},
 	"assets": {
 		"directory": "./dist/client",

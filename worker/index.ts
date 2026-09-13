@@ -1,7 +1,8 @@
 import { createAuth } from './auth.js'
 import { handleQuestionRequest } from './controllers/question-controller.js'
 import { handleProgressRequest } from './controllers/progress-controller.js'
-import { codingExecutionPlaceholder, socialPublishingPlaceholder } from './controllers/placeholder-controller.js'
+import { codingExecutionPlaceholder } from './controllers/placeholder-controller.js'
+import { handleSocialPublish } from './controllers/social-controller.js'
 import { handleTopicRequest } from './controllers/topic-controller.js'
 import { handleAuthorizationRequest } from './controllers/authorization-controller.js'
 import { handleModerationRequest } from './controllers/moderation-controller.js'
@@ -53,7 +54,7 @@ export default {
 			return handleModerationRequest(request, env)
 		}
 
-		if (url.pathname.startsWith('/api/social/')) return socialPublishingPlaceholder()
+		if (url.pathname.startsWith('/api/social/publish/')) return handleSocialPublish(request, env, url.pathname.split('/').filter(Boolean)[3])
 		if (url.pathname.endsWith('/execute')) return codingExecutionPlaceholder()
 
 		if (url.pathname.startsWith('/api/questions')) {

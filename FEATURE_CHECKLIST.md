@@ -379,11 +379,13 @@ in an external provider.
 
 ## Intentional deferrals
 
-- [ ] Social publishing provider integrations.
+- [x] Social publishing webhook integration.
+- [ ] Social publishing provider-specific integrations.
 - [ ] Social publishing queue and retry policy.
 - [ ] Secure coding-question execution.
 - [ ] Sandboxed runtimes.
-- [ ] Advanced analytics and request-origin reporting.
+- [x] Aggregate advanced analytics UI.
+- [ ] Request-origin reporting (intentionally not collected yet).
 - [ ] Third-party tracking or behavioral data collection.
 - [ ] Gamification.
 - [ ] Leaderboards.

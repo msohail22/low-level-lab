@@ -19,5 +19,6 @@ declare global {
 		OPENFGA_CLIENT_ID: string
 		OPENFGA_CLIENT_SECRET: string
 		OPENFGA_AUTH_MODE?: 'cloud' | 'local'
+		SOCIAL_PUBLISH_WEBHOOK_URL?: string
 	}
 }
