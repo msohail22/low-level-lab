@@ -6,7 +6,9 @@ export function useAuth() {
 	return {
 		...session,
 		signIn: authClient.signIn.email,
+		signInSocial: authClient.signIn.social,
 		signUp: authClient.signUp.email,
 		signOut: authClient.signOut,
+		requestPasswordReset: authClient.$fetch,
 	}
 }

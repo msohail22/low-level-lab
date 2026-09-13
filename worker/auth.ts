@@ -15,6 +15,31 @@ export function createAuth(env: Env, request: Request) {
 		}),
 		emailAndPassword: {
 			enabled: true,
+			sendResetPassword: async ({ user, url }) => {
+				await env.LOW_LEVEL_LAB_QUEUE.send({
+					type: 'password-reset',
+					to: user.email,
+					url,
+				})
+			},
+		},
+		socialProviders: {
+			...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+				? {
+						google: {
+							clientId: env.GOOGLE_CLIENT_ID,
+							clientSecret: env.GOOGLE_CLIENT_SECRET,
+						},
+					}
+				: {}),
+			...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+				? {
+						github: {
+							clientId: env.GITHUB_CLIENT_ID,
+							clientSecret: env.GITHUB_CLIENT_SECRET,
+						},
+					}
+				: {}),
 		},
 	})
 }

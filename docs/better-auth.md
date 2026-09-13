@@ -12,6 +12,10 @@ Set these Worker secrets before deploying:
 ```sh
 pnpm exec wrangler secret put BETTER_AUTH_SECRET
 pnpm exec wrangler secret put BETTER_AUTH_URL
+pnpm exec wrangler secret put GOOGLE_CLIENT_ID
+pnpm exec wrangler secret put GOOGLE_CLIENT_SECRET
+pnpm exec wrangler secret put GITHUB_CLIENT_ID
+pnpm exec wrangler secret put GITHUB_CLIENT_SECRET
 ```
 
 `BETTER_AUTH_SECRET` should be a long, random value. `BETTER_AUTH_URL` should
@@ -20,6 +24,10 @@ be the public origin of the deployed Worker, such as
 
 For local development, provide the same names through the local Wrangler
 environment without committing a `.dev.vars` file.
+
+Configure each provider's OAuth callback URL as
+`https://<your-origin>/api/auth/callback/google` and
+`https://<your-origin>/api/auth/callback/github`.
 
 ## Database schema and migration
 
@@ -46,7 +54,13 @@ database credentials in this repository.
 
 ## Supported flow
 
-The initial UI supports account creation, email/password sign-in, session
-loading, and sign-out. OAuth providers, email verification delivery, password
-reset delivery, and rate limiting are intentionally left for a follow-up
-configuration once the application's email and provider credentials exist.
+The UI supports account creation, email/password sign-in, Google and GitHub
+sign-in, session loading, sign-out, and requesting a password reset. Reset
+links are queued through the existing Cloudflare Queue; a queue consumer or
+email provider must deliver the queued message to the user. The reset form is
+available at `/reset-password?token=...`.
+
+The password reset API endpoints are provided by Better Auth:
+
+- `POST /api/auth/request-password-reset`
+- `POST /api/auth/reset-password`
