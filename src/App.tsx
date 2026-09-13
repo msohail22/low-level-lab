@@ -10,6 +10,7 @@ import { TopicsPage } from '@pages/TopicsPage'
 import { TopicDetailPage } from '@pages/TopicDetailPage'
 import { ContentManagementPage } from '@pages/ContentManagementPage'
 import { AnalyticsPage } from '@pages/AnalyticsPage'
+import { ProfilePage } from '@pages/ProfilePage'
 
 export default function App() {
 	return (
@@ -24,6 +25,7 @@ export default function App() {
 					<Route path="progress" element={<ProgressPage />} />
 					<Route path="manage" element={<ContentManagementPage />} />
 					<Route path="analytics" element={<AnalyticsPage />} />
+					<Route path="profile" element={<ProfilePage />} />
 				</Route>
 				<Route path="auth" element={<AuthPage />} />
 				<Route path="reset-password" element={<AuthPage />} />

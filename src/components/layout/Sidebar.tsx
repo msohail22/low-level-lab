@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UsersRound, X } from 'lucide-react'
+import { BarChart3, BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UserCircle, UsersRound, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '@hooks/useAuth'
 
@@ -40,6 +40,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 					</NavLink>
 				))}
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/analytics" onClick={onClose}><BarChart3 size={18} />Analytics</NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/profile" onClick={onClose}><UserCircle size={18} />Profile</NavLink>
 				<span className="nav-label nav-label-spaced">Content workspace</span>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=submit" onClick={onClose}><FilePlus2 size={18} />Submit a question</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review questions</NavLink>

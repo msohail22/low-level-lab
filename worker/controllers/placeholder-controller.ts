@@ -1,3 +1,5 @@
+import { jsonResponse } from './request-utils.js'
+
 export function codingExecutionPlaceholder() {
 	return jsonResponse({
 		error: 'Coding-question execution is intentionally unavailable.',

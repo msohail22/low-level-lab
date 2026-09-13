@@ -29,6 +29,8 @@ in an external provider.
 
 ## Authentication and accounts
 
+- [x] UI-only profile page.
+- [x] Profile page sidebar navigation.
 - [x] Better Auth integration.
 - [x] Email and password sign-up.
 - [x] Email and password sign-in.
