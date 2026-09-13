@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, CircleHelp, Code2, LayoutDashboard, Target, X } from 'lucide-react'
+import { BookOpen, ChevronRight, CircleHelp, Code2, LayoutDashboard, Settings2, Target, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 
 const navItems = [
@@ -35,6 +35,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 						{label}
 					</NavLink>
 				))}
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage" onClick={onClose}>
+					<Settings2 size={18} />
+					Manage content
+				</NavLink>
 				<span className="nav-label nav-label-spaced">Coming soon</span>
 				<div className="nav-item disabled">
 					<Code2 size={18} />
