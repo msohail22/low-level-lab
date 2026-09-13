@@ -1,0 +1,59 @@
+import { BookOpen, ChevronRight, CircleHelp, Code2, LayoutDashboard, Target, X } from 'lucide-react'
+import { NavLink, Link } from 'react-router-dom'
+
+const navItems = [
+	{ label: 'Dashboard', path: '/', icon: LayoutDashboard },
+	{ label: 'Questions', path: '/questions', icon: CircleHelp },
+	{ label: 'Topics', path: '/topics', icon: BookOpen },
+	{ label: 'Progress', path: '/progress', icon: Target },
+]
+
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+	return (
+		<aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+			<div className="brand">
+				<div className="brand-mark">L</div>
+				<div>
+					<strong>Low Level Lab</strong>
+					<span>Learn by understanding</span>
+				</div>
+				<button className="icon-button close-sidebar" onClick={onClose} aria-label="Close menu">
+					<X size={18} />
+				</button>
+			</div>
+			<nav className="main-nav" aria-label="Main navigation">
+				<span className="nav-label">Workspace</span>
+				{navItems.map(({ label, path, icon: Icon }) => (
+					<NavLink
+						className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+						end={path === '/'}
+						key={path}
+						onClick={onClose}
+						to={path}
+					>
+						<Icon size={18} />
+						{label}
+					</NavLink>
+				))}
+				<span className="nav-label nav-label-spaced">Coming soon</span>
+				<div className="nav-item disabled">
+					<Code2 size={18} />
+					Coding Questions
+					<span className="soon-pill">Soon</span>
+				</div>
+			</nav>
+			<div className="sidebar-footer">
+				<div className="profile-chip">
+					<div className="avatar">ML</div>
+					<div>
+						<strong>My Learning</strong>
+						<span>Guest workspace</span>
+					</div>
+				</div>
+				<Link className="settings-link" to="/auth">
+					Sign in to sync progress <ChevronRight size={15} />
+				</Link>
+			</div>
+		</aside>
+	)
+}
