@@ -89,13 +89,9 @@ export const question = pgTable('question', {
 	archivedAt: timestamp('archived_at'),
 })
 
-export const authSchema = {
-	user,
-	session,
-	account,
-	verification,
-	topic,
-	question,
-}
+export const authSchema = { user, session, account, verification }
+
+export const contentSchema = { topic, question }
 
 export type AuthSchema = typeof authSchema
+export type ContentSchema = typeof contentSchema

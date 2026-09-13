@@ -1,5 +1,6 @@
 import { createAuth } from './auth.js'
-import { handleQuestionRequest, handleTopicRequest } from './content.js'
+import { handleQuestionRequest } from './controllers/question-controller.js'
+import { handleTopicRequest } from './controllers/topic-controller.js'
 import { Resend } from 'resend'
 
 type EmailMessage = {
