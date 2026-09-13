@@ -1,31 +1,25 @@
-# Content Authorization
+# Content authorization
 
-OpenFGA is compatible with the Cloudflare Worker runtime because the Worker
-can call the OpenFGA HTTP API with `fetch`; it does not require a Node-only
-SDK or a long-lived server process.
+Authorization is implemented inside the Worker with database-backed roles. It
+does not require a separately deployed authorization service.
 
-The integration boundary is intentionally kept in one module:
+## Roles
 
-```text
-worker/authorization/openfga.ts
+- `super_admin`: unrestricted content and user-management access.
+- `admin`: manages and approves content for assigned topics.
+- `reviewer`: reviews questions for assigned topics.
+- `member`: authenticated learner who can create and submit questions.
+
+Assignments are stored in `user_role`. A null `topic_id` is an
+organization-wide assignment; a topic ID scopes an admin or reviewer to that
+topic. Permission checks are centralized in
+`worker/authorization/authorization.ts`.
+
+The first super admin must be inserted through a controlled database operation:
+
+```sql
+INSERT INTO user_role (id, user_id, role)
+VALUES ('role_<user-id>', '<better-auth-user-id>', 'super_admin');
 ```
 
-Controllers call `requireContentManager()` from the request utilities. They do
-not construct OpenFGA requests, inspect tokens, or duplicate permission rules.
-
-## Configuration
-
-Configure these Worker secrets or variables when the OpenFGA store is ready:
-
-- `OPENFGA_API_URL`
-- `OPENFGA_API_TOKEN`
-- `OPENFGA_STORE_ID`
-- `OPENFGA_MODEL_ID`
-
-Until the OpenFGA settings are configured, the adapter uses the authenticated
-session as the development fallback. Production deployment must configure
-OpenFGA before relying on content-management permissions.
-
-The current permission is `manage_content` on `content:catalog`. Future
-question ownership, moderator, editor, and publisher relations should be
-added to this adapter and its model rather than implemented in controllers.
+Never grant authorization based only on a client-provided role or email.

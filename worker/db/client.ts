@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 
 import { authSchema } from './auth-schema.js'
+import { authorizationSchema } from './authorization-schema.js'
 import { contentSchema } from './content-schema.js'
 
 let cachedConnectionString: string | undefined
@@ -16,5 +17,5 @@ export function createDatabase(env: Env) {
 		cachedPool = new Pool({ connectionString, max: 1 })
 	}
 
-	return drizzle(cachedPool, { schema: { ...authSchema, ...contentSchema } })
+	return drizzle(cachedPool, { schema: { ...authSchema, ...authorizationSchema, ...contentSchema } })
 }

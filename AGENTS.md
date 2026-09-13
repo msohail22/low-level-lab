@@ -47,11 +47,10 @@ shared/
 Keep database-only models and internal service/repository types in `worker/`;
 only transport-safe contracts intended for both sides belong in `shared/`.
 
-OpenFGA integration must live only in `worker/authorization/openfga.ts`.
-Controllers may call a named authorization helper, but must not build OpenFGA
-HTTP requests or duplicate permission rules. OpenFGA is Worker-compatible via
-HTTP `fetch`; keep its URL, store/model identifiers, and token in Worker
-configuration or secrets.
+Authorization must live in `worker/authorization/authorization.ts`.
+Controllers may call named authorization helpers, but must not duplicate role
+rules. Roles and topic-scoped assignments are stored in `user_role`; permission
+decisions must fail closed when the user is unauthenticated or unassigned.
 
 Question workflow is `draft -> submitted -> in_review -> approved -> published`.
 Authenticated members may submit questions; reviewers review them; admins

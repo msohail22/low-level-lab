@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Archive, Ellipsis, Plus, Save, Trash2, X } from 'lucide-react'
 
 import { questionInputSchema, topicInputSchema } from '@low-level-lab/shared/content'
-import { questions as initialQuestions } from '@data/questions'
-import { topics as initialTopics } from '@data/topics'
 import { PageIntro } from '@components/shared/PageIntro'
+import { createQuestion, createTopic, listQuestions, listTopics, type ApiQuestion, type ApiTopic } from '@services/content-api'
 
 type TopicDraft = { name: string; slug: string; description: string }
 type QuestionDraft = {
@@ -30,55 +29,75 @@ export function ContentManagementPage() {
 	const [topicDraft, setTopicDraft] = useState(emptyTopic)
 	const [questionDraft, setQuestionDraft] = useState(emptyQuestion)
 	const [notice, setNotice] = useState('')
-	const [topicCount, setTopicCount] = useState(initialTopics.length)
-	const [questionCount, setQuestionCount] = useState(initialQuestions.length)
+	const [topics, setTopics] = useState<ApiTopic[]>([])
+	const [questions, setQuestions] = useState<ApiQuestion[]>([])
 	const [editing, setEditing] = useState<{ kind: 'topic' | 'question'; title: string } | null>(null)
 
-	const topicOptions = useMemo(() => initialTopics.slice(0, topicCount), [topicCount])
+	useEffect(() => {
+		Promise.all([listTopics(), listQuestions({ manage: 1, pageSize: 50 })]).then(([nextTopics, nextQuestions]) => {
+			setTopics(nextTopics)
+			setQuestions(nextQuestions.items)
+		}).catch((reason: Error) => setNotice(reason.message))
+	}, [])
 
-	function saveTopic() {
+	async function saveTopic() {
 		const result = topicInputSchema.safeParse({ ...topicDraft, description: topicDraft.description || null })
 		if (!result.success) {
 			setNotice(result.error.issues[0]?.message ?? 'Check the topic fields.')
 			return
 		}
-		setTopicCount((count) => count + 1)
+		try {
+			const created = await createTopic(result.data)
+			setTopics((current) => [...current, created])
+		} catch (reason) {
+			setNotice(reason instanceof Error ? reason.message : 'Unable to save topic.')
+			return
+		}
 		setTopicDraft(emptyTopic)
-		setNotice('Topic draft saved locally. API persistence will be connected next.')
+		setNotice('Topic draft saved.')
 	}
 
-	function saveQuestion() {
+	async function saveQuestion() {
 		const result = questionInputSchema.safeParse({
 			...questionDraft,
 			options: questionDraft.options.split('\n').map((option) => option.trim()).filter(Boolean),
+			correctAnswer: questionDraft.type === 'multiple_choice'
+				? questionDraft.correctAnswer.split('\n').map((answer) => answer.trim()).filter(Boolean)
+				: questionDraft.correctAnswer,
 			explanation: questionDraft.explanation || null,
 		})
 		if (!result.success) {
 			setNotice(result.error.issues[0]?.message ?? 'Check the question fields.')
 			return
 		}
-		setQuestionCount((count) => count + 1)
+		try {
+			const created = await createQuestion(result.data)
+			setQuestions((current) => [...current, created])
+		} catch (reason) {
+			setNotice(reason instanceof Error ? reason.message : 'Unable to save question.')
+			return
+		}
 		setQuestionDraft(emptyQuestion)
-		setNotice('Question draft saved locally. API persistence will be connected next.')
+		setNotice('Question draft saved.')
 	}
 
 	return (
 		<section>
 			<PageIntro eyebrow="Content workspace" title="Manage content" description="Create and refine draft topics and questions before moderation." />
 			<div className="management-tabs">
-				<button className={section === 'questions' ? 'active' : ''} onClick={() => setSection('questions')}>Questions ({questionCount})</button>
-				<button className={section === 'topics' ? 'active' : ''} onClick={() => setSection('topics')}>Topics ({topicCount})</button>
+				<button className={section === 'questions' ? 'active' : ''} onClick={() => setSection('questions')}>Questions ({questions.length})</button>
+				<button className={section === 'topics' ? 'active' : ''} onClick={() => setSection('topics')}>Topics ({topics.length})</button>
 			</div>
 			<div className="management-grid">
 				<div className="panel management-list">
 					<div className="panel-heading"><div><span className="eyebrow">Draft workspace</span><h2>{section === 'questions' ? 'Question drafts' : 'Topic drafts'}</h2></div><span className="draft-badge">Draft</span></div>
 					{section === 'questions'
-						? initialQuestions.map((item) => <ManagementRow key={item.id} title={item.title} detail={`${item.topic} · ${item.type}`} onEdit={() => setEditing({ kind: 'question', title: item.title })} />)
-						: initialTopics.map((item) => <ManagementRow key={item.name} title={item.name} detail={`${item.count} questions`} onEdit={() => setEditing({ kind: 'topic', title: item.name })} />)}
+						? questions.map((item) => <ManagementRow key={item.id} title={item.title} detail={`${item.topicId} · ${item.type}`} onEdit={() => setEditing({ kind: 'question', title: item.title })} />)
+						: topics.map((item) => <ManagementRow key={item.id} title={item.name} detail={`${item.total} questions`} onEdit={() => setEditing({ kind: 'topic', title: item.name })} />)}
 				</div>
 				<div className="panel management-form">
 					<div className="panel-heading"><div><span className="eyebrow">Create draft</span><h2>New {section === 'questions' ? 'question' : 'topic'}</h2></div></div>
-					{section === 'topics' ? <TopicForm value={topicDraft} onChange={setTopicDraft} onSave={saveTopic} /> : <QuestionForm value={questionDraft} topics={topicOptions} onChange={setQuestionDraft} onSave={saveQuestion} />}
+					{section === 'topics' ? <TopicForm value={topicDraft} onChange={setTopicDraft} onSave={saveTopic} /> : <QuestionForm value={questionDraft} topics={topics} onChange={setQuestionDraft} onSave={saveQuestion} />}
 					{notice && <p className="form-notice">{notice}</p>}
 				</div>
 			</div>
@@ -100,6 +119,6 @@ function TopicForm({ value, onChange, onSave }: { value: TopicDraft; onChange: (
 	return <form className="content-form" onSubmit={(event) => { event.preventDefault(); onSave() }}><label>Name<input value={value.name} onChange={(event) => onChange({ ...value, name: event.target.value })} placeholder="e.g. Networking" /></label><label>Slug<input value={value.slug} onChange={(event) => onChange({ ...value, slug: event.target.value })} placeholder="networking" /></label><label>Description<textarea value={value.description} onChange={(event) => onChange({ ...value, description: event.target.value })} placeholder="What will learners explore?" /></label><button className="primary-button" type="submit"><Save size={16} /> Save topic draft</button></form>
 }
 
-function QuestionForm({ value, topics, onChange, onSave }: { value: QuestionDraft; topics: typeof initialTopics; onChange: (value: QuestionDraft) => void; onSave: () => void }) {
-	return <form className="content-form" onSubmit={(event) => { event.preventDefault(); onSave() }}><label>Title<input value={value.title} onChange={(event) => onChange({ ...value, title: event.target.value })} placeholder="Question title" /></label><label>Slug<input value={value.slug} onChange={(event) => onChange({ ...value, slug: event.target.value })} placeholder="question-slug" /></label><label>Body<textarea value={value.body} onChange={(event) => onChange({ ...value, body: event.target.value })} placeholder="Question prompt or explanation..." /></label><div className="form-row"><label>Type<select value={value.type} onChange={(event) => onChange({ ...value, type: event.target.value as QuestionDraft['type'] })}><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option><option value="true_false">True / False</option><option value="math">Math</option><option value="ai">AI</option><option value="code_output">Code output</option></select></label><label>Difficulty<select value={value.difficulty} onChange={(event) => onChange({ ...value, difficulty: event.target.value as QuestionDraft['difficulty'] })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label></div><label>Topic<select value={value.topicId} onChange={(event) => onChange({ ...value, topicId: event.target.value })}><option value="">Select a topic</option>{topics.map((topic) => <option key={topic.name} value={topic.name.toLowerCase().replaceAll(' ', '-')}>{topic.name}</option>)}</select></label><label>Options <small>(one per line)</small><textarea value={value.options} onChange={(event) => onChange({ ...value, options: event.target.value })} placeholder={'Option one\nOption two'} /></label><label>Correct answer<input value={value.correctAnswer} onChange={(event) => onChange({ ...value, correctAnswer: event.target.value })} placeholder="Exact answer" /></label><label>Explanation<textarea value={value.explanation} onChange={(event) => onChange({ ...value, explanation: event.target.value })} placeholder="Explain the answer..." /></label><button className="primary-button" type="submit"><Plus size={16} /> Save question draft</button></form>
+function QuestionForm({ value, topics, onChange, onSave }: { value: QuestionDraft; topics: ApiTopic[]; onChange: (value: QuestionDraft) => void; onSave: () => void }) {
+	return <form className="content-form" onSubmit={(event) => { event.preventDefault(); onSave() }}><label>Title<input value={value.title} onChange={(event) => onChange({ ...value, title: event.target.value })} placeholder="Question title" /></label><label>Slug<input value={value.slug} onChange={(event) => onChange({ ...value, slug: event.target.value })} placeholder="question-slug" /></label><label>Body<textarea value={value.body} onChange={(event) => onChange({ ...value, body: event.target.value })} placeholder="Question prompt or explanation..." /></label><div className="form-row"><label>Type<select value={value.type} onChange={(event) => onChange({ ...value, type: event.target.value as QuestionDraft['type'] })}><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option><option value="true_false">True / False</option><option value="math">Math</option><option value="ai">AI</option><option value="code_output">Code output</option></select></label><label>Difficulty<select value={value.difficulty} onChange={(event) => onChange({ ...value, difficulty: event.target.value as QuestionDraft['difficulty'] })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label></div><label>Topic<select value={value.topicId} onChange={(event) => onChange({ ...value, topicId: event.target.value })}><option value="">Select a topic</option>{topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></label><label>Options <small>(one per line)</small><textarea value={value.options} onChange={(event) => onChange({ ...value, options: event.target.value })} placeholder={'Option one\nOption two'} /></label><label>Correct answer<input value={value.correctAnswer} onChange={(event) => onChange({ ...value, correctAnswer: event.target.value })} placeholder="Exact answer" /></label><label>Explanation<textarea value={value.explanation} onChange={(event) => onChange({ ...value, explanation: event.target.value })} placeholder="Explain the answer..." /></label><button className="primary-button" type="submit"><Plus size={16} /> Save question draft</button></form>
 }

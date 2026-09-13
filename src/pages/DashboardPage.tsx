@@ -1,12 +1,25 @@
 import { BookOpen, CheckCircle2, ChevronRight, Sparkles, Target } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { questions } from '@data/questions'
-import { topics } from '@data/topics'
 import { QuestionRow } from '@components/questions/QuestionRow'
 import { StatCard } from '@components/shared/StatCard'
+import { listQuestions, listTopics, type ApiQuestion, type ApiTopic } from '@services/content-api'
+import { useEffect, useState } from 'react'
 
 export function DashboardPage() {
+	const [questions, setQuestions] = useState<ApiQuestion[]>([])
+	const [topics, setTopics] = useState<ApiTopic[]>([])
+	useEffect(() => {
+		Promise.all([listQuestions({ pageSize: 3 }), listTopics()]).then(([questionResult, topicResult]) => {
+			setQuestions(questionResult.items)
+			setTopics(topicResult)
+		}).catch(() => {
+			setQuestions([])
+			setTopics([])
+		})
+	}, [])
+	const total = topics.reduce((sum, topic) => sum + topic.total, 0)
+	const solved = topics.reduce((sum, topic) => sum + topic.solved, 0)
 	return (
 		<>
 			<section className="hero">
@@ -14,9 +27,9 @@ export function DashboardPage() {
 				<div className="hero-art"><Sparkles size={24} /><span>Small steps<br /><strong>compound.</strong></span></div>
 			</section>
 			<div className="stat-grid">
-				<StatCard label="Questions solved" value="12" detail="of 70 available" icon={CheckCircle2} />
-				<StatCard label="Current streak" value="4 days" detail="Keep it going" icon={Target} />
-				<StatCard label="Topics explored" value="3" detail="of 8 topics" icon={BookOpen} />
+				<StatCard label="Questions solved" value={String(solved)} detail={`of ${total} available`} icon={CheckCircle2} />
+				<StatCard label="Questions available" value={String(total)} detail="Published for learning" icon={Target} />
+				<StatCard label="Topics explored" value={String(topics.filter((topic) => topic.solved > 0).length)} detail={`of ${topics.length} topics`} icon={BookOpen} />
 			</div>
 			<section className="content-grid">
 				<div className="panel">
@@ -25,7 +38,7 @@ export function DashboardPage() {
 				</div>
 				<div className="panel topic-panel">
 					<div className="panel-heading"><div><span className="eyebrow">Explore</span><h2>Topics</h2></div><Link to="/topics" className="text-link">See all <ChevronRight size={15} /></Link></div>
-					{topics.slice(0, 3).map(({ name, count, icon: Icon, color }) => <Link className="topic-row" to="/topics" key={name}><span className={`topic-icon ${color}`}><Icon size={17} /></span><span><strong>{name}</strong><small>{count} questions</small></span><ChevronRight size={16} /></Link>)}
+					{topics.slice(0, 3).map((topic) => <Link className="topic-row" to={`/topics/${topic.id}`} key={topic.id}><span className="topic-icon violet"><BookOpen size={17} /></span><span><strong>{topic.name}</strong><small>{topic.total} questions</small></span><ChevronRight size={16} /></Link>)}
 				</div>
 			</section>
 		</>

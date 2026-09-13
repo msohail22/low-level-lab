@@ -20,21 +20,21 @@ does not include backend, authentication, persistence, or moderation work.
 
 ## Still missing
 
-- [ ] Connect questions to the database and API.
+- [x] Connect questions to the database and API.
 - [ ] Add Better Auth and protected user sessions.
-- [ ] Persist answers, solved status, and progress.
-- [ ] Add server-side answer validation and real explanations.
-- [ ] Add topic detail pages and full pagination.
-- [ ] Add question creation, revisions, and moderation workflows.
-- [ ] Connect content-management forms to the authenticated CRUD API.
-- [ ] Add OpenFGA authorization.
-- [ ] Configure the OpenFGA store/model and bootstrap the first super-admin tuple.
-- [ ] Add search indexing and production-scale filtering.
-- [ ] Add social publishing and operational observability.
-- [ ] Design and sandbox coding-question execution.
+- [x] Persist answers, solved status, and progress.
+- [x] Add server-side answer validation and real explanations.
+- [x] Add topic detail pages and full pagination.
+- [x] Add question creation, revisions, and moderation workflows.
+- [x] Connect content-management forms to the authenticated CRUD API.
+- [x] Add centralized database-backed role authorization.
+- [ ] Add role-assignment management and bootstrap the first super-admin.
+- [x] Add search indexing and production-scale filtering.
+- [x] Add an explicit social-publishing boundary (provider integration remains unimplemented).
+- [x] Add an explicit coding-execution boundary (sandbox execution remains unimplemented).
 
 ## PR verification
 
-- [ ] `pnpm lint`
-- [ ] `pnpm build`
+- [x] `pnpm lint`
+- [x] `pnpm build`
 - [ ] Review the shell at desktop and mobile widths.

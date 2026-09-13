@@ -1,5 +1,7 @@
 import { createAuth } from './auth.js'
 import { handleQuestionRequest } from './controllers/question-controller.js'
+import { handleProgressRequest } from './controllers/progress-controller.js'
+import { codingExecutionPlaceholder, socialPublishingPlaceholder } from './controllers/placeholder-controller.js'
 import { handleTopicRequest } from './controllers/topic-controller.js'
 import { Resend } from 'resend'
 
@@ -37,9 +39,18 @@ export default {
 			return handleTopicRequest(request, env, topicId)
 		}
 
+		if (url.pathname === '/api/progress') {
+			return handleProgressRequest(request, env)
+		}
+
+		if (url.pathname.startsWith('/api/social/')) return socialPublishingPlaceholder()
+		if (url.pathname.endsWith('/execute')) return codingExecutionPlaceholder()
+
 		if (url.pathname.startsWith('/api/questions')) {
-			const questionId = url.pathname.split('/')[3]
-			return handleQuestionRequest(request, env, questionId)
+			const segments = url.pathname.split('/').filter(Boolean)
+			const questionId = segments[2]
+			const action = segments[3]
+			return handleQuestionRequest(request, env, questionId, action)
 		}
 
 		if (url.pathname.startsWith('/api/')) {

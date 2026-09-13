@@ -1,7 +1,7 @@
-export type QuestionType = 'Single Choice' | 'Math' | 'AI'
+export type QuestionType = string
 
 export type Question = {
-	id: number
+	id: string
 	title: string
 	topic: string
 	type: QuestionType
@@ -12,7 +12,7 @@ export type Question = {
 
 export const questions: Question[] = [
 	{
-		id: 1,
+		id: '1',
 		title: 'What does a closure preserve in JavaScript?',
 		topic: 'JavaScript',
 		type: 'Single Choice',
@@ -26,7 +26,7 @@ export const questions: Question[] = [
 		],
 	},
 	{
-		id: 2,
+		id: '2',
 		title: 'Calculate the time complexity of binary search.',
 		topic: 'Mathematics',
 		type: 'Math',
@@ -35,7 +35,7 @@ export const questions: Question[] = [
 		options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
 	},
 	{
-		id: 3,
+		id: '3',
 		title: 'What is the purpose of a validation set in machine learning?',
 		topic: 'Artificial Intelligence',
 		type: 'AI',
@@ -49,7 +49,7 @@ export const questions: Question[] = [
 		],
 	},
 	{
-		id: 4,
+		id: '4',
 		title: 'Why does a process need virtual memory?',
 		topic: 'Operating Systems',
 		type: 'Single Choice',

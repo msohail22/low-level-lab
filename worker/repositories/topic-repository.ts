@@ -16,6 +16,9 @@ export function createTopicRepository(db: Database) {
 		findById(id: string) {
 			return db.query.topic.findFirst({ where: eq(topic.id, id) })
 		},
+		findBySlug(slug: string) {
+			return db.query.topic.findFirst({ where: eq(topic.slug, slug) })
+		},
 		create(values: typeof topic.$inferInsert) {
 			return db.insert(topic).values(values).returning()
 		},

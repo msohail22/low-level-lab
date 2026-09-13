@@ -7,6 +7,7 @@ import { ProgressPage } from '@pages/ProgressPage'
 import { QuestionDetailPage } from '@pages/QuestionDetailPage'
 import { QuestionsPage } from '@pages/QuestionsPage'
 import { TopicsPage } from '@pages/TopicsPage'
+import { TopicDetailPage } from '@pages/TopicDetailPage'
 import { ContentManagementPage } from '@pages/ContentManagementPage'
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
 					<Route path="questions" element={<QuestionsPage />} />
 					<Route path="questions/:questionId" element={<QuestionDetailPage />} />
 					<Route path="topics" element={<TopicsPage />} />
+					<Route path="topics/:topicId" element={<TopicDetailPage />} />
 					<Route path="progress" element={<ProgressPage />} />
 					<Route path="manage" element={<ContentManagementPage />} />
 				</Route>

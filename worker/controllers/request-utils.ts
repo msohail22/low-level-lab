@@ -1,4 +1,4 @@
-import { requirePermission, type Permission } from '../authorization/openfga.js'
+import { requirePermission, type Permission } from '../authorization/authorization.js'
 
 export function jsonResponse(data: unknown, status = 200) {
 	return Response.json(data, { status })
@@ -12,9 +12,9 @@ export async function requirePermissionFor(
 	request: Request,
 	env: Env,
 	permission: Permission,
-	object?: string,
+	topicId?: string,
 ) {
-	return requirePermission(request, env, permission, object)
+	return requirePermission(request, env, permission, topicId)
 }
 
 export async function parseBody<T>(request: Request, schema: { safeParse: (body: unknown) => { success: true; data: T } | { success: false; error: unknown } }) {
