@@ -29,7 +29,8 @@ type topic
     define can_manage_topics: admin or organization->can_manage_topics
     define can_create_question: admin or organization->can_create_question
     define can_review_question: reviewer or organization->can_review_question
-    define can_approve_question: organization->can_approve_question
+    define can_approve_question: admin or organization->can_approve_question
+    define can_publish_question: organization->can_publish_question
 
 type question
   relations
@@ -41,4 +42,4 @@ type question
     define can_submit_question: author or topic->can_create_question
     define can_review_question: topic->can_review_question
     define can_approve_question: topic->can_approve_question
-    define can_publish_question: topic->can_approve_question
+    define can_publish_question: topic->can_publish_question
