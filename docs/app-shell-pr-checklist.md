@@ -16,6 +16,7 @@ does not include backend, authentication, persistence, or moderation work.
 - [x] Add a light/dark theme toggle for the shell.
 - [x] Add a draft content-management UI for questions and topics.
 - [x] Reuse shared Zod validation in the content forms.
+- [x] Add workflow-oriented sidebar entries for submissions, review, topics, and super-admin management.
 
 ## Still missing
 
@@ -27,6 +28,7 @@ does not include backend, authentication, persistence, or moderation work.
 - [ ] Add question creation, revisions, and moderation workflows.
 - [ ] Connect content-management forms to the authenticated CRUD API.
 - [ ] Add OpenFGA authorization.
+- [ ] Configure the OpenFGA store/model and bootstrap the first super-admin tuple.
 - [ ] Add search indexing and production-scale filtering.
 - [ ] Add social publishing and operational observability.
 - [ ] Design and sandbox coding-question execution.

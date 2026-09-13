@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const questionTypes = ['single_choice', 'multiple_choice', 'true_false', 'math', 'ai', 'code_output'] as const
 export const difficulties = ['beginner', 'intermediate', 'advanced'] as const
+export const questionStatuses = ['draft', 'submitted', 'in_review', 'approved', 'published', 'changes_requested', 'rejected', 'archived'] as const
 
 const nonEmptyText = z.string().trim().min(1)
 
