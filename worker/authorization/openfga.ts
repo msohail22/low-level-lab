@@ -17,10 +17,18 @@ type OpenFgaCheckResponse = { allowed?: boolean }
 
 let accessToken: { value: string; expiresAt: number } | undefined
 
+function isLocal(env: Env) {
+	return env.OPENFGA_AUTH_MODE === 'local'
+}
+
 async function getAccessToken(env: Env) {
+	if (isLocal(env)) return null
 	if (accessToken && accessToken.expiresAt > Date.now() + 30_000) return accessToken.value
 
-	const response = await fetch(`https://${env.OPENFGA_TOKEN_ISSUER}/oauth/token`, {
+	const issuer = env.OPENFGA_TOKEN_ISSUER.startsWith('http')
+		? env.OPENFGA_TOKEN_ISSUER
+		: `https://${env.OPENFGA_TOKEN_ISSUER}`
+	const response = await fetch(`${issuer}/oauth/token`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/x-www-form-urlencoded' },
 		body: new URLSearchParams({
@@ -47,8 +55,8 @@ async function check(env: Env, user: string, relation: Permission, object: strin
 	const response = await fetch(`${env.OPENFGA_API_URL}/stores/${env.OPENFGA_STORE_ID}/check`, {
 		method: 'POST',
 		headers: {
-			authorization: `Bearer ${token}`,
 			'content-type': 'application/json',
+			...(token ? { authorization: `Bearer ${token}` } : {}),
 		},
 		body: JSON.stringify({
 			user,

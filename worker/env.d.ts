@@ -18,5 +18,6 @@ declare global {
 		OPENFGA_AUDIENCE: string
 		OPENFGA_CLIENT_ID: string
 		OPENFGA_CLIENT_SECRET: string
+		OPENFGA_AUTH_MODE?: 'cloud' | 'local'
 	}
 }

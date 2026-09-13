@@ -35,7 +35,7 @@ type question
     define topic: [topic]
     define organization: [organization]
   permissions
-    define can_edit_question: author or super_admin from topic
+    define can_edit_question: author or super_admin from organization
     define can_submit_question: author or member from organization
     define can_review_question: reviewer from topic or reviewer from organization or super_admin from organization
     define can_approve_question: admin from topic or admin from organization or super_admin from organization
