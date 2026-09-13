@@ -11,6 +11,31 @@
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
 	},
+	"kv_namespaces": [
+		{
+			"binding": "LOW_LEVEL_LAB_KV",
+			"id": "1580cd04579d4b0584d3051555ba3874"
+		}
+	],
+	"hyperdrive": [
+		{
+			"binding": "LOW_LEVEL_LAB_DB",
+			"id": "a9351b26ad294448bb28c44c881b2da8"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "LOW_LEVEL_LAB_QUEUE",
+				"queue": "low-level-lab"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "low-level-lab"
+			}
+		]
+	},
 	"observability": {
 		"enabled": true
 	},
