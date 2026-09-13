@@ -7,6 +7,11 @@
 	"name": "low-level-lab",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-09-11",
+	"compatibility_flags": ["nodejs_compat"],
+	"vars": {
+		"BETTER_AUTH_URL": "https://low-level-lab.msohail22.workers.dev",
+		"RESEND_FROM_EMAIL": "onboarding@resend.dev"
+	},
 	"assets": {
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
