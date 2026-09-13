@@ -1,4 +1,4 @@
-import { authClient } from '../services/auth-client'
+import { authClient } from '@services/auth-client'
 
 export function useAuth() {
 	const session = authClient.useSession()

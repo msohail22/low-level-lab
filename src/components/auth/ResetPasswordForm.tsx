@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 
-import { authClient } from '../../services/auth-client'
+import { authClient } from '@services/auth-client'
 
 export function ResetPasswordForm({ token }: { token: string }) {
 	const [password, setPassword] = useState('')

@@ -1,4 +1,4 @@
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '@hooks/useAuth'
 
 export function AuthenticatedView() {
 	const { data: session, signOut } = useAuth()

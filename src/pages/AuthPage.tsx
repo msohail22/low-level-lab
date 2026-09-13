@@ -1,7 +1,7 @@
-import { AuthForm } from '../components/auth/AuthForm'
-import { AuthenticatedView } from '../components/auth/AuthenticatedView'
-import { ResetPasswordForm } from '../components/auth/ResetPasswordForm'
-import { useAuth } from '../hooks/useAuth'
+import { AuthForm } from '@components/auth/AuthForm'
+import { AuthenticatedView } from '@components/auth/AuthenticatedView'
+import { ResetPasswordForm } from '@components/auth/ResetPasswordForm'
+import { useAuth } from '@hooks/useAuth'
 
 export function AuthPage() {
 	const { data: session, isPending } = useAuth()
