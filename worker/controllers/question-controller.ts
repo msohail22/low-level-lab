@@ -16,12 +16,23 @@ export async function handleQuestionRequest(request: Request, env: Env, question
 	const service = createQuestionService(createDatabase(env))
 	const url = new URL(request.url)
 
+	if (questionId && action === 'restore' && request.method === 'POST') {
+		const existing = await service.get(questionId)
+		const user = existing ? await requireQuestionPermission(request, env, 'edit_question', existing) : null
+		if (!user) return jsonResponse({ error: 'Question edit permission required' }, 403)
+		const revision = Number(url.searchParams.get('revision'))
+		if (!Number.isInteger(revision) || revision < 1) return jsonResponse({ error: 'A valid revision is required' }, 400)
+		const restored = await service.restore(questionId, revision, user.id)
+		return restored ? jsonResponse(restored) : jsonResponse({ error: 'Revision not found' }, 404)
+	}
+
 	if (request.method === 'GET') {
 		if (action === 'revisions' && questionId) {
 			const existing = await service.get(questionId)
 			const user = existing ? await requireQuestionPermission(request, env, 'edit_question', existing) : null
 			return user ? jsonResponse(await service.revisions(questionId)) : jsonResponse({ error: 'Question permission required' }, 403)
 		}
+
 		if (questionId) {
 			const item = await service.get(questionId)
 			if (!item || item.status !== 'published') return jsonResponse({ error: 'Question not found' }, 404)

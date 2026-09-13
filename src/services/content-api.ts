@@ -3,11 +3,19 @@ import type { QuestionResponse, TopicResponse } from '@low-level-lab/shared/cont
 export type ApiQuestion = QuestionResponse
 export type ApiTopic = TopicResponse
 
+export class ApiError extends Error {
+	readonly status: number
+	constructor(message: string, status: number) {
+		super(message)
+		this.status = status
+	}
+}
+
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(path, { credentials: 'include', ...init, headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } })
 	if (!response.ok) {
 		const body = await response.json().catch(() => null) as { error?: string } | null
-		throw new Error(body?.error ?? `Request failed (${response.status})`)
+		throw new ApiError(body?.error ?? `Request failed (${response.status})`, response.status)
 	}
 	return response.json() as Promise<T>
 }
@@ -44,4 +52,47 @@ export function createQuestion(input: unknown) {
 
 export function getProgress() {
 	return api<{ solved: number; total: number; topics: Array<{ topicId: string; total: number; solved: number }> }>('/api/progress')
+}
+
+export type AttemptHistory = {
+	id: string
+	questionId: string
+	questionTitle: string
+	correct: boolean
+	answer: unknown
+	createdAt: string
+}
+
+export function getProgressHistory() {
+	return api<{ items: AttemptHistory[] }>('/api/progress/history')
+}
+
+export function getRevisions(id: string) {
+	return api<Array<ApiQuestion & { revision: number; createdAt: string; createdBy: string }>>(`/api/questions/${id}/revisions`)
+}
+
+export function restoreRevision(id: string, revision: number) {
+	return api<ApiQuestion>(`/api/questions/${id}/restore?revision=${revision}`, { method: 'POST', body: JSON.stringify({}) })
+}
+
+export function transitionQuestion(id: string, action: string, reason?: string) {
+	return api<ApiQuestion>(`/api/questions/${id}/${action}`, { method: 'POST', body: JSON.stringify({ reason: reason || null }) })
+}
+
+export function listModeration(queue: 'reviewer' | 'admin') {
+	return api<{ items: ApiQuestion[]; total: number }>(`/api/moderation/${queue}`)
+}
+
+export type RoleTuple = { user: string; relation: string; object: string }
+
+export function listRoleTuples() {
+	return api<{ items: RoleTuple[] }>('/api/admin/roles')
+}
+
+export function assignRole(input: { userId: string; role: string; organizationId?: string; topicId?: string }) {
+	return api<{ item: RoleTuple }>('/api/admin/roles', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function removeRole(input: { userId: string; role: string; organizationId?: string; topicId?: string }) {
+	return api<{ item: RoleTuple }>('/api/admin/roles', { method: 'DELETE', body: JSON.stringify(input) })
 }

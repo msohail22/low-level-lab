@@ -7,6 +7,10 @@ export async function handleProgressRequest(request: Request, env: Env) {
 	const user = await getAuthenticatedUser(request, env)
 	if (!user) return jsonResponse({ error: 'Sign in to view progress' }, 401)
 	const service = createQuestionService(createDatabase(env))
+	const url = new URL(request.url)
+	if (url.pathname.endsWith('/history')) {
+		return jsonResponse({ items: await service.history(user.id) })
+	}
 	const [progress, topicCounts] = await Promise.all([
 		service.progress(user.id),
 		service.topicCounts(user.id),

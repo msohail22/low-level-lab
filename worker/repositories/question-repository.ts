@@ -22,7 +22,9 @@ export function createQuestionRepository(db: Database) {
 		findPage(filters: QuestionListFilters) {
 			const conditions = [
 				isNull(question.archivedAt),
-				filters.includeDrafts ? undefined : eq(question.status, 'published'),
+				filters.includeDrafts
+					? filters.status && !['solved', 'unsolved'].includes(filters.status) ? eq(question.status, filters.status) : undefined
+					: eq(question.status, 'published'),
 				filters.topicId ? eq(question.topicId, filters.topicId) : undefined,
 				filters.subtopic ? eq(question.subtopic, filters.subtopic) : undefined,
 				filters.type ? eq(question.type, filters.type) : undefined,
@@ -73,6 +75,11 @@ export function createQuestionRepository(db: Database) {
 		listRevisions(questionId: string) {
 			return db.select().from(questionRevision).where(eq(questionRevision.questionId, questionId)).orderBy(desc(questionRevision.revision))
 		},
+		findRevision(questionId: string, revision: number) {
+			return db.query.questionRevision.findFirst({
+				where: and(eq(questionRevision.questionId, questionId), eq(questionRevision.revision, revision)),
+			})
+		},
 		createWorkflowEvent(values: typeof questionWorkflowEvent.$inferInsert) {
 			return db.insert(questionWorkflowEvent).values(values).returning()
 		},
@@ -92,6 +99,20 @@ export function createQuestionRepository(db: Database) {
 			return db.query.questionProgress.findFirst({
 				where: and(eq(questionProgress.userId, userId), eq(questionProgress.questionId, questionId)),
 			})
+		},
+		findAttempts(userId: string, limit = 30) {
+			return db.select({
+				id: questionAttempt.id,
+				questionId: questionAttempt.questionId,
+				questionTitle: question.title,
+				correct: questionAttempt.correct,
+				answer: questionAttempt.answer,
+				createdAt: questionAttempt.createdAt,
+			}).from(questionAttempt)
+				.innerJoin(question, eq(questionAttempt.questionId, question.id))
+				.where(eq(questionAttempt.userId, userId))
+				.orderBy(desc(questionAttempt.createdAt))
+				.limit(limit)
 		},
 		findTopicCounts(userId?: string) {
 			const solvedSql = userId

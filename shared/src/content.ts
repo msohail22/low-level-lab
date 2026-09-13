@@ -4,6 +4,8 @@ export const questionTypes = ['single_choice', 'multiple_choice', 'true_false', 
 export const difficulties = ['beginner', 'intermediate', 'advanced'] as const
 export const questionStatuses = ['draft', 'submitted', 'in_review', 'approved', 'published', 'changes_requested', 'rejected', 'archived'] as const
 export const workflowTransitions = ['submit', 'start_review', 'request_changes', 'reject', 'approve', 'publish'] as const
+export const moderationQueues = ['reviewer', 'admin'] as const
+export const roles = ['super_admin', 'admin', 'reviewer', 'member'] as const
 
 const nonEmptyText = z.string().trim().min(1)
 
@@ -46,7 +48,7 @@ export const questionSearchSchema = z.object({
 	topicId: z.string().trim().optional(),
 	subtopic: z.string().trim().optional(),
 	type: z.enum(questionTypes).optional(),
-	status: z.enum(['published', 'solved', 'unsolved']).optional(),
+	status: z.enum(questionStatuses).optional(),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(50).default(20),
 })
@@ -59,8 +61,16 @@ export const workflowTransitionSchema = z.object({
 	reason: z.string().trim().max(1_000).nullable().optional(),
 })
 
+export const roleAssignmentSchema = z.object({
+	userId: nonEmptyText.max(200),
+	role: z.enum(roles),
+	organizationId: nonEmptyText.max(200).optional(),
+	topicId: nonEmptyText.max(200).optional(),
+})
+
 export type QuestionSearch = z.infer<typeof questionSearchSchema>
 export type AnswerSubmission = z.infer<typeof answerSubmissionSchema>
+export type RoleAssignment = z.infer<typeof roleAssignmentSchema>
 
 export const questionResponseSchema = z.object({
 	id: z.string(),
@@ -74,6 +84,7 @@ export const questionResponseSchema = z.object({
 	options: z.array(z.string()),
 	explanation: z.string().nullable().optional(),
 	status: z.enum(questionStatuses),
+	revision: z.number().optional(),
 	solved: z.boolean().optional(),
 })
 

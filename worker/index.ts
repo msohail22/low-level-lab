@@ -3,6 +3,8 @@ import { handleQuestionRequest } from './controllers/question-controller.js'
 import { handleProgressRequest } from './controllers/progress-controller.js'
 import { codingExecutionPlaceholder, socialPublishingPlaceholder } from './controllers/placeholder-controller.js'
 import { handleTopicRequest } from './controllers/topic-controller.js'
+import { handleAuthorizationRequest } from './controllers/authorization-controller.js'
+import { handleModerationRequest } from './controllers/moderation-controller.js'
 import { Resend } from 'resend'
 
 type EmailMessage = {
@@ -39,8 +41,16 @@ export default {
 			return handleTopicRequest(request, env, topicId)
 		}
 
-		if (url.pathname === '/api/progress') {
+		if (url.pathname.startsWith('/api/progress')) {
 			return handleProgressRequest(request, env)
+		}
+
+		if (url.pathname === '/api/admin/roles') {
+			return handleAuthorizationRequest(request, env)
+		}
+
+		if (url.pathname.startsWith('/api/moderation')) {
+			return handleModerationRequest(request, env)
 		}
 
 		if (url.pathname.startsWith('/api/social/')) return socialPublishingPlaceholder()

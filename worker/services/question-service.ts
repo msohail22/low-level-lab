@@ -125,6 +125,37 @@ export function createQuestionService(db: Parameters<typeof createQuestionReposi
 		revisions(id: string) {
 			return repository.listRevisions(id)
 		},
+		async restore(id: string, revision: number, actorId: string) {
+			const existing = await repository.findById(id)
+			const snapshot = await repository.findRevision(id, revision)
+			if (!existing || !snapshot) return null
+			const input: QuestionInput = {
+				title: snapshot.title,
+				body: snapshot.body,
+				type: snapshot.type as QuestionInput['type'],
+				topicId: snapshot.topicId,
+				subtopic: snapshot.subtopic,
+				difficulty: snapshot.difficulty as QuestionInput['difficulty'],
+				options: snapshot.options,
+				correctAnswer: snapshot.correctAnswer as QuestionInput['correctAnswer'],
+				explanation: snapshot.explanation,
+				slug: existing.slug,
+			}
+			const hash = await contentHash(input)
+			const [updated] = await repository.update(id, {
+				...input,
+				revision: existing.revision + 1,
+				contentHash: hash,
+				status: 'draft',
+				submittedAt: null,
+				approvedAt: null,
+				publishedAt: null,
+				rejectionReason: null,
+				updatedAt: new Date(),
+			})
+			if (updated) await repository.createRevision(revisionValues({ ...updated, authorId: actorId } as QuestionInput & { id: string; revision: number; authorId: string }, hash))
+			return updated
+		},
 		async answer(id: string, userId: string, submission: AnswerSubmission) {
 			const item = await repository.findById(id)
 			if (!item || item.status !== 'published') return { error: 'Question not found' as const }
@@ -144,6 +175,9 @@ export function createQuestionService(db: Parameters<typeof createQuestionReposi
 		},
 		progress(userId: string) {
 			return repository.findProgress(userId)
+		},
+		history(userId: string) {
+			return repository.findAttempts(userId)
 		},
 		topicCounts(userId?: string) {
 			return repository.findTopicCounts(userId)
