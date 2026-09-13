@@ -1,4 +1,6 @@
 import { createAuth } from './auth.js'
+import { handleQuestionRequest } from './controllers/question-controller.js'
+import { handleTopicRequest } from './controllers/topic-controller.js'
 import { Resend } from 'resend'
 
 type EmailMessage = {
@@ -30,13 +32,23 @@ export default {
 			return auth.handler(request)
 		}
 
+		if (url.pathname.startsWith('/api/topics')) {
+			const topicId = url.pathname.split('/')[3]
+			return handleTopicRequest(request, env, topicId)
+		}
+
+		if (url.pathname.startsWith('/api/questions')) {
+			const questionId = url.pathname.split('/')[3]
+			return handleQuestionRequest(request, env, questionId)
+		}
+
 		if (url.pathname.startsWith('/api/')) {
 			return Response.json({
 				name: 'Cloudflare',
 			})
 		}
 
-		return new Response(null, { status: 404 });
+		return new Response(null, { status: 404 })
 	},
 	async queue(batch, env) {
 		const resend = new Resend(env.RESEND_API_KEY)

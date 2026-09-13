@@ -55,11 +55,6 @@ export const verification = pgTable('verification', {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
-export const authSchema = {
-	user,
-	session,
-	account,
-	verification,
-}
+export const authSchema = { user, session, account, verification }
 
 export type AuthSchema = typeof authSchema
