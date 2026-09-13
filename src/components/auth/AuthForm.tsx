@@ -22,53 +22,53 @@ export function AuthForm() {
 		if (result.error) {
 			setError(result.error.message ?? 'Authentication failed')
 		}
+	}
 
-		async function handlePasswordResetRequest(
-			event: FormEvent<HTMLFormElement>,
-		) {
-			event.preventDefault()
-			setError('')
-			const result = await requestPasswordReset('/request-password-reset', {
-				method: 'POST',
-				body: {
-					email,
-					redirectTo: `${window.location.origin}/reset-password`,
-				},
-			})
-			if (result.error) {
-				setError(result.error.message ?? 'Unable to send reset email')
-			}
+	async function handlePasswordResetRequest(
+		event: FormEvent<HTMLFormElement>,
+	) {
+		event.preventDefault()
+		setError('')
+		const result = await requestPasswordReset('/request-password-reset', {
+			method: 'POST',
+			body: {
+				email,
+				redirectTo: `${window.location.origin}/reset-password`,
+			},
+		})
+		if (result.error) {
+			setError(result.error.message ?? 'Unable to send reset email')
 		}
+	}
 
-		if (isForgotPassword) {
-			return (
-				<section className="auth-card">
-					<p className="eyebrow">Low Level Lab</p>
-					<h1>Reset your password</h1>
-					<p>Enter your email and we will send a reset link.</p>
-					<form onSubmit={handlePasswordResetRequest}>
-						<label>
-							Email
-							<input
-								required
-								type="email"
-								value={email}
-								onChange={(event) => setEmail(event.target.value)}
-							/>
-						</label>
-						{error && <p className="error">{error}</p>}
-						<button type="submit">Send reset link</button>
-					</form>
-					<button
-						className="link-button"
-						type="button"
-						onClick={() => setIsForgotPassword(false)}
-					>
-						Back to sign in
-					</button>
-				</section>
-			)
-		}
+	if (isForgotPassword) {
+		return (
+			<section className="auth-card">
+				<p className="eyebrow">Low Level Lab</p>
+				<h1>Reset your password</h1>
+				<p>Enter your email and we will send a reset link.</p>
+				<form onSubmit={handlePasswordResetRequest}>
+					<label>
+						Email
+						<input
+							required
+							type="email"
+							value={email}
+							onChange={(event) => setEmail(event.target.value)}
+						/>
+					</label>
+					{error && <p className="error">{error}</p>}
+					<button type="submit">Send reset link</button>
+				</form>
+				<button
+					className="link-button"
+					type="button"
+					onClick={() => setIsForgotPassword(false)}
+				>
+					Back to sign in
+				</button>
+			</section>
+		)
 	}
 
 	return (
