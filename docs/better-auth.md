@@ -16,6 +16,7 @@ pnpm exec wrangler secret put GOOGLE_CLIENT_ID
 pnpm exec wrangler secret put GOOGLE_CLIENT_SECRET
 pnpm exec wrangler secret put GITHUB_CLIENT_ID
 pnpm exec wrangler secret put GITHUB_CLIENT_SECRET
+pnpm exec wrangler secret put RESEND_API_KEY
 ```
 
 `BETTER_AUTH_SECRET` should be a long, random value. `BETTER_AUTH_URL` should
@@ -28,6 +29,24 @@ environment without committing a `.dev.vars` file.
 Configure each provider's OAuth callback URL as
 `https://<your-origin>/api/auth/callback/google` and
 `https://<your-origin>/api/auth/callback/github`.
+
+Set the sender as a non-secret Wrangler variable. For initial Resend testing,
+the verified Resend onboarding sender can be used:
+
+```jsonc
+{
+	"vars": {
+		"RESEND_FROM_EMAIL": "onboarding@resend.dev"
+	}
+}
+```
+
+Replace `re_xxxxxxxxx` in `.dev.vars.example` with your real Resend API key
+only in your local ignored `.dev.vars` file:
+
+```sh
+pnpm exec wrangler secret put RESEND_API_KEY
+```
 
 ## Database schema and migration
 
@@ -56,9 +75,8 @@ database credentials in this repository.
 
 The UI supports account creation, email/password sign-in, Google and GitHub
 sign-in, session loading, sign-out, and requesting a password reset. Reset
-links are queued through the existing Cloudflare Queue; a queue consumer or
-email provider must deliver the queued message to the user. The reset form is
-available at `/reset-password?token=...`.
+links are queued through the existing Cloudflare Queue and delivered through
+Resend. The reset form is available at `/reset-password?token=...`.
 
 The password reset API endpoints are provided by Better Auth:
 
