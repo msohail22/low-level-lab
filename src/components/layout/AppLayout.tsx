@@ -9,6 +9,9 @@ const pageTitles: Record<string, string> = {
 	'/questions': 'Questions',
 	'/topics': 'Topics',
 	'/progress': 'Progress',
+	'/analytics': 'Analytics',
+	'/profile': 'Profile',
+	'/manage': 'Manage',
 }
 
 export function AppLayout() {

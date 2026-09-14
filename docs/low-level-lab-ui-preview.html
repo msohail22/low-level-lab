@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Low Level Lab — Reference Manual UI Prototype</title>
+  
+  <!-- Fonts: Spectral & IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Spectral:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Tokens based on PDF Gallery Reference Manual Spec */
+    :root {
+      /* Light Mode (Paper Theme - Sheet 1) */
+      --paper: #EDEDE7;
+      --paper-sunk: #E4E4DC;
+      --ink: #14171C;
+      --ink-muted: #66665E;
+      --index-blue: #1F3FD8;
+      --marker-gold: #A8791C;
+      --marker-bg: #EDE55B;
+      --rule: #C7C7B2;
+      --font-serif: 'Spectral', Georgia, serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    html.dark {
+      /* Dark Mode (Ground Theme - Sheet 1 dark) */
+      --paper: #14171C;
+      --paper-sunk: #1B1F26;
+      --ink: #EDEDE7;
+      --ink-muted: #999990;
+      --index-blue: #6E8BFF;
+      --marker-gold: #EDE55B;
+      --marker-bg: #EDE55B;
+      --rule: #2E343C;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-serif);
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Monospace Utility Class */
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Side Navigation Rail (Sheets 2-8) */
+    .sidebar-rail {
+      width: 260px;
+      background-color: var(--paper-sunk);
+      border-right: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 24px;
+    }
+
+    .ic-logo-badge {
+      width: 36px;
+      height: 36px;
+      background-color: var(--paper);
+      border: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ic-logo-badge svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: var(--marker-gold);
+      stroke-width: 2;
+    }
+
+    .brand-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+
+    .nav-section-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+      margin: 16px 8px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      font-size: 14px;
+      border-left: 2px solid transparent;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item:hover {
+      color: var(--ink);
+      background-color: var(--paper);
+    }
+
+    .nav-item.active {
+      color: var(--index-blue);
+      border-left-color: var(--index-blue);
+      background-color: var(--paper);
+      font-weight: 600;
+    }
+
+    .nav-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .nav-item.active .nav-badge {
+      color: var(--index-blue);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .theme-toggle-btn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: none;
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--index-blue);
+      color: var(--index-blue);
+    }
+
+    /* Main Content Canvas */
+    .main-canvas {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-header-bar {
+      height: 48px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .page-wrapper {
+      padding: 36px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Hairline Cards & Borders */
+    .hairline-card {
+      border: 1px solid var(--rule);
+      padding: 24px;
+      background-color: var(--paper-sunk);
+      margin-bottom: 24px;
+    }
+
+    /* Standfirst & Headings */
+    h1.page-heading {
+      font-size: 42px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .standfirst {
+      font-style: italic;
+      font-size: 18px;
+      color: var(--ink-muted);
+      margin-bottom: 24px;
+      max-width: 720px;
+    }
+
+    /* Memory Space Diagram Widget (Sheet 2 & Sheet 10) */
+    .memory-widget {
+      border: 1px solid var(--rule);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background-color: var(--paper);
+    }
+
+    .memory-widget-header {
+      padding: 8px 12px;
+      background-color: var(--paper-sunk);
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+      color: var(--ink-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .memory-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .memory-row:last-child {
+      border-bottom: none;
+    }
+
+    .memory-addr {
+      width: 80px;
+      color: var(--ink-muted);
+    }
+
+    .memory-label {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .memory-direction {
+      color: var(--ink-muted);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .memory-row.here {
+      background-color: var(--marker-bg);
+      color: #14171C;
+    }
+
+    .memory-row.here .memory-addr,
+    .memory-row.here .memory-direction {
+      color: #14171C;
+      font-weight: 600;
+    }
+
+    /* Stat Cards Row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-box {
+      border: 1px solid var(--rule);
+      padding: 16px;
+      background-color: var(--paper-sunk);
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 38px;
+      font-weight: 500;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-lbl {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+
+    /* Hairline Table */
+    .hairline-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .hairline-table th,
+    .hairline-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rule);
+      text-align: left;
+    }
+
+    .hairline-table th {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 400;
+      background-color: var(--paper-sunk);
+    }
+
+    .hairline-table tr:hover td {
+      background-color: var(--paper-sunk);
+    }
+
+    /* Question Reader Layout (Sheet 5) */
+    .reader-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 36px;
+    }
+
+    .reader-margin {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .reader-margin-item {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .reader-margin-label {
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+      color: var(--ink-muted);
+    }
+
+    .reader-margin-val {
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .reader-body {
+      max-width: 680px;
+    }
+
+    .drop-cap::first-letter {
+      font-size: 54px;
+      line-height: 0.8;
+      float: left;
+      margin-right: 8px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .code-block {
+      background-color: var(--paper-sunk);
+      border: 1px solid var(--rule);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 16px;
+      margin: 20px 0;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .callout-accent {
+      border-left: 3px solid var(--index-blue);
+      padding-left: 16px;
+      margin: 20px 0;
+      color: var(--ink);
+      font-style: italic;
+    }
+
+    /* Buttons & Pills */
+    .btn-primary {
+      background-color: var(--index-blue);
+      color: #FFF;
+      border: none;
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-outline {
+      background: none;
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      padding: 7px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--index-blue);
+      color: var(--index-blue);
+    }
+
+    .pill-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 1px solid var(--rule);
+      color: var(--ink-muted);
+    }
+
+    /* Latency Matrix Widget (Sheet 4) */
+    .latency-matrix {
+      border: 1px solid var(--rule);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 24px;
+    }
+
+    .latency-row {
+      display: flex;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--rule);
+      justify-content: space-between;
+    }
+
+    .latency-row:last-child {
+      border-bottom: none;
+    }
+
+    .latency-row.loss {
+      background-color: var(--marker-bg);
+      color: #14171C;
+      font-weight: 600;
+    }
+
+    /* Heatmap Grid (Sheet 6) */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(20, 14px);
+      gap: 4px;
+      margin: 16px 0;
+    }
+
+    .heatmap-cell {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--rule);
+      background-color: var(--paper-sunk);
+    }
+
+    .heatmap-cell.lvl-1 { background-color: rgba(31, 63, 216, 0.25); }
+    .heatmap-cell.lvl-2 { background-color: rgba(31, 63, 216, 0.50); }
+    .heatmap-cell.lvl-3 { background-color: rgba(31, 63, 216, 0.85); }
+    .heatmap-cell.lvl-4 { background-color: var(--index-blue); }
+
+    /* OpenFGA Tuple Tag */
+    .tuple-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--index-blue);
+    }
+
+    .notice-box {
+      border: 1px solid var(--rule);
+      background-color: var(--paper-sunk);
+      padding: 14px;
+      margin: 16px 0;
+      font-size: 13px;
+      border-left: 3px solid var(--marker-gold);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Side Rail -->
+  <aside class="sidebar-rail">
+    <div class="brand-header">
+      <div class="ic-logo-badge">
+        <svg viewBox="0 0 24 24">
+          <rect x="5" y="5" width="14" height="14" rx="1"/>
+          <line x1="8" y1="2" x2="8" y2="5"/>
+          <line x1="12" y1="2" x2="12" y2="5"/>
+          <line x1="16" y1="2" x2="16" y2="5"/>
+          <line x1="8" y1="19" x2="8" y2="22"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="16" y1="19" x2="16" y2="22"/>
+        </svg>
+      </div>
+      <div class="brand-title">Low Level Lab</div>
+    </div>
+
+    <div class="nav-section-title">Study</div>
+    <div class="nav-item active" onclick="showTab('dashboard')">
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showTab('questions')">
+      <span>Questions</span>
+      <span class="nav-badge">248</span>
+    </div>
+    <div class="nav-item" onclick="showTab('topic-detail')">
+      <span>Topics</span>
+      <span class="nav-badge">9</span>
+    </div>
+    <div class="nav-item" onclick="showTab('progress')">
+      <span>Progress</span>
+      <span class="nav-badge">31%</span>
+    </div>
+    <div class="nav-item" onclick="showTab('analytics')">
+      <span>Analytics</span>
+    </div>
+
+    <div class="nav-section-title">Contribute</div>
+    <div class="nav-item" onclick="showTab('reader')">
+      <span>Question Reader</span>
+      <span class="nav-badge">#096</span>
+    </div>
+    <div class="nav-item" onclick="showTab('admin-queue')">
+      <span>Review Queue</span>
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item" onclick="showTab('openfga')">
+      <span>OpenFGA Roles</span>
+    </div>
+
+    <div class="sidebar-footer">
+      <span class="mono" style="font-size: 11px; color: var(--ink-muted);">v2.4 reference</span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()">Theme: Dark</button>
+    </div>
+  </aside>
+
+  <!-- Main Workspace Canvas -->
+  <main class="main-canvas">
+    <header class="top-header-bar">
+      <div>LOW LEVEL LAB &mdash; REFERENCE MANUAL SPECIFICATION</div>
+      <div>USER: MD.SOHAIL (SUPER_ADMIN)</div>
+    </header>
+
+    <div class="page-wrapper">
+      
+      <!-- TAB 1: DASHBOARD (Sheet 2) -->
+      <section id="dashboard" class="tab-panel active">
+        <h1 class="page-heading">You left off inside the stack frame.</h1>
+        <p class="standfirst">Four questions on calling conventions are still open. They take about twenty minutes together.</p>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px;">
+          <div>
+            <div class="stat-row" style="margin-bottom: 24px;">
+              <div class="stat-box">
+                <div class="stat-val">77<span style="font-size: 20px; color: var(--ink-muted);">/248</span></div>
+                <div class="stat-lbl">Questions solved</div>
+                <div class="stat-sub">Thirty-one per cent of bank</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">6<span style="font-size: 20px; color: var(--ink-muted);">/9</span></div>
+                <div class="stat-lbl">Topics opened</div>
+                <div class="stat-sub">Compilers untouched</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">12</div>
+                <div class="stat-lbl">Days running</div>
+                <div class="stat-sub">Longest streak, nineteen</div>
+              </div>
+            </div>
+
+            <div class="hairline-card">
+              <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 16px;">Pick up where you left off</div>
+              <table class="hairline-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Question Title</th>
+                    <th>Topic</th>
+                    <th>Diff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">118</td>
+                    <td><strong>Why does a function call touch the stack pointer twice?</strong></td>
+                    <td class="mono">Memory</td>
+                    <td><span class="pill-tag">med</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">117</td>
+                    <td>What does the CPU actually fetch when you read one byte?</td>
+                    <td class="mono">Caches</td>
+                    <td><span class="pill-tag">easy</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">096</td>
+                    <td>Two threads, two variables, one slow program. What happened?</td>
+                    <td class="mono">Concurrency</td>
+                    <td><span class="pill-tag">hard</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Memory Address Space Widget -->
+          <div>
+            <div class="memory-widget">
+              <div class="memory-widget-header">
+                <span>Process Address Space</span>
+                <span>0x0000 - 0xFFFF</span>
+              </div>
+              <div class="memory-row">
+                <span class="memory-addr">0xFFFF</span>
+                <span class="memory-label">stack</span>
+                <span class="memory-direction">&darr; grows down</span>
+              </div>
+              <div class="memory-row here">
+                <span class="memory-addr">0xFF20</span>
+                <span class="memory-label">frame: parse()</span>
+                <span class="memory-direction">&bull; you are here</span>
+              </div>
+              <div class="memory-row">
+                <span class="memory-addr">0x7A00</span>
+                <span class="memory-label">mmap</span>
+                <span class="memory-direction">shared libs</span>
+              </div>
+              <div class="memory-row">
+                <span class="memory-addr">0x4100</span>
+                <span class="memory-label">heap</span>
+                <span class="memory-direction">&uarr; grows up</span>
+              </div>
+              <div class="memory-row">
+                <span class="memory-addr">0x2000</span>
+                <span class="memory-label">.bss / .data</span>
+                <span class="memory-direction">statics</span>
+              </div>
+              <div class="memory-row">
+                <span class="memory-addr">0x0400</span>
+                <span class="memory-label">.text</span>
+                <span class="memory-direction">your code</span>
+              </div>
+            </div>
+            <div style="margin-top: 16px; text-align: center;">
+              <button class="btn-primary" onclick="showTab('reader')">Resume Question 118 &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: QUESTIONS BANK (Sheet 3) -->
+      <section id="questions" class="tab-panel">
+        <h1 class="page-heading">Questions</h1>
+        <p class="standfirst">The bank, as a table of contents. 248 questions across 9 core topics.</p>
+        
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <input type="text" placeholder="Search questions, topics, syscalls..." class="btn-outline" style="flex: 1; text-align: left; background: var(--paper-sunk); color: var(--ink);">
+          <button class="btn-outline">Topic: All</button>
+          <button class="btn-outline">Difficulty: Any</button>
+          <button class="btn-outline">Unsolved only</button>
+        </div>
+
+        <table class="hairline-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Topic</th>
+              <th>Difficulty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">124</td>
+              <td>How does the compiler decide a variable never needs memory?</td>
+              <td class="mono">Compilers</td>
+              <td><span class="pill-tag">hard</span></td>
+              <td class="mono" style="color: var(--ink-muted);">Unsolved</td>
+            </tr>
+            <tr>
+              <td class="mono">123</td>
+              <td>What makes a struct 24 bytes when its fields add to 17?</td>
+              <td class="mono">Memory</td>
+              <td><span class="pill-tag">easy</span></td>
+              <td class="mono" style="color: var(--index-blue); font-weight: 600;">Solved</td>
+            </tr>
+            <tr>
+              <td class="mono">122</td>
+              <td>Why is a linked list slower than an array of the same size?</td>
+              <td class="mono">Caches</td>
+              <td><span class="pill-tag">medium</span></td>
+              <td class="mono" style="color: var(--index-blue); font-weight: 600;">Solved</td>
+            </tr>
+            <tr>
+              <td class="mono">121</td>
+              <td>What does the kernel do between read() and the disk?</td>
+              <td class="mono">Syscalls</td>
+              <td><span class="pill-tag">hard</span></td>
+              <td class="mono" style="color: var(--ink-muted);">Unsolved</td>
+            </tr>
+            <tr>
+              <td class="mono">120</td>
+              <td>Can two threads see different values of the same variable?</td>
+              <td class="mono">Concurrency</td>
+              <td><span class="pill-tag">hard</span></td>
+              <td class="mono" style="color: var(--ink-muted);">Unsolved</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- TAB 3: TOPIC VIEW (Sheet 4) -->
+      <section id="topic-detail" class="tab-panel">
+        <div class="mono" style="font-size: 11px; color: var(--ink-muted); margin-bottom: 8px;">TOPIC 02 OF 09</div>
+        <h1 class="page-heading">Caches and locality</h1>
+        <p class="standfirst">Memory is not flat. Everything here follows from one fact: the CPU never fetches a byte, it fetches sixty-four of them.</p>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div>
+            <div class="stat-row">
+              <div class="stat-box">
+                <div class="stat-val">27</div>
+                <div class="stat-lbl">Questions</div>
+                <div class="stat-sub">Four added this month</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">11</div>
+                <div class="stat-lbl">Solved by you</div>
+                <div class="stat-sub">Forty-one per cent</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">6</div>
+                <div class="stat-lbl">Subtopics</div>
+                <div class="stat-sub">Cache lines to NUMA</div>
+              </div>
+            </div>
+
+            <div class="hairline-card">
+              <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px;">Questions in this topic</div>
+              <table class="hairline-table">
+                <tbody>
+                  <tr>
+                    <td class="mono">117</td>
+                    <td>What does the CPU actually fetch when you read one byte?</td>
+                    <td><span class="pill-tag">easy</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">122</td>
+                    <td>Why is a linked list slower than an array of the same size?</td>
+                    <td><span class="pill-tag">medium</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">096</td>
+                    <td>Two threads, two variables, one slow program. What happened?</td>
+                    <td><span class="pill-tag">hard</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Hardware Latency Matrix Widget (Sheet 4) -->
+          <div>
+            <div class="latency-matrix">
+              <div class="memory-widget-header">
+                <span>Latency, cycles</span>
+                <span>Typical x86</span>
+              </div>
+              <div class="latency-row">
+                <span>L1 Cache</span>
+                <span>4 cycles (32 KB)</span>
+              </div>
+              <div class="latency-row">
+                <span>L2 Cache</span>
+                <span>14 cycles (512 KB)</span>
+              </div>
+              <div class="latency-row">
+                <span>L3 Cache</span>
+                <span>60 cycles (16 MB)</span>
+              </div>
+              <div class="latency-row loss">
+                <span>DRAM</span>
+                <span>220 cycles &bull; where you lose</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: QUESTION READER VIEW (Sheet 5) -->
+      <section id="reader" class="tab-panel">
+        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); margin-bottom: 16px;">
+          <span>&larr; BACK TO QUESTIONS</span>
+          <span>QUESTION 096 OF 248</span>
+        </div>
+
+        <div class="reader-grid">
+          <!-- Margin Metadata Sidebar -->
+          <div class="reader-margin">
+            <div class="reader-margin-item">
+              <div class="reader-margin-label">Question</div>
+              <div class="reader-margin-val">096</div>
+            </div>
+            <div class="reader-margin-item">
+              <div class="reader-margin-label">Topic</div>
+              <div class="reader-margin-val">Concurrency<br>Caches and locality</div>
+            </div>
+            <div class="reader-margin-item">
+              <div class="reader-margin-label">Difficulty / Est. Time</div>
+              <div class="reader-margin-val">Hard &bull; 8 minutes</div>
+            </div>
+            <div class="reader-margin-item">
+              <div class="reader-margin-label">Author</div>
+              <div class="reader-margin-val">A. Mehta (March 2026)</div>
+            </div>
+            <div class="reader-margin-item">
+              <div class="reader-margin-label">Stats</div>
+              <div class="reader-margin-val">212 Readers Solved</div>
+            </div>
+          </div>
+
+          <!-- Main Reading Pane -->
+          <div class="reader-body">
+            <h1 class="page-heading">Two threads, two variables, one slow program</h1>
+            <p class="standfirst">Each thread increments its own counter. They never share data. The program still runs four times slower than the single-threaded version. Explain why.</p>
+
+            <p class="drop-cap">Start with the layout. Both counters were declared next to each other, so the linker put them in the same sixty-four byte cache line. Nothing in the source says the threads share anything, but the hardware does not track variables. It tracks lines.</p>
+
+            <div class="code-block">
+<span style="color: var(--ink-muted);">// both counters land inside one cache line</span>
+<span style="color: var(--index-blue);">struct</span> counters {
+    <span style="color: var(--index-blue);">long</span> a;  <span style="color: var(--ink-muted);">// thread 0 writes here</span>
+    <span style="color: var(--index-blue);">long</span> b;  <span style="color: var(--ink-muted);">// thread 1 writes here</span>
+};
+            </div>
+
+            <div class="callout-accent">
+              When thread zero writes to a, the coherence protocol invalidates that line everywhere else. Thread one's next write to b misses, pulls the line back, and invalidates thread zero in turn. The line ping-pongs between cores for the whole run.
+            </div>
+
+            <p style="margin-bottom: 24px;">The threads are not sharing a variable. They are sharing a line, and the line is the unit that moves. The fix is padding: push each counter onto its own line, and the traffic disappears.</p>
+
+            <div style="display: flex; gap: 12px; border-top: 1px solid var(--rule); padding-top: 20px;">
+              <button class="btn-primary">Reveal the answer</button>
+              <button class="btn-outline">Mark as solved</button>
+              <button class="btn-outline" style="margin-left: auto;">Next: 097 &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: PROGRESS LEDGER (Sheet 6) -->
+      <section id="progress" class="tab-panel">
+        <h1 class="page-heading">Seventy-seven solved, eight months in.</h1>
+        <p class="standfirst">Concurrency is where you slow down. Three of your last five unsolved attempts came from it.</p>
+
+        <div class="hairline-card">
+          <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px;">Last 60 Days Activity Ledger</div>
+          <div class="heatmap-grid">
+            <div class="heatmap-cell lvl-1"></div><div class="heatmap-cell lvl-2"></div><div class="heatmap-cell lvl-4"></div><div class="heatmap-cell lvl-3"></div><div class="heatmap-cell"></div><div class="heatmap-cell lvl-1"></div><div class="heatmap-cell lvl-2"></div><div class="heatmap-cell lvl-3"></div><div class="heatmap-cell lvl-4"></div><div class="heatmap-cell"></div><div class="heatmap-cell lvl-2"></div><div class="heatmap-cell lvl-1"></div><div class="heatmap-cell lvl-3"></div><div class="heatmap-cell lvl-4"></div><div class="heatmap-cell lvl-2"></div><div class="heatmap-cell lvl-1"></div><div class="heatmap-cell lvl-3"></div><div class="heatmap-cell lvl-4"></div><div class="heatmap-cell lvl-1"></div><div class="heatmap-cell lvl-2"></div>
+          </div>
+        </div>
+
+        <table class="hairline-table">
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Last Opened</th>
+              <th>Solved</th>
+              <th>Total</th>
+              <th>Share %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Memory and pointers</td>
+              <td class="mono">Yesterday</td>
+              <td class="mono">23</td>
+              <td class="mono">37</td>
+              <td class="mono">62%</td>
+            </tr>
+            <tr>
+              <td>Caches and locality</td>
+              <td class="mono">3 days ago</td>
+              <td class="mono">11</td>
+              <td class="mono">27</td>
+              <td class="mono">41%</td>
+            </tr>
+            <tr>
+              <td>Syscalls and kernel</td>
+              <td class="mono">Last week</td>
+              <td class="mono">9</td>
+              <td class="mono">28</td>
+              <td class="mono">32%</td>
+            </tr>
+            <tr>
+              <td>Concurrency</td>
+              <td class="mono">Last week</td>
+              <td class="mono">6</td>
+              <td class="mono">33</td>
+              <td class="mono">18%</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- TAB 6: ANALYTICS (Sheet 7) -->
+      <section id="analytics" class="tab-panel">
+        <h1 class="page-heading">Analytics</h1>
+        <p class="standfirst">For people who publish questions. Track reader engagement and solve ratios.</p>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-val">3,412</div>
+            <div class="stat-lbl">Total Reads</div>
+            <div class="stat-sub">Up 19% this month</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">61%</div>
+            <div class="stat-lbl">Solved after reading</div>
+            <div class="stat-sub">Site median is 54%</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">28</div>
+            <div class="stat-lbl">Saved for later</div>
+            <div class="stat-sub">Mostly question 096</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: ADMIN QUEUE (Sheet 15 & 16) -->
+      <section id="admin-queue" class="tab-panel">
+        <h1 class="page-heading">Admin & Review Queue</h1>
+        <p class="standfirst">Approve, then publish. Two separate decisions on purpose.</p>
+
+        <div class="notice-box">
+          <strong>Approval Policy:</strong> Approval says the question is correct. Publishing says it is ready to be read. Keeping them apart means a batch can be cleared on a Tuesday and released on a Thursday.
+        </div>
+
+        <div class="hairline-card">
+          <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px;">Waiting on action</div>
+          <table class="hairline-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Author</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>What does the linker do with two definitions of the same symbol?</td>
+                <td class="mono">M. Sohail</td>
+                <td><span class="pill-tag" style="color: var(--index-blue);">in_review</span></td>
+                <td><button class="btn-outline">Approve</button></td>
+              </tr>
+              <tr>
+                <td>Why does a function call touch the stack pointer twice?</td>
+                <td class="mono">A. Mehta</td>
+                <td><span class="pill-tag" style="color: var(--marker-gold);">approved</span></td>
+                <td><button class="btn-primary">Publish</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 8: OPENFGA ROLES (Sheet 17) -->
+      <section id="openfga" class="tab-panel">
+        <h1 class="page-heading">Roles & OpenFGA Authorization</h1>
+        <p class="standfirst">OpenFGA tuples, shown as what they actually are in system scope.</p>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div>
+            <table class="hairline-table">
+              <thead>
+                <tr>
+                  <th>Relation</th>
+                  <th>User</th>
+                  <th>Object Scope</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">super_admin</td>
+                  <td class="tuple-tag">user:md.sohail</td>
+                  <td class="mono">workspace:111</td>
+                </tr>
+                <tr>
+                  <td class="mono">admin</td>
+                  <td class="tuple-tag">user:a.mehta</td>
+                  <td class="mono">workspace:111</td>
+                </tr>
+                <tr>
+                  <td class="mono">reviewer</td>
+                  <td class="tuple-tag">user:r.iyer</td>
+                  <td class="mono">topic:concurrency</td>
+                </tr>
+                <tr>
+                  <td class="mono">reviewer</td>
+                  <td class="tuple-tag">user:k.nair</td>
+                  <td class="mono">topic:memory</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="hairline-card">
+            <div style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px;">Assign a role</div>
+            <div style="display: grid; gap: 12px;">
+              <input type="text" placeholder="User ID from auth system" class="btn-outline" style="text-align: left; background: var(--paper);">
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-outline">Member</button>
+                <button class="btn-primary">Reviewer</button>
+                <button class="btn-outline">Admin</button>
+              </div>
+              <button class="btn-outline" style="border-color: var(--index-blue); color: var(--index-blue);">Assign role tuple</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      event.currentTarget.classList.add('active');
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle-btn');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        btn.textContent = 'Theme: Paper (Light)';
+      } else {
+        html.classList.add('dark');
+        btn.textContent = 'Theme: Ground (Dark)';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,8 +1,8 @@
-import { BookOpen, CheckCircle2, ChevronRight, Sparkles, Target } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { QuestionRow } from '@components/questions/QuestionRow'
-import { StatCard } from '@components/shared/StatCard'
+import { MemorySpaceWidget } from '@components/shared/MemorySpaceWidget'
 import { listQuestions, listTopics, type ApiQuestion, type ApiTopic } from '@services/content-api'
 import { useEffect, useState } from 'react'
 
@@ -24,13 +24,12 @@ export function DashboardPage() {
 			{loading && <div className="empty-state">Loading dashboard…</div>}
 			{error && <div className="empty-state">{error}</div>}
 			<section className="hero">
-				<div><span className="eyebrow">Tuesday, September 13</span><h1>Keep building your mental model.</h1><p>Explore focused questions and strengthen your understanding of how things work.</p></div>
-				<div className="hero-art"><Sparkles size={24} /><span>Small steps<br /><strong>compound.</strong></span></div>
+				<div><span className="eyebrow">Your study ledger / today</span><h1>You left off inside the stack frame.</h1><p>The next useful question is usually one level below the abstraction.</p></div>
 			</section>
 			<div className="stat-grid">
-				<StatCard label="Questions solved" value={String(solved)} detail={`of ${total} available`} icon={CheckCircle2} />
-				<StatCard label="Questions available" value={String(total)} detail="Published for learning" icon={Target} />
-				<StatCard label="Topics explored" value={String(topics.filter((topic) => topic.solved > 0).length)} detail={`of ${topics.length} topics`} icon={BookOpen} />
+				<div className="stat-card"><div><span>Questions solved</span><strong>{solved}/{total}</strong><small>31% of the bank</small></div></div>
+				<div className="stat-card"><div><span>Topics opened</span><strong>{topics.filter((topic) => topic.solved > 0).length}/{topics.length}</strong><small>Keep the map in view</small></div></div>
+				<div className="stat-card"><div><span>Day streak</span><strong>12</strong><small>Days running</small></div></div>
 			</div>
 			<section className="content-grid">
 				<div className="panel">
@@ -39,9 +38,10 @@ export function DashboardPage() {
 				</div>
 				<div className="panel topic-panel">
 					<div className="panel-heading"><div><span className="eyebrow">Explore</span><h2>Topics</h2></div><Link to="/topics" className="text-link">See all <ChevronRight size={15} /></Link></div>
-					{topics.length ? topics.slice(0, 3).map((topic) => <Link className="topic-row" to={`/topics/${topic.id}`} key={topic.id}><span className="topic-icon violet"><BookOpen size={17} /></span><span><strong>{topic.name}</strong><small>{topic.total} questions</small></span><ChevronRight size={16} /></Link>) : <div className="empty-state">No topics are available yet.</div>}
+					{topics.length ? topics.slice(0, 3).map((topic) => <Link className="topic-row" to={`/topics/${topic.id}`} key={topic.id}><span className="mono">0{topics.indexOf(topic) + 1}</span><span><strong>{topic.name}</strong><small>{topic.solved}/{topic.total} solved</small></span><ChevronRight size={16} /></Link>) : <div className="empty-state">No topics are available yet.</div>}
 				</div>
 			</section>
+			<div style={{ marginTop: 28 }}><MemorySpaceWidget /></div>
 		</>
 	)
 }

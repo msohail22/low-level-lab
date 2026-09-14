@@ -16,17 +16,17 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 	return (
 		<aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
 			<div className="brand">
-				<div className="brand-mark">L</div>
+				<div className="brand-mark" aria-hidden="true"><span>┬</span><span>┼</span></div>
 				<div>
-					<strong>Low Level Lab</strong>
-					<span>Learn by understanding</span>
+					<strong>LOW LEVEL LAB</strong>
+					<span>REFERENCE MANUAL</span>
 				</div>
 				<button className="icon-button close-sidebar" onClick={onClose} aria-label="Close menu">
 					<X size={18} />
 				</button>
 			</div>
 			<nav className="main-nav" aria-label="Main navigation">
-				<span className="nav-label">Workspace</span>
+				<span className="nav-label">Study</span>
 				{navItems.map(({ label, path, icon: Icon }) => (
 					<NavLink
 						className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -40,14 +40,15 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 					</NavLink>
 				))}
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/analytics" onClick={onClose}><BarChart3 size={18} />Analytics</NavLink>
-				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/profile" onClick={onClose}><UserCircle size={18} />Profile</NavLink>
-				<span className="nav-label nav-label-spaced">Content workspace</span>
+				<span className="nav-label nav-label-spaced">Contribute</span>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=submit" onClick={onClose}><FilePlus2 size={18} />Submit a question</NavLink>
-				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review questions</NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review queue <span className="nav-badge mono">[4]</span></NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=admin" onClick={onClose}><ShieldCheck size={18} />Admin moderation</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=topics" onClick={onClose}><Settings2 size={18} />Manage topics</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=super-admin" onClick={onClose}><UsersRound size={18} />Super admin</NavLink>
-				<span className="nav-label nav-label-spaced">Coming soon</span>
+				<span className="nav-label nav-label-spaced">Account</span>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/profile" onClick={onClose}><UserCircle size={18} />Profile</NavLink>
+				<span className="nav-label nav-label-spaced">Later</span>
 				<div className="nav-item disabled">
 					<Code2 size={18} />
 					Coding Questions
@@ -65,6 +66,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 				<Link className="settings-link" to="/auth">
 					{session?.user ? 'Account settings' : 'Sign in to sync progress'} <ChevronRight size={15} />
 				</Link>
+				<span className="theme-label mono">Theme: Paper / Ground</span>
 			</div>
 		</aside>
 	)

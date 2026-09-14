@@ -1,0 +1,142 @@
+graph TD
+    %% Low Level Lab UI Overhaul Architecture & Design System Flow
+    %% Based on PDF Gallery Reference Manual Specification
+
+    subgraph DesignSystem["Design System Core Tokens"]
+        direction TB
+        ColorsLight["Light Palette (Paper)
+        • Paper: #EDEDE7
+        • Sunk Paper: #E4E4DC
+        • Ink: #14171C
+        • Index Blue: #1F3FD8
+        • Marker: #EDE55B
+        • Gold Paper: #A8791C
+        • Rule Hairline: #C7C7B2"]
+
+        ColorsDark["Dark Palette (Ground)
+        • Ground: #14171C
+        • Raised Ground: #1B1F26
+        • Ink Reversed: #EDEDE7
+        • Index Blue Lifted: #6E8BFF
+        • Marker / Gold: #EDE55B
+        • Rule Hairline: #2E343C"]
+
+        Typography["Typography System
+        • Serif (Spectral 600/50, 400/19 italic, 400/17 body)
+        • Mono (IBM Plex Mono 500/44 stats, 400/11 meta/tabular)
+        • Tabular Alignment Rules: Strict Mono columns"]
+
+        Iconography["Icon & Favicon Specs (Sheet 9)
+        • 32px+ (icon.svg): 3 legs, shaded case, rounded tile
+        • 16px (favicon-16.svg): 2 legs, flat fill, square, heavy stroke
+        • prefers-color-scheme adaptive tile"]
+    end
+
+    subgraph NavigationRail["App Navigation Rail (Side Panel)"]
+        direction TB
+        Brand["Brand Header: Low Level Lab (3-Pin IC Logo)"]
+        
+        subgraph NavStudy["Study Section"]
+            NavDash["Dashboard (Sheet 2)"]
+            NavQuest["Questions (Sheet 3) - [248]"]
+            NavTopics["Topics (Sheet 4) - [9]"]
+            NavProg["Progress (Sheet 6) - [31%]"]
+            NavAnalyt["Analytics (Sheet 7) - [Publishers]"]
+        end
+
+        subgraph NavContribute["Contribute Section"]
+            NavWrite["Write a Question (Sheet 13)"]
+            NavRevQueue["Review Queue (Sheet 15) - [4]"]
+            NavTopTags["Topics and Tags (Sheet 14)"]
+        end
+
+        subgraph NavAccount["Account Section"]
+            NavProfile["Profile (Sheet 8)"]
+        end
+    end
+
+    subgraph CoreViews["Core User Views & Interactive Widgets"]
+        direction TB
+        
+        DashboardView["Dashboard Screen
+        • Hero Banner: Resume Question 118
+        • Memory Space Widget (0xFFFF Stack, 0xFF20 Frame parse, 0x4100 Heap, 0x0400 Text)
+        • Stat Summary Row (77/248 Solved, 6/9 Topics, 12 Day Streak)
+        • Split Grid: Pick Up Where Left Off + Topics Overview"]
+
+        QuestionBankView["Questions Bank Screen
+        • Search & Filter Bar (Topic, Difficulty, Unsolved)
+        • Hairline Table View (ID, Title, Subtitle, Tags)
+        • Load 20 More Pagination"]
+
+        TopicDetailView["Topic Screen (e.g. Caches & Locality)
+        • Topic Summary & Description
+        • Latency Matrix Widget (L1 4c, L2 14c, L3 60c, DRAM 220c)
+        • Subtopics Taxonomy Grid (a-f)
+        • Scoped Questions List"]
+
+        QuestionReaderView["Question Reading Screen
+        • Left Margin Sidebar (Metadata: ID, Topic, Difficulty, Time, Author)
+        • Main Reading Pane (Standfirst, Drop-Cap 'S', C Code Block)
+        • Coherence Protocol Callout Border
+        • Actions: Reveal Answer, Mark Solved, Next Question"]
+
+        ProgressLedgerView["Progress Ledger Screen
+        • 60-Day Activity Heatmap Grid
+        • Solved / Time / Streak Cards
+        • Topic Breakdown Ledger Table"]
+
+        AnalyticsView["Analytics Screen (Publisher Dashboard)
+        • 30-Day Daily Reads Trend Line Chart
+        • KPIs: Reads (3412), Solved Rate (61%), Saved (28)
+        • Published Questions Breakdown"]
+
+        ProfileView["Profile Screen
+        • Author Bio & Account Details Card
+        • Standing Metrics (77 Solved, 14 Written, 12 Streak)
+        • Saved for Later Empty State"]
+    end
+
+    subgraph AuthWorkflow["Authentication & Password Reset Flow"]
+        direction TB
+        SignIn["Sign In (Sheet 10)
+        • Stack Diagram Visual Left
+        • Email / Password + GitHub / Google OAuth"]
+
+        CreateAcc["Create Account (Sheet 11)
+        • Topic/Pricing Table Left
+        • Quote Callout (Question 117)
+        • Signup Form Right"]
+
+        ResetPass["Reset Password Stepper (Sheet 12)
+        • Step 1: Ask link
+        • Step 2: Check inbox
+        • Step 3: Set new password (with mismatch validation)"]
+    end
+
+    subgraph GovernanceWorkflow["Content Workflow & OpenFGA Governance"]
+        direction TB
+        
+        QuestionState["Question State Machine
+        Draft --> Submitted --> In Review --> Approved --> Published"]
+
+        RoleMatrix["OpenFGA Role Matrix (Sheet 17)
+        • Member: Read, answer, submit drafts
+        • Reviewer: Start review, request changes, reject (Scoped to Topic)
+        • Admin: Approve and publish
+        • Super Admin: Assign OpenFGA roles (Workspace scoped)"]
+
+        ReviewerScreen["Reviewer Queue Screen (Sheet 15)
+        • Queue status tabs: Draft, Submitted, In Review, Approved, Published
+        • Actions: Start Review, Request Changes (Drawer with feedback), Reject"]
+
+        AdminScreen["Admin Queue Screen (Sheet 16)
+        • Two-stage decision: Approve then Publish
+        • Banner Notice: Approval vs Publishing policy
+        • Recently Published / Rejected Archives"]
+    end
+
+    DesignSystem --> NavigationRail
+    NavigationRail --> CoreViews
+    CoreViews --> AuthWorkflow
+    CoreViews --> GovernanceWorkflow
