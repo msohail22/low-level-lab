@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from '@components/layout/AppLayout'
+import { RequireAuth } from '@components/auth/RequireAuth'
 import { AuthPage } from '@pages/AuthPage'
 import { DashboardPage } from '@pages/DashboardPage'
 import { ProgressPage } from '@pages/ProgressPage'
@@ -16,7 +17,7 @@ export default function App() {
 	return (
 		<BrowserRouter>
 			<Routes>
-				<Route element={<AppLayout />}>
+				<Route element={<RequireAuth><AppLayout /></RequireAuth>}>
 					<Route index element={<DashboardPage />} />
 					<Route path="questions" element={<QuestionsPage />} />
 					<Route path="questions/:questionId" element={<QuestionDetailPage />} />
