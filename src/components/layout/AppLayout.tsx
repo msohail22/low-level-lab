@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 
 import { Sidebar } from '@components/layout/Sidebar'
 import { Topbar } from '@components/layout/Topbar'
+import { useTheme } from '@hooks/useTheme'
 
 const pageTitles: Record<string, string> = {
 	'/': 'Dashboard',
@@ -16,12 +17,12 @@ const pageTitles: Record<string, string> = {
 
 export function AppLayout() {
 	const [sidebarOpen, setSidebarOpen] = useState(false)
-	const [darkMode, setDarkMode] = useState(false)
+	const { theme, toggleTheme } = useTheme()
 	const { pathname } = useLocation()
 	const pageTitle = pageTitles[pathname] ?? 'Questions'
 
 	return (
-		<div className={`app-shell ${darkMode ? 'dark' : ''}`}>
+		<div className="app-shell">
 			<Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 			{sidebarOpen && (
 				<button
@@ -32,10 +33,10 @@ export function AppLayout() {
 			)}
 			<div className="main-area">
 				<Topbar
-					darkMode={darkMode}
+					theme={theme}
 					pageTitle={pageTitle}
 					onMenuOpen={() => setSidebarOpen(true)}
-					onThemeToggle={() => setDarkMode((current) => !current)}
+					onThemeToggle={toggleTheme}
 				/>
 				<main className="page-content">
 					<Outlet />

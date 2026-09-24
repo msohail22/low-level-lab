@@ -1,5 +1,6 @@
 import { BarChart3, BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UserCircle, UsersRound, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
+import { BrandMark } from '@components/layout/BrandMark'
 import { useAuth } from '@hooks/useAuth'
 
 const navItems = [
@@ -16,10 +17,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 	return (
 		<aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
 			<div className="brand">
-				<div className="brand-mark" aria-hidden="true"><span>┬</span><span>┼</span></div>
+				<BrandMark />
 				<div>
-					<strong>LOW LEVEL LAB</strong>
-					<span>REFERENCE MANUAL</span>
+					<strong>Low Level Lab</strong>
+					<span>Bench 03</span>
 				</div>
 				<button className="icon-button close-sidebar" onClick={onClose} aria-label="Close menu">
 					<X size={18} />
@@ -42,7 +43,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/analytics" onClick={onClose}><BarChart3 size={18} />Analytics</NavLink>
 				<span className="nav-label nav-label-spaced">Contribute</span>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=submit" onClick={onClose}><FilePlus2 size={18} />Submit a question</NavLink>
-				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review queue <span className="nav-badge mono">[4]</span></NavLink>
+				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review queue</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=admin" onClick={onClose}><ShieldCheck size={18} />Admin moderation</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=topics" onClick={onClose}><Settings2 size={18} />Manage topics</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=super-admin" onClick={onClose}><UsersRound size={18} />Super admin</NavLink>
@@ -66,7 +67,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 				<Link className="settings-link" to="/auth">
 					{session?.user ? 'Account settings' : 'Sign in to sync progress'} <ChevronRight size={15} />
 				</Link>
-				<span className="theme-label mono">Theme: Paper / Ground</span>
+				
 			</div>
 		</aside>
 	)

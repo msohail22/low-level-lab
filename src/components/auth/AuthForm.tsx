@@ -64,11 +64,14 @@ export function AuthForm() {
 				<h1>Reset your password</h1>
 				<p>Enter your email and we will send a reset link.</p>
 				<form onSubmit={handlePasswordResetRequest}>
-					<label>
+					<label htmlFor="reset-email">
 						Email
 						<input
 							required
+							id="reset-email"
+							name="email"
 							type="email"
+							autoComplete="email"
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 						/>
@@ -107,21 +110,27 @@ export function AuthForm() {
 						/>
 					</label>
 				)}
-				<label>
+				<label htmlFor="auth-email">
 					Email
 					<input
 						required
+						id="auth-email"
+						name="email"
 						type="email"
+						autoComplete="email"
 						value={email}
 						onChange={(event) => setEmail(event.target.value)}
 					/>
 				</label>
-				<label>
+				<label htmlFor="auth-password">
 					Password
 					<input
 						required
 						minLength={8}
+						id="auth-password"
+						name="password"
 						type="password"
+						autoComplete={isSignUp ? 'new-password' : 'current-password'}
 						value={password}
 						onChange={(event) => setPassword(event.target.value)}
 					/>

@@ -30,12 +30,15 @@ export function ResetPasswordForm({ token }: { token: string }) {
 				<p>Your password has been updated. You can now sign in.</p>
 			) : (
 				<form onSubmit={handleSubmit}>
-					<label>
+					<label htmlFor="new-password">
 						New password
 						<input
 							required
 							minLength={8}
+							id="new-password"
+							name="new-password"
 							type="password"
+							autoComplete="new-password"
 							value={password}
 							onChange={(event) => setPassword(event.target.value)}
 						/>

@@ -25,6 +25,78 @@ Anything worth writing down permanently belongs **in this file**, in the appropr
 
 ---
 
+## HARD RULE: verify in a real browser before you push
+
+**No change ships on a clean type-check alone. Drive it in Chrome and look at it first.** This is
+absolute, and it applies to every change, not only UI ones — a backend edit can still break the page
+that renders its data.
+
+The `chrome-devtools` CLI is installed globally. It is not on the default PATH, so export it first:
+
+```bash
+export PATH="$(npm config get prefix)/bin:$PATH"
+chrome-devtools start -e /usr/bin/chromium --headless true --isolated true   # once per session
+```
+
+The dev server refuses to boot without a Hyperdrive connection string. For a UI-only look, a
+placeholder is enough (API calls will fail, and you will see the styled error and empty states):
+
+```bash
+CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_LOW_LEVEL_LAB_DB="postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder" pnpm dev
+```
+
+Then, for every change:
+
+```bash
+chrome-devtools navigate_page 1 --type url --url "http://localhost:5173/<route>"
+chrome-devtools take_snapshot 1             # accessibility tree — check names and roles
+chrome-devtools list_console_messages 1     # MUST be clean: no errors, no a11y warnings
+chrome-devtools take_screenshot 1 --filePath /tmp/<name>.png   # then actually Read the png
+chrome-devtools emulate 1 --viewport "390x844x3,mobile,touch"  # and re-check at phone size
+```
+
+Rules that go with it:
+- **Read the screenshot.** Saving one and not looking at it is not verification.
+- **The console must be clean.** Chrome's own warnings are real defects — missing `autocomplete`,
+  form fields with no `id`/`name`, contrast failures. Fix them, do not narrate them.
+- **Check every viewport** in the responsive rule below, not just the one you are working at.
+- **Both themes.** Flip with
+  `chrome-devtools evaluate_script "() => document.documentElement.dataset.theme='dark'" --pageId 1`.
+- Never claim something works when you have not seen it. If you could not reach a page — for example
+  the authenticated routes, which need a real database — say exactly that instead of implying it was
+  checked.
+
+## HARD RULE: every screen is mobile-first and responsive
+
+**Nothing is finished until it works on a phone.** Verify at all three in the browser, every time:
+
+| Viewport | Emulate string |
+| --- | --- |
+| Phone | `390x844x3,mobile,touch` |
+| Tablet | `768x1024x2,touch` |
+| Desktop | `1440x900x1` |
+
+At each one: **zero horizontal overflow** (`document.documentElement.scrollWidth` must not exceed
+`clientWidth`), no element past the right edge, and nothing clipped or overlapping.
+
+The design principles that go with it, all of which the browser can check:
+
+- **Touch targets are at least 44×44px.** Buttons, nav items, and inputs already carry `min-height:
+  44px` in `src/index.css` — keep it when adding controls.
+- **Text contrast is at least 4.5:1** (3:1 at 24px and above), in *both* themes. The light theme's
+  amber and teal are deliberately darker than the dark theme's for exactly this reason; do not
+  "simplify" them back to one value.
+- **Keyboard focus is always visible** — `:focus-visible` is defined globally; never remove an outline
+  without replacing it.
+- **Reduced motion is respected** — the global `prefers-reduced-motion` block handles it.
+- **Real semantic elements**: `<button>`, `<a href>`, `<input>` paired with `<label htmlFor>`. Never
+  `onClick` on a `div`. Icon-only buttons need `aria-label`.
+- **Line length stays under about 70 characters** for reading text; use the `ch` unit, not `px`.
+- Content reflows to one column below 860px and the sidebar becomes an overlay — follow that pattern
+  rather than inventing a new breakpoint.
+
+---
+
 ## Working in this repo — start here
 
 **Never run `git add` or `git commit`.** Also never `git push`, `git reset --hard`, or `git checkout --`
@@ -258,8 +330,9 @@ policy is explicitly revised — and keep every transition and permission check 
 
 No test framework is configured and there is no test directory. Before adding behavioral changes,
 consider setting up a lightweight React/Vite-compatible test runner. Until then the verification gate is
-`pnpm lint` and `pnpm build`, plus
-`pnpm exec wrangler deploy --dry-run --config wrangler.jsonc` for Cloudflare deployment changes.
+`pnpm lint`, `pnpm build`, **and the browser pass described in the hard rule above** — a clean
+type-check on its own is not evidence that anything works. Cloudflare deployment changes also need
+`pnpm exec wrangler deploy --dry-run --config wrangler.jsonc`.
 
 When tests do get added, put them next to the code they cover or under a clear `src/__tests__/`
 directory.

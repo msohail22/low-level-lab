@@ -9,9 +9,11 @@ export function QuestionRow({ question }: { question: QuestionRowData }) {
 			<span className="question-status">{question.solved ? <CheckCircle2 size={18} /> : <CircleHelp size={18} />}</span>
 			<span className="question-copy">
 				<strong>{question.title}</strong>
-				<small>{question.topic ?? question.topicId ?? 'Topic'} · {question.type}</small>
+				<small>{(question.topic ?? question.topicId ?? 'Topic')} — {question.type.replace(/_/g, ' ')}</small>
 			</span>
-			<span className="difficulty">{question.difficulty}</span>
+			<span className={`difficulty ${question.solved ? 'is-solved' : question.difficulty === 'advanced' ? 'is-advanced' : ''}`}>
+				{question.solved ? 'Held up' : question.difficulty}
+			</span>
 			<ChevronRight size={17} />
 		</Link>
 	)
