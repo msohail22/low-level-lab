@@ -196,9 +196,13 @@ pnpm exec wrangler secret list            # every secret the Worker needs is pre
 
 What to look for, in order:
 
-1. **The active version matches your push.** Deploys take about 90 seconds. Confirm the served bundle
-   hash actually changed before trusting any production test, or you are testing the previous build:
-   `curl -s <url>/ | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js'`.
+1. **The active version matches your push.** Deploys take about 90 seconds, and testing before one
+   lands means testing the previous build. Check with
+   `pnpm exec wrangler deployments status` and confirm the version id is newer than your last check —
+   that works for every change. The client bundle hash
+   (`curl -s <url>/ | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js'`) is a useful second signal, but only
+   for changes under `src/`: a Worker-only change leaves the client bundle byte-identical, so its hash
+   never moves and waiting on it will hang forever.
 2. **Exercise every API route and read the body, not just the status.** Cloudflare can return `200`
    with an error page in the body. `error code: 1101` means the Worker threw.
 3. **Repeat each call about ten times.** The worst Worker bugs are intermittent, because they depend on
