@@ -38,6 +38,8 @@ head2() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 cdt() { chrome-devtools "$@" 2>/dev/null | grep -v 'ExperimentalWarning\|trace-warnings'; }
 evaluate() { cdt evaluate_script "$1" --pageId "$PAGE" | grep -oE '"[^"]*"' | head -1 | tr -d '"'; }
+# Production CSS is minified and lowercases hex, so token checks fold case.
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 goto() { cdt navigate_page "$PAGE" --type url --url "$BASE_URL$1" >/dev/null; sleep 2; }
 theme() { cdt evaluate_script "() => { document.documentElement.dataset.theme='$1'; return '$1'; }" --pageId "$PAGE" >/dev/null; sleep 1; }
 viewport() { cdt emulate "$PAGE" --viewport "$1" >/dev/null; sleep 1; }
@@ -75,18 +77,18 @@ failed=$(echo "$requests" | grep -oE '\[(4[0-9][0-9]|5[0-9][0-9])\]' | wc -l | t
 head2 "3. Both themes resolve their tokens"
 theme light
 light_ground=$(evaluate "() => getComputedStyle(document.documentElement).getPropertyValue('--ground').trim()")
-[ "$light_ground" = "#D9D3C7" ] && ok "light ground is the aluminium faceplate" || bad "light --ground is '$light_ground', expected #D9D3C7"
+[ "$(lower "$light_ground")" = "$(lower "#D9D3C7")" ] && ok "light ground is the aluminium faceplate" || bad "light --ground is '$light_ground', expected #D9D3C7"
 cdt take_screenshot "$PAGE" --filePath "$SHOTS/signin-light.png" >/dev/null
 
 theme dark
 dark_ground=$(evaluate "() => getComputedStyle(document.documentElement).getPropertyValue('--ground').trim()")
-[ "$dark_ground" = "#2E2B27" ] && ok "dark ground is the graphite chassis" || bad "dark --ground is '$dark_ground', expected #2E2B27"
+[ "$(lower "$dark_ground")" = "$(lower "#2E2B27")" ] && ok "dark ground is the graphite chassis" || bad "dark --ground is '$dark_ground', expected #2E2B27"
 cdt take_screenshot "$PAGE" --filePath "$SHOTS/signin-dark.png" >/dev/null
 
 # Amber must darken on light or body text fails contrast.
 theme light
 light_amber=$(evaluate "() => getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()")
-[ "$light_amber" = "#7A4F08" ] && ok "amber darkens on the light faceplate" || bad "light --amber is '$light_amber', expected #7A4F08"
+[ "$(lower "$light_amber")" = "$(lower "#7A4F08")" ] && ok "amber darkens on the light faceplate" || bad "light --amber is '$light_amber', expected #7A4F08"
 
 # ---------------------------------------------------------------- scenario 4
 head2 "4. Switching to Create account reveals the name field"
