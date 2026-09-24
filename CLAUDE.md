@@ -97,6 +97,90 @@ The design principles that go with it, all of which the browser can check:
 
 ---
 
+## HARD RULE: a clean console and clean network, every time
+
+**Before any push, the browser console must be empty of errors and no request may have failed.**
+Not "mostly clean". Empty.
+
+```bash
+chrome-devtools list_console_messages 1   # zero errors, zero a11y warnings
+chrome-devtools list_network_requests 1   # zero 4xx, zero 5xx
+```
+
+- Chrome's own warnings are **real defects**, not noise. Missing `autocomplete`, a form field with no
+  `id`/`name`, a contrast failure — each is a bug a person will hit. Fix it; never narrate it as a
+  known issue and push anyway.
+- A failed request is a bug even when the page still looks right. Track down every 4xx and 5xx. If one
+  is genuinely expected (an unauthenticated probe, say), say so out loud and explain why.
+- `tests/browser/run-scenarios.sh` checks both and fails the run. Use it rather than eyeballing.
+
+## HARD RULE: write a lot of tests, and keep them all in one folder
+
+**Every change ships with tests. Every single one.** A change with no test is not finished.
+
+- **All tests live under `tests/`.** Never anywhere else — not beside the source, not in `src/__tests__`.
+  One folder, so the whole suite is visible at a glance.
+  - `tests/unit/` — Vitest, jsdom, Testing Library.
+  - `tests/browser/run-scenarios.sh` — the real-browser scenarios.
+- **Be thorough rather than tidy.** Cover the happy path, every branch, every boundary (empty, blank,
+  one under and one over each limit), the error path, and what happens when a dependency throws.
+  Table-driven cases (`it.each`) are how you get breadth cheaply.
+- **Test behaviour, not implementation.** Query by role and label the way a person would, and assert on
+  what the reader sees.
+- **A design decision worth keeping is worth a test.** The logo's +7 bar rhythm and the theme tokens
+  both have tests, so a later edit that breaks them fails loudly instead of drifting.
+- **A bug found in the browser gets a unit test** pinning it, so it cannot come back.
+
+```bash
+pnpm test           # the Vitest suite
+pnpm test:watch     # while working
+pnpm test:browser   # the browser scenarios (needs the dev server up)
+```
+
+## HARD RULE: security comes before convenience
+
+- **Never commit a secret.** Not in source, not in a test, not in a fixture, not in a comment, not in a
+  commit message. `.dev.vars*` and `.env*` are ignored — keep it that way. A script that needs a
+  credential reads it from the environment; `scripts/seed-super-admin.ts` is the pattern to copy.
+- **Never print a secret**, even while debugging. Print the key name, or a host, never the value.
+- **Authorization stays server-side and fails closed.** Every permission decision goes through
+  `worker/authorization/openfga.ts`; a failure of any kind returns `null` and the caller denies. Never
+  gate on something the client sent, and never treat a hidden UI control as a permission.
+- **Validate every external input with a Zod schema from `types.ts`**, at the controller boundary,
+  before it reaches a service. Never trust a request body, a query parameter, or a path segment.
+- **Never leak the answer key.** `correctAnswer` and `authorId` are stripped from every question
+  response; keep them stripped when adding endpoints.
+- **Parameterised queries only** — Drizzle builders, never string-concatenated SQL.
+- **No secrets in the client bundle.** Anything under `src/` is public. Only `VITE_`-prefixed values
+  are exposed on purpose, and none of them may be sensitive.
+- **Sessions come from better-auth**, cookies stay `httpOnly`, and requests use
+  `credentials: 'include'`. Never hand-roll a token or stash one in `localStorage`.
+- **Never widen access to make something work.** If a check blocks you, fix the tuple or the model —
+  do not bypass the check, loosen a scope, or add an escape hatch.
+- If you find a vulnerability, report it plainly and fix it. Do not write an exploit for it.
+
+## Deployment: pushing to master ships it
+
+**A push to `master` deploys.** There is no staging step and no approval gate, so `git push` is a
+production release.
+
+- **Live URL: https://low-level-lab.msohail22.workers.dev**
+- **After every push, check the deployed site, not just localhost.** Give the deploy a moment, then run
+  the scenarios against production:
+
+  ```bash
+  bash tests/browser/run-scenarios.sh https://low-level-lab.msohail22.workers.dev
+  ```
+
+  Confirm the page renders, the console is clean, no request failed, both themes resolve, and the
+  favicon and fonts load. Production differs from dev in ways that matter: real Hyperdrive, real
+  OpenFGA, real assets, and a built bundle rather than a dev server.
+- **If production is broken, say so immediately** and fix forward or revert. Never end a turn reporting
+  a successful push while the deployed site is failing.
+- Environment differences live in `wrangler.jsonc` `vars` (non-secret) and Wrangler secrets. A change
+  that works locally can still fail deployed — `OPENFGA_AUTH_MODE` is the obvious example, since it is
+  `local` in `.dev.vars` and denies every permission check.
+
 ## Working in this repo — start here
 
 **Never run `git add` or `git commit`.** Also never `git push`, `git reset --hard`, or `git checkout --`
@@ -328,14 +412,21 @@ policy is explicitly revised — and keep every transition and permission check 
 
 ## Testing
 
-No test framework is configured and there is no test directory. Before adding behavioral changes,
-consider setting up a lightweight React/Vite-compatible test runner. Until then the verification gate is
-`pnpm lint`, `pnpm build`, **and the browser pass described in the hard rule above** — a clean
-type-check on its own is not evidence that anything works. Cloudflare deployment changes also need
-`pnpm exec wrangler deploy --dry-run --config wrangler.jsonc`.
+Vitest with jsdom and Testing Library. **Every test lives under `tests/`** — see the hard rule above.
 
-When tests do get added, put them next to the code they cover or under a clear `src/__tests__/`
-directory.
+```bash
+pnpm test           # tests/unit/**, one run
+pnpm test:watch     # while working
+pnpm test:browser   # tests/browser/run-scenarios.sh, needs the dev server up
+```
+
+Config is `vitest.config.ts` (it repeats the `vite.config.ts` aliases, so a new alias goes in three
+places now). `tests/setup.ts` wires in jest-dom matchers, clears `localStorage` and the `data-theme`
+attribute between tests, and stubs `matchMedia`, which jsdom does not implement.
+
+The full gate before a push: `pnpm test`, `pnpm lint`, `pnpm build`, the browser scenarios, and then the
+deployed site. Cloudflare deployment changes also need
+`pnpm exec wrangler deploy --dry-run --config wrangler.jsonc`.
 
 ## Commits & pull requests
 

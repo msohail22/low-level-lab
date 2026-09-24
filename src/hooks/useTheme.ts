@@ -29,7 +29,11 @@ export function useTheme() {
 	useEffect(() => {
 		if (readStoredTheme()) return
 		const media = window.matchMedia(DARK_QUERY)
-		const onChange = (event: MediaQueryListEvent) => setTheme(event.matches ? 'dark' : 'light')
+		const onChange = (event: MediaQueryListEvent) => {
+			// Re-check at event time: a choice made since mount must win.
+			if (readStoredTheme()) return
+			setTheme(event.matches ? 'dark' : 'light')
+		}
 		media.addEventListener('change', onChange)
 		return () => media.removeEventListener('change', onChange)
 	}, [])

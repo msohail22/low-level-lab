@@ -60,9 +60,8 @@ export function AuthForm() {
 	if (isForgotPassword) {
 		return (
 			<section className="auth-card">
-				<p className="eyebrow">Low Level Lab</p>
 				<h1>Reset your password</h1>
-				<p>Enter your email and we will send a reset link.</p>
+				<p>Enter your email and we will send you a link.</p>
 				<form onSubmit={handlePasswordResetRequest}>
 					<label htmlFor="reset-email">
 						Email
@@ -92,19 +91,55 @@ export function AuthForm() {
 
 	return (
 		<section className="auth-card">
-			<p className="eyebrow">Low Level Lab</p>
-			<h1>{isSignUp ? 'Create your account' : 'Sign in'}</h1>
+			<div className="auth-tabs" role="tablist" aria-label="Sign in or create an account">
+				<button
+					type="button"
+					role="tab"
+					aria-selected={!isSignUp}
+					onClick={() => { setIsSignUp(false); setError('') }}
+				>
+					Sign in
+				</button>
+				<button
+					type="button"
+					role="tab"
+					aria-selected={isSignUp}
+					onClick={() => { setIsSignUp(true); setError('') }}
+				>
+					Create account
+				</button>
+			</div>
+
+			<h1>{isSignUp ? 'Create your account' : 'Welcome back'}</h1>
 			<p>
 				{isSignUp
-					? 'Create an account to continue.'
-					: 'Use your account to continue.'}
+					? 'Your progress is saved against your account, so you can pick up mid-question.'
+					: 'Sign in to pick up where your last session left off.'}
 			</p>
+
+			<div className="social-actions" style={{ marginTop: 22 }}>
+				<button type="button" onClick={() => signInSocial({ provider: 'github' })}>
+					<GithubLogo />
+					Continue with GitHub
+				</button>
+				<button type="button" onClick={() => signInSocial({ provider: 'google' })}>
+					<GoogleLogo />
+					Continue with Google
+				</button>
+			</div>
+
+			<p className="auth-divider">or use email</p>
+
 			<form onSubmit={handleSubmit}>
 				{isSignUp && (
-					<label>
+					<label htmlFor="auth-name">
 						Name
 						<input
 							required
+							id="auth-name"
+							name="name"
+							type="text"
+							autoComplete="name"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
 						/>
@@ -134,40 +169,21 @@ export function AuthForm() {
 						value={password}
 						onChange={(event) => setPassword(event.target.value)}
 					/>
+					{isSignUp && <span className="field-hint">At least 8 characters.</span>}
 				</label>
 				{error && <p className="error">{error}</p>}
-				<button type="submit">{isSignUp ? 'Sign up' : 'Sign in'}</button>
+				<button type="submit">{isSignUp ? 'Create account' : 'Sign in'}</button>
 			</form>
+
 			{!isSignUp && (
-				<>
-					<button
-						className="link-button"
-						type="button"
-						onClick={() => setIsForgotPassword(true)}
-					>
-						Forgot password?
-					</button>
-					<div className="social-actions">
-						<button type="button" onClick={() => signInSocial({ provider: 'google' })}>
-							<GoogleLogo />
-							Continue with Google
-						</button>
-						<button type="button" onClick={() => signInSocial({ provider: 'github' })}>
-							<GithubLogo />
-							Continue with GitHub
-						</button>
-					</div>
-				</>
+				<button
+					className="link-button"
+					type="button"
+					onClick={() => setIsForgotPassword(true)}
+				>
+					Forgot your password?
+				</button>
 			)}
-			<button
-				className="link-button"
-				type="button"
-				onClick={() => setIsSignUp((current) => !current)}
-			>
-				{isSignUp
-					? 'Already have an account? Sign in'
-					: 'Need an account? Sign up'}
-			</button>
 		</section>
 	)
 }
