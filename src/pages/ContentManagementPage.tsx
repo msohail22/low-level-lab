@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Archive, Ellipsis, Plus, Save, Trash2, X } from 'lucide-react'
 
-import { questionInputSchema, topicInputSchema } from '@low-level-lab/shared/content'
+import { questionInputSchema, topicInputSchema } from '../../types'
 import { PageIntro } from '@components/shared/PageIntro'
 import { assignRole, createQuestion, createTopic, listModeration, listQuestions, listRoleTuples, listTopics, transitionQuestion, type ApiQuestion, type ApiTopic, type RoleTuple } from '@services/content-api'
 

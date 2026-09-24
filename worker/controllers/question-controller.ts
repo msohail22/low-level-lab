@@ -1,4 +1,4 @@
-import { answerSubmissionSchema, questionInputSchema, questionSearchSchema, workflowTransitionSchema } from '@low-level-lab/shared/content'
+import { answerSubmissionSchema, questionInputSchema, questionSearchSchema, workflowTransitionSchema } from '../../types.js'
 
 import { createDatabase } from '../db/client.js'
 import { createQuestionService } from '../services/question-service.js'

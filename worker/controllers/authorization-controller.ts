@@ -1,4 +1,4 @@
-import { roleAssignmentSchema } from '@low-level-lab/shared/content'
+import { roleAssignmentSchema } from '../../types.js'
 
 import { listRoleTuples, manageRoleTuple, requirePermission } from '../authorization/openfga.js'
 import { jsonResponse, parseBody } from './request-utils.js'

@@ -13,12 +13,13 @@
 		"lint": "eslint .",
 		"preview": "pnpm run build && vite preview",
 		"deploy": "pnpm run build && wrangler deploy",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"drizzle:generate": "node --env-file-if-exists=.dev.vars ./node_modules/drizzle-kit/bin.cjs generate",
+		"drizzle:push": "node --env-file-if-exists=.dev.vars ./node_modules/drizzle-kit/bin.cjs push"
 	},
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.7.4",
 		"@hookform/resolvers": "^5.9.1",
-		"@low-level-lab/shared": "workspace:*",
 		"@tanstack/react-query": "^5.102.8",
 		"better-auth": "^1.7.4",
 		"class-variance-authority": "^0.7.1",

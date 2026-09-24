@@ -1,4 +1,4 @@
-import type { QuestionResponse, TopicResponse } from '@low-level-lab/shared/content'
+import type { QuestionResponse, TopicResponse } from '../../types'
 
 export type ApiQuestion = QuestionResponse
 export type ApiTopic = TopicResponse

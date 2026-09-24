@@ -1,4 +1,4 @@
-import type { TopicInput } from '@low-level-lab/shared/content'
+import type { TopicInput } from '../../types.js'
 
 import { createId } from '../lib/ids.js'
 import { createQuestionService } from './question-service.js'

@@ -1,4 +1,4 @@
-import type { AnswerSubmission, QuestionInput, QuestionSearch } from '@low-level-lab/shared/content'
+import type { AnswerSubmission, QuestionInput, QuestionSearch } from '../../types.js'
 
 import { createId } from '../lib/ids.js'
 import { createQuestionRepository, type QuestionListFilters } from '../repositories/question-repository.js'

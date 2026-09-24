@@ -2,8 +2,6 @@
 # them: `workerd` downloads the platform binary and `esbuild` downloads/
 # builds native bindings. Without these, pnpm 11+ aborts the install with
 # ERR_PNPM_IGNORED_BUILDS.
-packages:
-  - shared
 
 allowBuilds:
   esbuild: true

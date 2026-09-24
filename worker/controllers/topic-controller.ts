@@ -1,4 +1,4 @@
-import { topicInputSchema } from '@low-level-lab/shared/content'
+import { topicInputSchema } from '../../types.js'
 
 import { getAuthenticatedUser } from '../authorization/openfga.js'
 import { createDatabase } from '../db/client.js'
