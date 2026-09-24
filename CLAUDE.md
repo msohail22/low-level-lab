@@ -488,6 +488,62 @@ belong in `.dev.vars` locally and in Wrangler secrets when deployed.
 
 Keep Cloudflare build settings aligned with `package.json`: Node `>=24`, pnpm `11.22.0`.
 
+## To do
+
+Open work, roughly in the order it is worth doing. Keep this list current: tick nothing off without
+verifying it, and add anything discovered and deliberately deferred.
+
+### Alerting on failed requests
+
+- [ ] **Add a Tail Worker that posts failures to a webhook.** The account is on Workers Paid (Queues
+      and Hyperdrive are both live), so Tail Workers are available. A second Worker with a
+      `tail(events, env, ctx)` handler, registered on this one through `tail_consumers` in
+      `wrangler.jsonc`. Filter to `outcome !== 'ok'`, a non-empty `exceptions`, or a response status of
+      400 and above, then POST a summary. Send to **Discord** — a private server's channel webhook is
+      free, permanent and supports rich embeds. Microsoft retired Teams incoming-webhook connectors, so
+      do not build against those.
+- [ ] Keep the webhook URL a secret: `wrangler secret put ALERT_WEBHOOK_URL` on the tail Worker, never
+      in `wrangler.jsonc`, never in the repo.
+- [ ] Batch and throttle before sending. A tail invocation carries many events, and one bad deploy can
+      fire thousands. Group per invocation and hold a cooldown key in `LOW_LEVEL_LAB_KV` so a burst
+      produces one message, not a thousand.
+- [ ] Never put a request body, header, cookie or token in an alert. URL, method, status, and the
+      exception message only.
+
+### Authorization, currently broken in production
+
+- [ ] **The OpenFGA credentials are rejected (401).** The token request fails, so no tuple can be
+      written and no permission can be checked. Until this is fixed there is no working super admin.
+- [ ] **`OPENFGA_AUTH_MODE` is unset in production** — not in `wrangler.jsonc` `vars`, not a secret. It
+      is therefore `undefined`, so the Worker attempts real OpenFGA calls with those failing
+      credentials. Every check fails closed to 403: safe, but all content management is dead.
+- [ ] **Resolve the relation-name mismatch.** `openfga/model.fga` declares `can_create_question`, while
+      `check()` sends the bare `create_question`. If the deployed model matches the file, every check
+      errors. Fetch the deployed model once the credentials work and make one side match the other.
+- [ ] Once all three are settled, re-run `scripts/seed-super-admin.ts` to write the `super_admin` tuple.
+
+### Verification gaps
+
+- [ ] **No authenticated page has ever been checked in a browser.** `RequireAuth` redirects without a
+      session, and stubbing `fetch` does not work because better-auth never issues the session request.
+      Point `.dev.vars` at a local Postgres, sign in for real, then extend
+      `tests/browser/run-scenarios.sh` to cover Dashboard, Questions, Topics, Progress and Manage.
+- [ ] Add browser scenarios for the question-answering flow, which is the core loop and is currently
+      untested end to end.
+
+### Cleanup
+
+- [ ] **Replace the invented UI data.** `ActivityHeatmap`, `MemorySpaceWidget` and
+      `HardwareLatencyWidget` are hardcoded, and the Analytics page's figures and sparkline are
+      fiction. Either wire them to real data or label them clearly as samples.
+- [ ] **Remove unused dependencies**: `hono`, `@tanstack/react-query`, `jotai`, `react-hook-form`,
+      `class-variance-authority`, `tailwind-merge`, `shadcn`. None is imported anywhere.
+- [ ] **Delete `src/data/questions.ts` and `src/data/topics.ts`** — leftover fixtures nothing imports.
+- [ ] **Settle the two migration histories.** `worker/migrations/*.sql` (hand-written, 0000–0004) and
+      `drizzle/` (drizzle-kit output) both exist. Decide which is authoritative and drop the other.
+- [ ] Consider whether `/api/questions` should still call `requirePermissionFor` twice per list request;
+      it issues two session lookups for one page.
+
 ## Reference artifacts
 
 The repository deliberately contains **no Markdown files other than this one** (see the hard rule at the
