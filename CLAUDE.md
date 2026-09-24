@@ -184,9 +184,15 @@ production release.
 ### Check Cloudflare itself, not just the page
 
 **A page that renders is not a healthy Worker.** The HTML is served from static assets, so the site can
-look perfectly fine while every API route throws. After each deploy, check the platform too — through
-the Cloudflare MCP server (the `cloudflare` plugin, authenticated with your Cloudflare account) or with
-`wrangler`, which is already authenticated:
+look perfectly fine while every API route throws. After each deploy, check the platform too.
+
+Two ways in, and both are worth having:
+
+- **The Cloudflare MCP server** — the `cloudflare` plugin, a remote server at `mcp.cloudflare.com`.
+  It signs in over OAuth: run `/mcp`, pick `cloudflare`, approve in the browser. Its tools read the
+  account directly (Workers, bindings, analytics, logs). Never put a Cloudflare API token in the repo
+  or in a chat message; OAuth or an environment variable only.
+- **`wrangler`** — already authenticated, and enough on its own for the checks below:
 
 ```bash
 pnpm exec wrangler deployments status     # is the active version the one you just pushed?
