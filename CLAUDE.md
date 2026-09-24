@@ -181,6 +181,38 @@ production release.
   that works locally can still fail deployed — `OPENFGA_AUTH_MODE` is the obvious example, since it is
   `local` in `.dev.vars` and denies every permission check.
 
+### Check Cloudflare itself, not just the page
+
+**A page that renders is not a healthy Worker.** The HTML is served from static assets, so the site can
+look perfectly fine while every API route throws. After each deploy, check the platform too — through
+the Cloudflare MCP server (the `cloudflare` plugin, authenticated with your Cloudflare account) or with
+`wrangler`, which is already authenticated:
+
+```bash
+pnpm exec wrangler deployments status     # is the active version the one you just pushed?
+pnpm exec wrangler tail --format pretty --status error   # live exceptions, while you hit the routes
+pnpm exec wrangler secret list            # every secret the Worker needs is present
+```
+
+What to look for, in order:
+
+1. **The active version matches your push.** Deploys take about 90 seconds. Confirm the served bundle
+   hash actually changed before trusting any production test, or you are testing the previous build:
+   `curl -s <url>/ | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js'`.
+2. **Exercise every API route and read the body, not just the status.** Cloudflare can return `200`
+   with an error page in the body. `error code: 1101` means the Worker threw.
+3. **Repeat each call about ten times.** The worst Worker bugs are intermittent, because they depend on
+   which isolate serves you — a route that fails 75% of the time looks healthy if you try it once.
+4. **`wrangler tail` while you make those calls.** It gives the real exception; the response body will
+   not.
+5. **A secret set locally is not set in production.** Compare `wrangler secret list` against `.dev.vars`.
+   A variable absent in production is `undefined`, not the local value.
+
+**Never carry I/O across requests in a Worker.** A socket, database pool, or stream belongs to the
+request that created it; reusing one from module scope hangs the next request until the runtime cancels
+it ("your Worker's code had hung and would never generate a response"). Open per request and close in
+`ctx.waitUntil`. `worker/db/client.ts` is the pattern.
+
 ## Working in this repo — start here
 
 **Never run `git add` or `git commit`.** Also never `git push`, `git reset --hard`, or `git checkout --`

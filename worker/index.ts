@@ -1,4 +1,5 @@
 import { createAuth } from './auth.js'
+import { closeDatabases } from './db/client.js'
 import { handleQuestionRequest } from './controllers/question-controller.js'
 import { handleProgressRequest } from './controllers/progress-controller.js'
 import { codingExecutionPlaceholder } from './controllers/placeholder-controller.js'
@@ -29,7 +30,7 @@ function isEmailMessage(value: unknown): value is EmailMessage {
 }
 
 export default {
-	async fetch(request, env) {
+	async fetch(request, env, ctx) {
 		try {
 			const url = new URL(request.url)
 
@@ -81,6 +82,9 @@ export default {
 				},
 				{ status: 500 },
 			)
+		} finally {
+			// Release this request's connections; never carry a socket into the next one.
+			ctx.waitUntil(closeDatabases())
 		}
 	},
 	async queue(batch, env) {
