@@ -16,10 +16,25 @@ export default defineConfig({
 		],
 	},
 	test: {
-		environment: 'jsdom',
 		globals: true,
 		setupFiles: ['./tests/setup.ts'],
-		include: ['tests/**/*.test.{ts,tsx}'],
 		css: false,
+		projects: [
+			{
+				extends: true,
+				test: { name: 'unit', environment: 'jsdom', include: ['tests/unit/**/*.test.{ts,tsx}'] },
+			},
+			{
+				// Real Postgres (PGlite) and real password hashing: slower, so longer timeouts.
+				extends: true,
+				test: {
+					name: 'integration',
+					environment: 'node',
+					include: ['tests/integration/**/*.test.ts'],
+					testTimeout: 30_000,
+					hookTimeout: 60_000,
+				},
+			},
+		],
 	},
 })

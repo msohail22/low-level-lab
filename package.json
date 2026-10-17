@@ -13,6 +13,8 @@
 		"lint": "eslint .",
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"test:unit": "vitest run tests/unit",
+		"test:integration": "vitest run tests/integration",
 		"test:browser": "bash tests/browser/run-scenarios.sh",
 		"preview": "pnpm run build && vite preview",
 		"deploy": "pnpm run build && wrangler deploy",
@@ -43,6 +45,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.54.8",
+		"@electric-sql/pglite": "^0.5.8",
 		"@eslint/js": "^10.0.1",
 		"@tailwindcss/vite": "^4.3.3",
 		"@testing-library/jest-dom": "^7.0.1",

@@ -121,6 +121,16 @@ chrome-devtools list_network_requests 1   # zero 4xx, zero 5xx
 - **All tests live under `tests/`.** Never anywhere else — not beside the source, not in `src/__tests__`.
   One folder, so the whole suite is visible at a glance.
   - `tests/unit/` — Vitest, jsdom, Testing Library.
+  - `tests/unit/worker/` — the Worker: services, controllers, authorization, dispatch, the email
+    queue. These files start with `// @vitest-environment node` and mock at the module seam
+    (repository, service, `openfga`), never hitting a real database or OpenFGA.
+  - `tests/integration/` — the real Worker end to end: real `Request`s into `worker/index.ts`, real
+    better-auth, real SQL on PGlite (Postgres in WebAssembly, migrated with `worker/migrations/`).
+    Only two things are faked: OpenFGA (`fake-openfga.ts`, which evaluates `openfga/model.fga` — keep
+    the two in step) and the email queue. `harness.ts` has `register()` (sign up → follow the queued
+    verification link → sign in) and `publishQuestion()`. No Docker, no credentials.
+  - **Known bugs are pinned with `it.fails`** and a `KNOWN BUG:` comment. When you fix one, the test
+    starts failing — turn it back into a plain `it`.
   - `tests/browser/run-scenarios.sh` — the real-browser scenarios.
 - **Be thorough rather than tidy.** Cover the happy path, every branch, every boundary (empty, blank,
   one under and one over each limit), the error path, and what happens when a dependency throws.
@@ -132,8 +142,10 @@ chrome-devtools list_network_requests 1   # zero 4xx, zero 5xx
 - **A bug found in the browser gets a unit test** pinning it, so it cannot come back.
 
 ```bash
-pnpm test           # the Vitest suite
-pnpm test:watch     # while working
+pnpm test              # everything: unit + integration
+pnpm test:unit         # tests/unit only, fast
+pnpm test:integration  # tests/integration, about 30s
+pnpm test:watch        # while working
 pnpm test:browser   # the browser scenarios (needs the dev server up)
 ```
 
@@ -262,9 +274,9 @@ the structure, then read the specific files to confirm details before changing t
 - **A new feature or a behavior change** → `superpowers:brainstorming` first: present a design and get an
   explicit yes before writing code.
 - **A bug or unexpected behavior** → `superpowers:systematic-debugging` before proposing a fix.
-- **Before claiming anything works** → run `pnpm lint` and `pnpm build` and report the actual output.
-  Cloudflare config changes also need `pnpm exec wrangler deploy --dry-run --config wrangler.jsonc`.
-  There is no test suite, so a clean type-check is the only automated signal available.
+- **Before claiming anything works** → run `pnpm test`, `pnpm lint` and `pnpm build` and report the
+  actual output. Cloudflare config changes also need
+  `pnpm exec wrangler deploy --dry-run --config wrangler.jsonc`.
 
 ### Invariants that are easy to break quietly
 
@@ -305,8 +317,7 @@ pnpm drizzle:push       # apply the schema directly
 Note there are two migration histories: hand-written SQL in `worker/migrations/` (0000–0004, the applied
 history) and drizzle-kit output in `drizzle/`. Confirm which one is being used before adding a migration.
 
-**No test framework is configured.** Verification is `pnpm lint` + `pnpm build`. There is no "run a single
-test" command; if you add tests, also add the runner and note it here.
+Tests run with Vitest (see Testing below). Run a single file with `pnpm vitest run <path>`.
 
 ## Architecture
 
@@ -520,6 +531,11 @@ verifying it, and add anything discovered and deliberately deferred.
 - [ ] **Resolve the relation-name mismatch.** `openfga/model.fga` declares `can_create_question`, while
       `check()` sends the bare `create_question`. If the deployed model matches the file, every check
       errors. Fetch the deployed model once the credentials work and make one side match the other.
+- [ ] **No question or topic tuples are ever written.** Every question-level permission in
+      `openfga/model.fga` resolves through `question:<id>#author`, `#organization` and `#topic`, and
+      topic edits through `topic:<id>#organization`. Nothing writes them, so against the real model
+      nobody can edit, submit, review, approve or publish a question, and an API-created topic can
+      never be edited. Write them on create. Pinned by `it.fails` in `tests/integration/`.
 - [ ] Once all three are settled, re-run `scripts/seed-super-admin.ts` to write the `super_admin` tuple.
 
 ### Verification gaps
