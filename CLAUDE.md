@@ -255,7 +255,7 @@ Read the slice the request actually touches rather than the whole tree:
 | Request touches | Read first |
 | --- | --- |
 | UI, styling, layout | `src/index.css` (all design tokens live here), `src/components/layout/AppLayout.tsx`, the relevant `src/pages/` file, `docs/low-level-lab-ui-preview.html` |
-| An API endpoint | the dispatch branch in `worker/index.ts`, then that controller → service → repository chain |
+| An API endpoint | the Hono route in `worker/index.ts`, then that controller → service → repository chain |
 | Permissions, roles, a 403 | `worker/authorization/openfga.ts`, `openfga/model.fga` |
 | A request/response shape | `types.ts` at the repo root, then both callers |
 | DB columns or migrations | `worker/db/content-schema.ts`, `worker/db/auth-schema.ts`, `worker/migrations/` |
@@ -285,7 +285,8 @@ the structure, then read the specific files to confirm details before changing t
   redeclared in `src/` or `worker/`.
 - Authorization stays in `worker/authorization/openfga.ts` and must fail closed; controllers call the
   named helpers and never construct OpenFGA requests themselves.
-- A new endpoint needs a dispatch branch in `worker/index.ts` — there is no router library.
+- A new endpoint needs a Hono route in `worker/index.ts`; controllers receive `c.req.raw`, never a Hono
+  `Context`.
 - Import aliases must be added to **both** `vite.config.ts` and `tsconfig.app.json`.
 - Keep controller / service / repository responsibilities separate; do not collapse routing, validation,
   business rules, and queries into one handler.
@@ -323,18 +324,40 @@ Tests run with Vitest (see Testing below). Run a single file with `pnpm vitest r
 
 ### Request pipeline
 
-`worker/index.ts` is a plain `fetch` handler that dispatches by inspecting `URL.pathname` segments —
-there is no router library (`hono` is a dependency but unused). Adding an endpoint means adding a branch
-there and passing the extracted path segments into a controller:
+`worker/index.ts` builds a **Hono** app (`new Hono<{ Bindings: Env }>()`) and exports it as the Worker's
+`fetch`, alongside the `queue()` consumer. Adding an endpoint means adding a route there and passing the
+named path parameters into a controller:
 
 ```
-worker/index.ts  →  controllers/*  →  services/*  →  repositories/*  →  drizzle (pg)
+worker/index.ts (hono)  →  controllers/*  →  services/*  →  repositories/*  →  drizzle (pg)
 ```
 
-Dispatch order matters, and the segment indexes are positional (e.g. `/api/questions/:id/:action` reads
-`segments[2]` and `segments[3]`). Controllers parse/validate and shape responses, services own workflow
-and business rules, repositories own queries. `worker/controllers/request-utils.ts` holds `jsonResponse`,
-`parseBody` (Zod), and the permission wrappers.
+**Hono is used only for routing.** Controllers keep their `(request: Request, env: Env, ...)` signature
+and are handed `c.req.raw` — the real `Request`, unwrapped. Never pass a Hono `Context` into a
+controller; the controller layer has no business knowing which router called it. Controllers
+parse/validate and shape responses, services own workflow and business rules, repositories own queries.
+`worker/controllers/request-utils.ts` holds `jsonResponse`, `parseBody` (Zod), and the permission
+wrappers.
+
+Four things about Hono that this file depends on, each verified against hono 4.13.7 and not assumed:
+
+- **Routes match in registration order** and the first responder wins.
+- **A mid-path `*` spans exactly one segment.** A wildcard segment followed by `/execute` matches
+  nothing, so the coding-execution placeholder is a `*` middleware rather than a route — a `*`
+  middleware runs even for a path no route matches.
+- **A throw that is not an `Error` instance never reaches `app.onError`**; it propagates out of
+  `app.fetch`. The JSON 500 is therefore produced by `internalError()`, wired into both `app.onError`
+  and the `catch` in `fetch`. Hono's default handler answers plain text, which a client cannot parse.
+- **`trimTrailingSlash()` answers with a 301**, which is wrong for an API — a non-GET redirect is not
+  reliably followed with its method and body intact. `withoutTrailingSlash()` normalizes the URL
+  before the router instead.
+
+`handleProgressRequest` and `handleModerationRequest` read their own sub-path back off the request URL
+(`/history`, the queue name), so their routes carry an optional trailing segment rather than a bare
+prefix.
+
+`await app.fetch(...)` in the `fetch` handler is load-bearing: returning the promise instead would run
+the `finally` block early and `closeDatabases()` would tear down the pool under the live request.
 
 ### Shared contracts
 
@@ -416,7 +439,7 @@ component-local and not persisted).
 
 Pages call `src/services/content-api.ts`, a thin `fetch` wrapper that sends `credentials: 'include'` and
 throws `ApiError` with the server's `error` string. Data fetching is plain `useEffect` + `useState`.
-Several installed dependencies are currently unused — `hono`, `@tanstack/react-query`, `jotai`,
+Several installed dependencies are currently unused — `@tanstack/react-query`, `jotai`,
 `react-hook-form`, `class-variance-authority`, `tailwind-merge`, `shadcn`. `src/data/questions.ts` and
 `src/data/topics.ts` are leftover fixtures that nothing imports.
 
@@ -552,7 +575,7 @@ verifying it, and add anything discovered and deliberately deferred.
 - [ ] **Replace the invented UI data.** `ActivityHeatmap`, `MemorySpaceWidget` and
       `HardwareLatencyWidget` are hardcoded, and the Analytics page's figures and sparkline are
       fiction. Either wire them to real data or label them clearly as samples.
-- [ ] **Remove unused dependencies**: `hono`, `@tanstack/react-query`, `jotai`, `react-hook-form`,
+- [ ] **Remove unused dependencies**: `@tanstack/react-query`, `jotai`, `react-hook-form`,
       `class-variance-authority`, `tailwind-merge`, `shadcn`. None is imported anywhere.
 - [ ] **Delete `src/data/questions.ts` and `src/data/topics.ts`** — leftover fixtures nothing imports.
 - [ ] **Settle the two migration histories.** `worker/migrations/*.sql` (hand-written, 0000–0004) and
