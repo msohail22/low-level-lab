@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { query, resetDatabase, startDatabase, stopDatabase } from './database'
-import { call, fga, installFetch, publishQuestion, queue, register, seedTopic, validQuestion, type Account } from './harness'
+import { call, installFetch, publishQuestion, queue, register, seedTopic, validQuestion, type Account } from './harness'
 
 // A question's whole life over HTTP: create, edit, the review workflow, revisions, restore, archive.
 
@@ -15,17 +15,14 @@ let admin: Account
 
 beforeEach(async () => {
 	await resetDatabase()
-	fga.reset()
 	queue.send.mockClear()
 	installFetch()
 	await seedTopic()
 	admin = await register('Super Admin')
-	fga.grant(admin.id, 'super_admin')
 })
 
 async function create(overrides: Record<string, unknown> = {}, who = admin) {
 	const reply = await call('POST', '/api/questions', { cookie: who.cookie, body: validQuestion(overrides) })
-	if (reply.status === 201) fga.linkQuestion(reply.body.id, who.id, reply.body.topicId)
 	return reply
 }
 
@@ -58,14 +55,14 @@ describe('creating', () => {
 		expect(await query('SELECT id FROM question')).toHaveLength(0)
 	})
 
-	it('refuses a signed-in user with no role', async () => {
+	// Authorization is session-only: there is no role to lack, so any signed-in account may create.
+	it('lets any signed-in user create a question', async () => {
 		const nobody = await register('No Role')
-		expect((await create({}, nobody)).status).toBe(403)
+		expect((await create({}, nobody)).status).toBe(201)
 	})
 
 	it('lets a plain member create a question', async () => {
 		const member = await register('Member')
-		fga.grant(member.id, 'member')
 		expect((await create({}, member)).status).toBe(201)
 	})
 
@@ -257,12 +254,18 @@ describe('editing, revisions and restore', () => {
 		expect((await call('POST', `/api/questions/${body.id}/restore?revision=9`, { cookie: admin.cookie, body: {} })).status).toBe(404)
 	})
 
-	it('refuses revisions and restore to someone who cannot edit', async () => {
+	it('refuses revisions and restore to a signed-out visitor', async () => {
+		const { body } = await create()
+		expect((await call('GET', `/api/questions/${body.id}/revisions`)).status).toBe(403)
+		expect((await call('POST', `/api/questions/${body.id}/restore?revision=1`, { body: {} })).status).toBe(403)
+	})
+
+	// Session-only authorization: another signed-in account is allowed in, by design for now.
+	it('allows revisions and restore to any signed-in user', async () => {
 		const { body } = await create()
 		const member = await register('Member')
-		fga.grant(member.id, 'member')
-		expect((await call('GET', `/api/questions/${body.id}/revisions`, { cookie: member.cookie })).status).toBe(403)
-		expect((await call('POST', `/api/questions/${body.id}/restore?revision=1`, { cookie: member.cookie, body: {} })).status).toBe(403)
+		expect((await call('GET', `/api/questions/${body.id}/revisions`, { cookie: member.cookie })).status).toBe(200)
+		expect((await call('POST', `/api/questions/${body.id}/restore?revision=1`, { cookie: member.cookie, body: {} })).status).toBe(200)
 	})
 
 	it('archives a question, hiding it from every list', async () => {

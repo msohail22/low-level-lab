@@ -20,7 +20,7 @@ const auth = {
 
 vi.mock('../../../worker/db/client', () => ({ createDatabase: () => ({}) }))
 vi.mock('../../../worker/services/question-service', () => ({ createQuestionService: () => svc }))
-vi.mock('../../../worker/authorization/openfga', () => auth)
+vi.mock('../../../worker/authorization/permissions', () => auth)
 
 const { handleQuestionRequest } = await import('../../../worker/controllers/question-controller')
 

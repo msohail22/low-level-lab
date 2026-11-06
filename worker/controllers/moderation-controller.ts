@@ -1,5 +1,5 @@
 import { createDatabase } from '../db/client.js'
-import { requirePermission } from '../authorization/openfga.js'
+import { requirePermission } from '../authorization/permissions.js'
 import { createQuestionService } from '../services/question-service.js'
 import { jsonResponse } from './request-utils.js'
 

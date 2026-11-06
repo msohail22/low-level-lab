@@ -7,9 +7,7 @@ const api = {
 	listTopics: vi.fn(),
 	listQuestions: vi.fn(),
 	listModeration: vi.fn(),
-	listRoleTuples: vi.fn(),
 	transitionQuestion: vi.fn(),
-	assignRole: vi.fn(),
 	createTopic: vi.fn(),
 	createQuestion: vi.fn(),
 }
@@ -35,7 +33,6 @@ beforeEach(() => {
 	api.listTopics.mockResolvedValue([caches])
 	api.listQuestions.mockResolvedValue({ items: [q()], total: 1 })
 	api.listModeration.mockResolvedValue({ items: [], total: 0 })
-	api.listRoleTuples.mockResolvedValue({ items: [] })
 })
 
 describe('initial load', () => {
@@ -65,12 +62,6 @@ describe('initial load', () => {
 	it.each([['review', 'reviewer'], ['admin', 'admin']])('?view=%s opens the %s queue', async (view, queue) => {
 		open(view)
 		await waitFor(() => expect(api.listModeration).toHaveBeenCalledWith(queue))
-	})
-
-	it('?view=super-admin opens the roles panel', async () => {
-		open('super-admin')
-		expect(await screen.findByRole('heading', { name: 'Assign a role' })).toBeInTheDocument()
-		expect(api.listRoleTuples).toHaveBeenCalled()
 	})
 
 	it('marks the active tab', async () => {
@@ -293,50 +284,3 @@ describe('moderation queues', () => {
 	})
 })
 
-describe('roles', () => {
-	it('lists assigned tuples', async () => {
-		api.listRoleTuples.mockResolvedValue({ items: [{ user: 'user:u1', relation: 'admin', object: 'organization:low-level-lab' }] })
-		open('super-admin')
-		expect(await screen.findByText('admin')).toBeInTheDocument()
-		expect(screen.getByText('user:u1 on organization:low-level-lab')).toBeInTheDocument()
-	})
-
-	it('shows an empty list', async () => {
-		open('super-admin')
-		expect(await screen.findByText('No role assignments found.')).toBeInTheDocument()
-	})
-
-	it('offers the four roles with reviewer preselected', async () => {
-		open('super-admin')
-		const select = await screen.findByLabelText('Role')
-		expect(select).toHaveValue('reviewer')
-		expect(within(select).getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['member', 'reviewer', 'admin', 'super_admin'])
-	})
-
-	it('requires a user id before assigning', async () => {
-		open('super-admin')
-		expect(await screen.findByLabelText('User ID')).toBeRequired()
-	})
-
-	it('assigns a role, lists it and resets the form', async () => {
-		api.assignRole.mockResolvedValue({ item: { user: 'user:u9', relation: 'admin', object: 'organization:low-level-lab' } })
-		open('super-admin')
-		await userEvent.type(await screen.findByLabelText('User ID'), 'u9')
-		await userEvent.selectOptions(screen.getByLabelText('Role'), 'admin')
-		await userEvent.click(screen.getByRole('button', { name: 'Assign role' }))
-		expect(api.assignRole).toHaveBeenCalledWith({ userId: 'u9', role: 'admin' })
-		expect(await screen.findByText('Role assigned.')).toBeInTheDocument()
-		expect(screen.getByText('user:u9 on organization:low-level-lab')).toBeInTheDocument()
-		expect(screen.getByLabelText('User ID')).toHaveValue('')
-		expect(screen.getByLabelText('Role')).toHaveValue('reviewer')
-	})
-
-	it('shows an assignment failure and keeps the draft', async () => {
-		api.assignRole.mockRejectedValue(new Error('Super-admin permission required'))
-		open('super-admin')
-		await userEvent.type(await screen.findByLabelText('User ID'), 'u9')
-		await userEvent.click(screen.getByRole('button', { name: 'Assign role' }))
-		expect(await screen.findByText('Super-admin permission required')).toBeInTheDocument()
-		expect(screen.getByLabelText('User ID')).toHaveValue('u9')
-	})
-})

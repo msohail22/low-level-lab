@@ -1,6 +1,6 @@
 import { topicInputSchema } from '../../types.js'
 
-import { getAuthenticatedUser } from '../authorization/openfga.js'
+import { getAuthenticatedUser } from '../authorization/permissions.js'
 import { createDatabase } from '../db/client.js'
 import { createTopicService } from '../services/topic-service.js'
 import { jsonResponse, parseBody, requirePermissionFor } from './request-utils.js'

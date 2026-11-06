@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // request-utils, the per-request database pool, the better-auth configuration, and ids.
 
 const requirePermission = vi.fn()
-vi.mock('../../../worker/authorization/openfga', () => ({ requirePermission }))
+vi.mock('../../../worker/authorization/permissions', () => ({ requirePermission }))
 
 const pools: Array<{ options: unknown; end: ReturnType<typeof vi.fn> }> = []
 vi.mock('pg', () => ({

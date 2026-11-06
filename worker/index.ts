@@ -7,7 +7,6 @@ import { handleProgressRequest } from './controllers/progress-controller.js'
 import { codingExecutionPlaceholder } from './controllers/placeholder-controller.js'
 import { handleSocialPublish } from './controllers/social-controller.js'
 import { handleTopicRequest } from './controllers/topic-controller.js'
-import { handleAuthorizationRequest } from './controllers/authorization-controller.js'
 import { handleModerationRequest } from './controllers/moderation-controller.js'
 import { Resend } from 'resend'
 
@@ -60,7 +59,6 @@ app.all('/api/topics/:topicId?', async (c) => handleTopicRequest(c.req.raw, c.en
 
 app.all('/api/progress/:section?', async (c) => handleProgressRequest(c.req.raw, c.env))
 
-app.all('/api/admin/roles', async (c) => handleAuthorizationRequest(c.req.raw, c.env))
 
 app.all('/api/moderation/:queue?', async (c) => handleModerationRequest(c.req.raw, c.env))
 

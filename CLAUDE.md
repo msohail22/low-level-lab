@@ -123,12 +123,12 @@ chrome-devtools list_network_requests 1   # zero 4xx, zero 5xx
   - `tests/unit/` — Vitest, jsdom, Testing Library.
   - `tests/unit/worker/` — the Worker: services, controllers, authorization, dispatch, the email
     queue. These files start with `// @vitest-environment node` and mock at the module seam
-    (repository, service, `openfga`), never hitting a real database or OpenFGA.
+    (repository, service, `permissions`), never hitting a real database.
   - `tests/integration/` — the real Worker end to end: real `Request`s into `worker/index.ts`, real
     better-auth, real SQL on PGlite (Postgres in WebAssembly, migrated with `worker/migrations/`).
-    Only two things are faked: OpenFGA (`fake-openfga.ts`, which evaluates `openfga/model.fga` — keep
-    the two in step) and the email queue. `harness.ts` has `register()` (sign up → follow the queued
-    verification link → sign in) and `publishQuestion()`. No Docker, no credentials.
+    Only the email queue is faked; any outbound `fetch` in an integration test is a test failure.
+    `harness.ts` has `register()` (sign up → follow the queued verification link → sign in) and
+    `publishQuestion()`. No Docker, no credentials.
   - **Known bugs are pinned with `it.fails`** and a `KNOWN BUG:` comment. When you fix one, the test
     starts failing — turn it back into a plain `it`.
   - `tests/browser/run-scenarios.sh` — the real-browser scenarios.
@@ -156,8 +156,10 @@ pnpm test:browser   # the browser scenarios (needs the dev server up)
   credential reads it from the environment; `scripts/seed-super-admin.ts` is the pattern to copy.
 - **Never print a secret**, even while debugging. Print the key name, or a host, never the value.
 - **Authorization stays server-side and fails closed.** Every permission decision goes through
-  `worker/authorization/openfga.ts`; a failure of any kind returns `null` and the caller denies. Never
-  gate on something the client sent, and never treat a hidden UI control as a permission.
+  `worker/authorization/permissions.ts`; a failure of any kind returns `null` and the caller denies.
+  Never gate on something the client sent, and never treat a hidden UI control as a permission. That
+  module is session-only today — see Authorization below — so **every endpoint is open to any signed-in
+  account.** Treat that as a known, temporary state, not a licence to skip the boundary.
 - **Validate every external input with a Zod schema from `types.ts`**, at the controller boundary,
   before it reaches a service. Never trust a request body, a query parameter, or a path segment.
 - **Never leak the answer key.** `correctAnswer` and `authorId` are stripped from every question
@@ -186,12 +188,11 @@ production release.
 
   Confirm the page renders, the console is clean, no request failed, both themes resolve, and the
   favicon and fonts load. Production differs from dev in ways that matter: real Hyperdrive, real
-  OpenFGA, real assets, and a built bundle rather than a dev server.
+  real assets, and a built bundle rather than a dev server.
 - **If production is broken, say so immediately** and fix forward or revert. Never end a turn reporting
   a successful push while the deployed site is failing.
 - Environment differences live in `wrangler.jsonc` `vars` (non-secret) and Wrangler secrets. A change
-  that works locally can still fail deployed — `OPENFGA_AUTH_MODE` is the obvious example, since it is
-  `local` in `.dev.vars` and denies every permission check.
+  that works locally can still fail deployed, so check both.
 
 ### Check Cloudflare itself, not just the page
 
@@ -256,7 +257,7 @@ Read the slice the request actually touches rather than the whole tree:
 | --- | --- |
 | UI, styling, layout | `src/index.css` (all design tokens live here), `src/components/layout/AppLayout.tsx`, the relevant `src/pages/` file, `docs/low-level-lab-ui-preview.html` |
 | An API endpoint | the Hono route in `worker/index.ts`, then that controller → service → repository chain |
-| Permissions, roles, a 403 | `worker/authorization/openfga.ts`, `openfga/model.fga` |
+| Permissions, a 403 | `worker/authorization/permissions.ts` (session-only; no roles) |
 | A request/response shape | `types.ts` at the repo root, then both callers |
 | DB columns or migrations | `worker/db/content-schema.ts`, `worker/db/auth-schema.ts`, `worker/migrations/` |
 | Sign-in, sessions, email | `worker/auth.ts`, the `queue()` consumer in `worker/index.ts`, `src/hooks/useAuth.ts` |
@@ -283,8 +284,8 @@ the structure, then read the specific files to confirm details before changing t
 - Routes stay in `src/App.tsx`; do not introduce an `AppRoutes` module.
 - Request/response contracts live in the root `types.ts` and are imported by both sides — never
   redeclared in `src/` or `worker/`.
-- Authorization stays in `worker/authorization/openfga.ts` and must fail closed; controllers call the
-  named helpers and never construct OpenFGA requests themselves.
+- Authorization stays in `worker/authorization/permissions.ts` and must fail closed; controllers call
+  the named helpers and never make a permission decision of their own.
 - A new endpoint needs a Hono route in `worker/index.ts`; controllers receive `c.req.raw`, never a Hono
   `Context`.
 - Import aliases must be added to **both** `vite.config.ts` and `tsconfig.app.json`.
@@ -306,7 +307,7 @@ pnpm exec wrangler deploy --dry-run --config wrangler.jsonc   # run for Cloudfla
 
 `pnpm dev` serves both the client and `/api/*` from one process — there is no separate `wrangler dev`.
 Worker secrets in dev come from `.dev.vars` (see `.dev.vars.example`); `vars` in `wrangler.jsonc` supply
-the non-secret OpenFGA/auth config in deployed environments.
+the non-secret auth config in deployed environments.
 
 Database migrations use drizzle-kit against `DATABASE_URL`:
 
@@ -385,31 +386,28 @@ The client side is `src/services/auth-client.ts` (better-auth React client) wrap
 (`worker/db/auth-schema.ts`) and content tables (`worker/db/content-schema.ts`) stay in separate modules
 and are merged only when constructing the Drizzle client.
 
-### Authorization (OpenFGA)
+### Authorization (session-only; OpenFGA removed)
 
-Every permission decision goes through `worker/authorization/openfga.ts`. Controllers call
-`requirePermission` / `requireQuestionPermission`, which return the authenticated user or `null` — every
-failure path (no session, denied, OpenFGA error) returns `null`, so callers fail closed by treating
-`null` as 401/403.
+**There is no role system right now. A valid session is the permission.** OpenFGA was removed
+deliberately: the credentials were rejected in production, no question or topic tuples were ever
+written, and the relation names did not match what the Worker sent, so every check failed closed and
+all content management was dead. Rather than ship a permission system that denied everything, the
+app runs session-only until the rest of it is right.
 
-`objectForPermission` decides which OpenFGA object a permission is checked against: `question:<id>` for
-per-question permissions, `topic:<id>` for topic-scoped ones, otherwise `organization:low-level-lab`.
-Roles (`super_admin`, `admin`, `reviewer`, `member`) are stored as tuples, managed through
-`/api/admin/roles`.
+Every permission decision still goes through one file — now `worker/authorization/permissions.ts`.
+Controllers call `requirePermission` / `requireQuestionPermission`, which return the authenticated
+user or `null`. Anonymous requests and a failed session lookup both return `null`, so callers still
+fail closed by treating `null` as 401/403. Any signed-in user is allowed everything.
 
-To bootstrap the model: the checked-in model is `openfga/model.fga`. Export `OPENFGA_API_URL`,
-`OPENFGA_STORE_ID`, `OPENFGA_MODEL_ID` and an ephemeral `OPENFGA_BEARER_TOKEN` in your shell — never
-commit any of them. Validate with `fga model test --model-file openfga/model.fga`, then run
-`scripts/openfga-bootstrap.sh`, which is **dry-run by default**; `OPENFGA_APPLY=1` writes the model and
-`OPENFGA_WRITE_TUPLE=1` plus explicit tuple values is required to write any tuple. No users are seeded
-and no irreversible tuple writes happen during deploy or local dev.
+The `Permission` names (`create_question`, `publish_question`, `manage_topics`, …) are still passed at
+every call site and still exported from that module, so the call sites already say which decision they
+are making. They are simply not consulted yet.
 
-Two things to know before debugging a 403:
-- `OPENFGA_AUTH_MODE=local` makes `check()` return `false` unconditionally, so every protected route
-  denies locally. Sign-in and public reads still work.
-- `check()` sends the bare permission name (e.g. `create_question`) as the relation, while
-  `openfga/model.fga` declares those as `can_*` permissions. Verify the relation names in the deployed
-  model (`OPENFGA_MODEL_ID`) before assuming either side is wrong.
+**When a real permission system comes back, it goes in that one file and nowhere else.** Do not add a
+check in a controller, and do not gate on anything the client sent. `openfga/model.fga` and
+`scripts/openfga-bootstrap.sh` are kept as the starting point: the model is dry-run by default,
+`OPENFGA_APPLY=1` writes it, and `OPENFGA_WRITE_TUPLE=1` plus explicit values is required for a tuple.
+Nothing in the app reads either one today.
 
 ### Question workflow
 
@@ -517,8 +515,9 @@ Cloudflare configuration changes explicitly. Never add a Claude co-author traile
 ## Security & configuration
 
 Never commit `.dev.vars*`, `.env*`, `.wrangler/`, `dist/`, or any secret. Note that
-`wrangler.jsonc` already carries non-secret OpenFGA store/model/client IDs in `vars` — real secrets
-belong in `.dev.vars` locally and in Wrangler secrets when deployed.
+real secrets belong in `.dev.vars` locally and in Wrangler secrets when deployed. The OpenFGA
+store/model/client IDs were removed from `wrangler.jsonc` `vars` along with the checks; the leftover
+`OPENFGA_*` lines in a local `.dev.vars` are unused and harmless.
 
 Keep Cloudflare build settings aligned with `package.json`: Node `>=24`, pnpm `11.22.0`.
 
@@ -544,22 +543,28 @@ verifying it, and add anything discovered and deliberately deferred.
 - [ ] Never put a request body, header, cookie or token in an alert. URL, method, status, and the
       exception message only.
 
-### Authorization, currently broken in production
+### Authorization, deliberately removed — must come back before any real use
 
-- [ ] **The OpenFGA credentials are rejected (401).** The token request fails, so no tuple can be
-      written and no permission can be checked. Until this is fixed there is no working super admin.
-- [ ] **`OPENFGA_AUTH_MODE` is unset in production** — not in `wrangler.jsonc` `vars`, not a secret. It
-      is therefore `undefined`, so the Worker attempts real OpenFGA calls with those failing
-      credentials. Every check fails closed to 403: safe, but all content management is dead.
-- [ ] **Resolve the relation-name mismatch.** `openfga/model.fga` declares `can_create_question`, while
-      `check()` sends the bare `create_question`. If the deployed model matches the file, every check
-      errors. Fetch the deployed model once the credentials work and make one side match the other.
-- [ ] **No question or topic tuples are ever written.** Every question-level permission in
-      `openfga/model.fga` resolves through `question:<id>#author`, `#organization` and `#topic`, and
-      topic edits through `topic:<id>#organization`. Nothing writes them, so against the real model
-      nobody can edit, submit, review, approve or publish a question, and an API-created topic can
-      never be edited. Write them on create. Pinned by `it.fails` in `tests/integration/`.
-- [ ] Once all three are settled, re-run `scripts/seed-super-admin.ts` to write the `super_admin` tuple.
+OpenFGA was torn out so the rest of the app could be built against a working backend. **Every API
+endpoint is now open to any signed-in account**, including publish and topic deletion. This is fine
+for a single-developer app with verified sign-up, and not fine the moment anyone else has an account.
+
+- [ ] **Re-add a real permission system in `worker/authorization/permissions.ts`.** The `Permission`
+      names and every call site are already in place, so this is one file. Decide first whether it is
+      OpenFGA again or a `user_role` table plus a migration — a table needs no external credentials and
+      no tuple writes, which is what broke last time.
+- [ ] **Write the tests that were deleted with the checks.** `tests/unit/worker/openfga.test.ts` went
+      with the module. The new rule is covered only incidentally by the integration tests; it has no
+      unit test of its own. Cover: no session → `null`, valid session → the user, session lookup throws
+      → `null`.
+- [ ] **Restore the roles admin surface.** `/api/admin/roles`, `worker/controllers/authorization-controller.ts`,
+      `roleAssignmentSchema` in `types.ts`, the `RolePanel` in `ContentManagementPage`, the three role
+      functions in `src/services/content-api.ts`, and the Super admin sidebar link were all deleted.
+      Recoverable from git history.
+- [ ] If it is OpenFGA again: the credentials were rejected (401), `OPENFGA_AUTH_MODE` was never set in
+      production, `openfga/model.fga` declares `can_*` while the Worker sent the bare permission name,
+      and nothing ever wrote the `question:<id>` / `topic:<id>` tuples every permission resolved
+      through. All four must be settled before a single check can pass.
 
 ### Verification gaps
 

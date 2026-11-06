@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The smaller controllers: topics, moderation, progress, roles, social publish, and the execution
+// The smaller controllers: topics, moderation, progress, social publish, and the execution
 // placeholder. The question controller has its own file.
 
 const questionSvc = { get: vi.fn(), list: vi.fn(), progress: vi.fn(), history: vi.fn(), topicCounts: vi.fn() }
@@ -10,19 +10,16 @@ const auth = {
 	requirePermission: vi.fn(),
 	requireQuestionPermission: vi.fn(),
 	getAuthenticatedUser: vi.fn(),
-	manageRoleTuple: vi.fn(),
-	listRoleTuples: vi.fn(),
 }
 
 vi.mock('../../../worker/db/client', () => ({ createDatabase: () => ({}) }))
 vi.mock('../../../worker/services/question-service', () => ({ createQuestionService: () => questionSvc }))
 vi.mock('../../../worker/services/topic-service', () => ({ createTopicService: () => topicSvc }))
-vi.mock('../../../worker/authorization/openfga', () => auth)
+vi.mock('../../../worker/authorization/permissions', () => auth)
 
 const { handleTopicRequest } = await import('../../../worker/controllers/topic-controller')
 const { handleModerationRequest } = await import('../../../worker/controllers/moderation-controller')
 const { handleProgressRequest } = await import('../../../worker/controllers/progress-controller')
-const { handleAuthorizationRequest } = await import('../../../worker/controllers/authorization-controller')
 const { handleSocialPublish } = await import('../../../worker/controllers/social-controller')
 const { codingExecutionPlaceholder } = await import('../../../worker/controllers/placeholder-controller')
 
@@ -242,63 +239,6 @@ describe('progress', () => {
 		expect(body).toEqual({ items: [{ id: 'att-1' }] })
 		expect(questionSvc.history).toHaveBeenCalledWith('user-1')
 		expect(questionSvc.progress).not.toHaveBeenCalled()
-	})
-})
-
-describe('role administration', () => {
-	const assignment = { userId: 'u2', role: 'reviewer' }
-
-	it.each(['GET', 'POST', 'DELETE', 'PUT'])('%s needs manage_users', async (method) => {
-		const { status, body } = await read(await handleAuthorizationRequest(req(method, '/api/admin/roles', method === 'GET' ? undefined : assignment), env as never))
-		expect(status).toBe(403)
-		expect(body.error).toBe('Super-admin permission required')
-		expect(auth.requirePermission).toHaveBeenCalledWith(expect.any(Request), env, 'manage_users')
-		expect(auth.manageRoleTuple).not.toHaveBeenCalled()
-		expect(auth.listRoleTuples).not.toHaveBeenCalled()
-	})
-
-	describe('as a super admin', () => {
-		beforeEach(() => auth.requirePermission.mockResolvedValue(user))
-
-		it('lists the tuples', async () => {
-			auth.listRoleTuples.mockResolvedValue([{ user: 'user:u1', relation: 'admin', object: 'organization:low-level-lab' }])
-			const { status, body } = await read(await handleAuthorizationRequest(req('GET', '/api/admin/roles'), env as never))
-			expect(status).toBe(200)
-			expect(body.items).toHaveLength(1)
-		})
-
-		it('503s when OpenFGA cannot be read', async () => {
-			auth.listRoleTuples.mockRejectedValue(new Error('down'))
-			expect((await handleAuthorizationRequest(req('GET', '/api/admin/roles'), env as never)).status).toBe(503)
-		})
-
-		it.each([['POST', 'add'], ['DELETE', 'remove']])('%s %ss the tuple', async (method, action) => {
-			auth.manageRoleTuple.mockResolvedValue({ user: 'user:u2', relation: 'reviewer', object: 'organization:low-level-lab' })
-			const { status, body } = await read(await handleAuthorizationRequest(req(method, '/api/admin/roles', assignment), env as never))
-			expect(status).toBe(200)
-			expect(body.item.relation).toBe('reviewer')
-			expect(auth.manageRoleTuple).toHaveBeenCalledWith(env, assignment, action)
-		})
-
-		it('503s when the write fails', async () => {
-			auth.manageRoleTuple.mockRejectedValue(new Error('down'))
-			expect((await handleAuthorizationRequest(req('POST', '/api/admin/roles', assignment), env as never)).status).toBe(503)
-		})
-
-		it.each(['PUT', 'PATCH'])('405s %s', async (method) => {
-			expect((await handleAuthorizationRequest(req(method, '/api/admin/roles', assignment), env as never)).status).toBe(405)
-		})
-
-		it.each([
-			['an unknown role', { userId: 'u2', role: 'owner' }],
-			['a blank user', { userId: '  ', role: 'admin' }],
-			['a missing user', { role: 'admin' }],
-			['a user id over 200 characters', { userId: 'u'.repeat(201), role: 'admin' }],
-			['a blank topic', { userId: 'u2', role: 'admin', topicId: '' }],
-		])('400s %s', async (_label, body) => {
-			expect((await handleAuthorizationRequest(req('POST', '/api/admin/roles', body), env as never)).status).toBe(400)
-			expect(auth.manageRoleTuple).not.toHaveBeenCalled()
-		})
 	})
 })
 

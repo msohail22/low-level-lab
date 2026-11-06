@@ -104,7 +104,6 @@ describe('endpoints', () => {
 		['getRevisions', () => api.getRevisions('q1'), '/api/questions/q1/revisions', 'GET'],
 		['listModeration reviewer', () => api.listModeration('reviewer'), '/api/moderation/reviewer', 'GET'],
 		['listModeration admin', () => api.listModeration('admin'), '/api/moderation/admin', 'GET'],
-		['listRoleTuples', () => api.listRoleTuples(), '/api/admin/roles', 'GET'],
 	])('%s calls %s', async (_label, run, url, method) => {
 		await run()
 		expect(lastCall().url).toBe(url)
@@ -120,8 +119,6 @@ describe('endpoints', () => {
 		['transition with reason', () => api.transitionQuestion('q1', 'reject', 'Unclear'), '/api/questions/q1/reject', 'POST', { reason: 'Unclear' }],
 		['transition without reason', () => api.transitionQuestion('q1', 'approve'), '/api/questions/q1/approve', 'POST', { reason: null }],
 		['transition with blank reason', () => api.transitionQuestion('q1', 'approve', ''), '/api/questions/q1/approve', 'POST', { reason: null }],
-		['assignRole', () => api.assignRole({ userId: 'u', role: 'admin' }), '/api/admin/roles', 'POST', { userId: 'u', role: 'admin' }],
-		['removeRole', () => api.removeRole({ userId: 'u', role: 'admin', topicId: 't' }), '/api/admin/roles', 'DELETE', { userId: 'u', role: 'admin', topicId: 't' }],
 	])('%s sends %s %s', async (_label, run, url, method, body) => {
 		await run()
 		expect(lastCall().url).toBe(url)

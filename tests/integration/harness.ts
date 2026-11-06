@@ -1,12 +1,10 @@
 import { vi } from 'vitest'
 
-import { createFakeOpenFga, FGA_ISSUER, FGA_URL } from './fake-openfga'
 import { query } from './database'
 
 /**
  * Drives the real Worker (worker/index.ts) with real Requests, against the PGlite database from
- * ./database and the fake OpenFGA from ./fake-openfga. Nothing between the fetch handler and the
- * SQL is mocked. Each test file must mock worker/db/client.ts onto the test database:
+ * ./database. Nothing between the fetch handler and the SQL is mocked. Each test file must mock worker/db/client.ts onto the test database:
  *
  *   vi.mock('../../worker/db/client', async () => (await import('./database')).clientMock)
  *
@@ -14,7 +12,6 @@ import { query } from './database'
  */
 
 export const BASE_URL = 'http://lab.test'
-export const fga = createFakeOpenFga()
 export const queue = { send: vi.fn(async (message: unknown) => { void message }) }
 
 // Test-only values; none of them is a real credential.
@@ -22,22 +19,14 @@ export const env = {
 	BETTER_AUTH_URL: BASE_URL,
 	BETTER_AUTH_SECRET: 'integration-test-secret-integration-test-secret',
 	LOW_LEVEL_LAB_QUEUE: queue,
-	OPENFGA_API_URL: FGA_URL,
-	OPENFGA_TOKEN_ISSUER: FGA_ISSUER,
-	OPENFGA_STORE_ID: 'store',
-	OPENFGA_MODEL_ID: 'model',
-	OPENFGA_CLIENT_ID: 'client',
-	OPENFGA_CLIENT_SECRET: 'client-secret',
-	OPENFGA_AUDIENCE: FGA_URL,
 	RESEND_API_KEY: 're_test',
 	RESEND_FROM_EMAIL: 'lab@example.test',
 } as Record<string, unknown>
 
-/** Route outbound fetches: OpenFGA goes to the fake, anything else is a test failure. */
+/** Any outbound fetch in an integration test is a test failure: nothing external is called. */
 export function installFetch() {
-	vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+	vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
 		const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
-		if (url.startsWith(FGA_URL) || url.startsWith(FGA_ISSUER)) return fga.handle(url, init)
 		throw new Error(`Unexpected outbound fetch in an integration test: ${url}`)
 	}))
 }
@@ -97,7 +86,6 @@ export { cookieFrom }
 /** A topic created straight in the database, for tests that are not about topic management. */
 export async function seedTopic(id = 'caches', name = 'Caches') {
 	await query('INSERT INTO topic (id, slug, name) VALUES ($1, $2, $3)', [id, id, name])
-	fga.linkTopic(id)
 	return id
 }
 
@@ -114,15 +102,11 @@ export const validQuestion = (overrides: Record<string, unknown> = {}) => ({
 	...overrides,
 })
 
-/**
- * Create a question through the API and walk it to published, as a super admin. Links the
- * question in the fake OpenFGA first, since the app itself never writes those tuples.
- */
+/** Create a question through the API and walk it all the way to published. */
 export async function publishQuestion(admin: Account, overrides: Record<string, unknown> = {}) {
 	const created = await call('POST', '/api/questions', { cookie: admin.cookie, body: validQuestion(overrides) })
 	if (created.status !== 201) throw new Error(`create failed: ${created.status} ${JSON.stringify(created.body)}`)
 	const id = created.body.id as string
-	fga.linkQuestion(id, admin.id, created.body.topicId)
 	for (const action of ['submit', 'start_review', 'approve', 'publish']) {
 		const step = await call('POST', `/api/questions/${id}/${action}`, { cookie: admin.cookie, body: {} })
 		if (step.status !== 200) throw new Error(`${action} failed: ${step.status} ${JSON.stringify(step.body)}`)

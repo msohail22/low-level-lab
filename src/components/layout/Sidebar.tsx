@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UserCircle, UsersRound, X } from 'lucide-react'
+import { BarChart3, BookOpen, ChevronRight, CircleHelp, Code2, FilePlus2, LayoutDashboard, ShieldCheck, Settings2, Target, UserCircle, X } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 import { BrandMark } from '@components/layout/BrandMark'
 import { useAuth } from '@hooks/useAuth'
@@ -46,7 +46,6 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=review" onClick={onClose}><ShieldCheck size={18} />Review queue</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=admin" onClick={onClose}><ShieldCheck size={18} />Admin moderation</NavLink>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=topics" onClick={onClose}><Settings2 size={18} />Manage topics</NavLink>
-				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/manage?view=super-admin" onClick={onClose}><UsersRound size={18} />Super admin</NavLink>
 				<span className="nav-label nav-label-spaced">Account</span>
 				<NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/profile" onClick={onClose}><UserCircle size={18} />Profile</NavLink>
 				<span className="nav-label nav-label-spaced">Later</span>

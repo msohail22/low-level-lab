@@ -10,7 +10,6 @@ import {
 	questionSearchSchema,
 	questionStatuses,
 	questionTypes,
-	roleAssignmentSchema,
 	roles,
 	topicInputSchema,
 	topicResponseSchema,
@@ -236,24 +235,6 @@ describe('answerSubmissionSchema', () => {
 
 	it('rejects an answer beyond 5,000 characters', () => {
 		expect(answerSubmissionSchema.safeParse({ answer: 'x'.repeat(5_001) }).success).toBe(false)
-	})
-})
-
-describe('roleAssignmentSchema', () => {
-	it('accepts an organization-scoped role', () => {
-		expect(roleAssignmentSchema.safeParse({ userId: 'u1', role: 'super_admin' }).success).toBe(true)
-	})
-
-	it('accepts a topic-scoped role', () => {
-		expect(roleAssignmentSchema.safeParse({ userId: 'u1', role: 'admin', topicId: 't1' }).success).toBe(true)
-	})
-
-	it('rejects an unknown role', () => {
-		expect(roleAssignmentSchema.safeParse({ userId: 'u1', role: 'owner' }).success).toBe(false)
-	})
-
-	it('rejects a blank user id', () => {
-		expect(roleAssignmentSchema.safeParse({ userId: '  ', role: 'admin' }).success).toBe(false)
 	})
 })
 

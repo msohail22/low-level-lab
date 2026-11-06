@@ -1,17 +1,16 @@
 /**
  * Seed a super admin.
  *
- * Two independent steps, because they can fail independently:
- *   1. Create the account in Postgres through better-auth, so the password
- *      hash matches what the Worker will verify at sign-in.
- *   2. Write the `super_admin` OpenFGA tuple that actually grants the role.
+ * Creates the account in Postgres through better-auth, so the password hash
+ * matches what the Worker will verify at sign-in, and marks the address
+ * verified. No role is granted: authorization is session-only for now, so any
+ * signed-in account already has full access.
  *
  * Nothing here is committed with a value in it. Everything comes from the
  * environment:
  *
- *   DATABASE_URL, BETTER_AUTH_SECRET            (required, step 1)
- *   SEED_EMAIL, SEED_PASSWORD, SEED_NAME        (required, step 1)
- *   OPENFGA_* as in .dev.vars                   (required, step 2)
+ *   DATABASE_URL, BETTER_AUTH_SECRET            (required)
+ *   SEED_EMAIL, SEED_PASSWORD, SEED_NAME        (required)
  *
  * Run:
  *   node --env-file=.dev.vars --env-file-if-exists=.seed.vars scripts/seed-super-admin.ts
@@ -24,8 +23,6 @@ import { Pool } from 'pg'
 
 import { authSchema, user } from '../worker/db/auth-schema.js'
 import { contentSchema } from '../worker/db/content-schema.js'
-
-const ORGANIZATION = 'low-level-lab'
 
 function required(name: string) {
 	const value = process.env[name]
@@ -67,53 +64,7 @@ async function createAccount() {
 	return created.id
 }
 
-async function grantSuperAdmin(userId: string) {
-	const issuer = required('OPENFGA_TOKEN_ISSUER').startsWith('http')
-		? required('OPENFGA_TOKEN_ISSUER')
-		: `https://${required('OPENFGA_TOKEN_ISSUER')}`
+await createAccount()
 
-	const tokenResponse = await fetch(`${issuer}/oauth/token`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams({
-			grant_type: 'client_credentials',
-			client_id: required('OPENFGA_CLIENT_ID'),
-			client_secret: required('OPENFGA_CLIENT_SECRET'),
-			audience: required('OPENFGA_AUDIENCE'),
-		}),
-	})
-	if (!tokenResponse.ok) {
-		throw new Error(`OpenFGA token request failed (${tokenResponse.status}). Check OPENFGA_CLIENT_ID and OPENFGA_CLIENT_SECRET.`)
-	}
-	const { access_token } = (await tokenResponse.json()) as { access_token: string }
-
-	const writeResponse = await fetch(
-		`${required('OPENFGA_API_URL')}/stores/${required('OPENFGA_STORE_ID')}/write`,
-		{
-			method: 'POST',
-			headers: { 'content-type': 'application/json', authorization: `Bearer ${access_token}` },
-			body: JSON.stringify({
-				writes: {
-					tuple_keys: [
-						{ user: `user:${userId}`, relation: 'super_admin', object: `organization:${ORGANIZATION}` },
-					],
-				},
-				authorization_model_id: required('OPENFGA_MODEL_ID'),
-			}),
-		},
-	)
-	if (!writeResponse.ok) {
-		throw new Error(`OpenFGA tuple write failed (${writeResponse.status}): ${(await writeResponse.text()).slice(0, 200)}`)
-	}
-	console.log(`Granted super_admin on organization:${ORGANIZATION} to user:${userId}`)
-}
-
-const userId = await createAccount()
-
-if (process.env.OPENFGA_AUTH_MODE === 'local') {
-	console.log('\nOPENFGA_AUTH_MODE=local: skipping the tuple write.')
-	console.log('Local mode denies every permission check, so this account has no elevated rights yet.')
-	console.log('Set OPENFGA_AUTH_MODE=cloud with working credentials, then re-run to grant the role.')
-} else {
-	await grantSuperAdmin(userId)
-}
+console.log('\nAuthorization is session-only right now, so this account can already do everything.')
+console.log('No role has to be granted until a real permission system is wired back in.')

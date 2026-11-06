@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { query, resetDatabase, startDatabase, stopDatabase } from './database'
-import { call, cookieFrom, fga, installFetch, queue, register, verificationUrlFor } from './harness'
+import { call, cookieFrom, installFetch, queue, register, verificationUrlFor } from './harness'
 
 // Real better-auth, real Postgres: sign-up, the queued verification email, sign-in, sessions.
 
@@ -12,7 +12,6 @@ beforeAll(startDatabase)
 afterAll(stopDatabase)
 beforeEach(async () => {
 	await resetDatabase()
-	fga.reset()
 	queue.send.mockClear()
 	installFetch()
 })

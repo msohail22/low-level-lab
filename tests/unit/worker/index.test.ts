@@ -11,7 +11,6 @@ const controllers = {
 	codingExecutionPlaceholder: ok('execute'),
 	handleSocialPublish: ok('social'),
 	handleTopicRequest: ok('topics'),
-	handleAuthorizationRequest: ok('roles'),
 	handleModerationRequest: ok('moderation'),
 }
 const authHandler = vi.fn(async () => Response.json({ handledBy: 'auth' }))
@@ -24,7 +23,6 @@ vi.mock('../../../worker/controllers/progress-controller', () => ({ handleProgre
 vi.mock('../../../worker/controllers/placeholder-controller', () => ({ codingExecutionPlaceholder: controllers.codingExecutionPlaceholder }))
 vi.mock('../../../worker/controllers/social-controller', () => ({ handleSocialPublish: controllers.handleSocialPublish }))
 vi.mock('../../../worker/controllers/topic-controller', () => ({ handleTopicRequest: controllers.handleTopicRequest }))
-vi.mock('../../../worker/controllers/authorization-controller', () => ({ handleAuthorizationRequest: controllers.handleAuthorizationRequest }))
 vi.mock('../../../worker/controllers/moderation-controller', () => ({ handleModerationRequest: controllers.handleModerationRequest }))
 vi.mock('../../../worker/auth', () => ({ createAuth: () => ({ handler: authHandler }) }))
 vi.mock('../../../worker/db/client', () => ({ closeDatabases }))
@@ -62,7 +60,6 @@ describe('fetch dispatch', () => {
 		['/api/topics/caches', 'topics'],
 		['/api/progress', 'progress'],
 		['/api/progress/history', 'progress'],
-		['/api/admin/roles', 'roles'],
 		['/api/moderation', 'moderation'],
 		['/api/moderation/admin', 'moderation'],
 		['/api/social/publish/q1', 'social'],
@@ -104,12 +101,6 @@ describe('fetch dispatch', () => {
 	it('hands the social question id', async () => {
 		await hit('/api/social/publish/q7', 'POST')
 		expect(controllers.handleSocialPublish).toHaveBeenCalledWith(expect.any(Request), env, 'q7')
-	})
-
-	it('only routes the exact roles path', async () => {
-		const { body } = await hit('/api/admin/roles/extra')
-		expect(body).toEqual({ name: 'Cloudflare' })
-		expect(controllers.handleAuthorizationRequest).not.toHaveBeenCalled()
 	})
 
 	it('answers an unknown /api/ path with the default payload', async () => {

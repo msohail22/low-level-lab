@@ -1,4 +1,4 @@
-import { requireQuestionPermission } from '../authorization/openfga.js'
+import { requireQuestionPermission } from '../authorization/permissions.js'
 import { createDatabase } from '../db/client.js'
 import { createQuestionService } from '../services/question-service.js'
 import { jsonResponse } from './request-utils.js'

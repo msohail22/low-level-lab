@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { questionSearchSchema } from '../../types'
 import { query, resetDatabase, startDatabase, stopDatabase } from './database'
-import { call, fga, installFetch, publishQuestion, queue, register, seedTopic, validQuestion, type Account } from './harness'
+import { call, installFetch, publishQuestion, queue, register, seedTopic, validQuestion, type Account } from './harness'
 
 // The reader's side over real SQL: answering and grading, progress, history, search, topics,
 // moderation queues, and topic management.
@@ -18,14 +18,11 @@ let learner: Account
 
 beforeEach(async () => {
 	await resetDatabase()
-	fga.reset()
 	queue.send.mockClear()
 	installFetch()
 	await seedTopic()
 	admin = await register('Super Admin')
-	fga.grant(admin.id, 'super_admin')
 	learner = await register('Learner')
-	fga.grant(learner.id, 'member')
 })
 
 const right = validQuestion().correctAnswer
@@ -90,7 +87,6 @@ describe('answering', () => {
 	it('keeps each learner\'s progress separate', async () => {
 		const id = await publishQuestion(admin)
 		const other = await register('Other')
-		fga.grant(other.id, 'member')
 		await answer(learner, id, right)
 		await answer(other, id, 'wrong')
 		const rows = await query<{ user_id: string; solved: boolean }>('SELECT user_id, solved FROM question_progress ORDER BY solved')
@@ -264,10 +260,9 @@ describe('topics', () => {
 		expect((await call('GET', '/api/topics/nope')).status).toBe(404)
 	})
 
-	// KNOWN BUG: edits and archives are checked against `topic:<id>`, whose permissions resolve
-	// through a `topic#organization` tuple the app never writes. So a topic created through the API
-	// can never be edited or archived again — not even by the super admin who created it.
-	it.fails('lets the super admin who created a topic edit it, without manual linking', async () => {
+	// Was a known bug while topic edits resolved through a `topic#organization` tuple the app never
+	// wrote. Session-only authorization removed that dependency, so this now passes.
+	it('lets the super admin who created a topic edit it, without manual linking', async () => {
 		const created = await call('POST', '/api/topics', { cookie: admin.cookie, body: { name: 'Networking', slug: 'networking' } })
 		expect((await call('PUT', `/api/topics/${created.body.id}`, { cookie: admin.cookie, body: { name: 'Networks', slug: 'networking' } })).status).toBe(200)
 	})
@@ -275,17 +270,22 @@ describe('topics', () => {
 	it('creates, renames and archives a topic as a content manager', async () => {
 		const created = await call('POST', '/api/topics', { cookie: admin.cookie, body: { name: 'Networking', slug: 'networking', description: 'Packets' } })
 		expect(created.status).toBe(201)
-		fga.linkTopic(created.body.id)
 		const renamed = await call('PUT', `/api/topics/${created.body.id}`, { cookie: admin.cookie, body: { name: 'Networks', slug: 'networking' } })
 		expect(renamed.body).toMatchObject({ name: 'Networks', description: null })
 		await call('DELETE', `/api/topics/${created.body.id}`, { cookie: admin.cookie })
 		expect((await call('GET', '/api/topics')).body.map((topic: { id: string }) => topic.id)).toEqual(['caches'])
 	})
 
-	it('refuses topic management to a member', async () => {
-		expect((await call('POST', '/api/topics', { cookie: learner.cookie, body: { name: 'N', slug: 'n' } })).status).toBe(403)
-		expect((await call('DELETE', '/api/topics/caches', { cookie: learner.cookie })).status).toBe(403)
+	it('refuses topic management to a signed-out visitor', async () => {
+		expect((await call('POST', '/api/topics', { body: { name: 'N', slug: 'n' } })).status).toBe(403)
+		expect((await call('DELETE', '/api/topics/caches')).status).toBe(403)
 		expect(await query('SELECT archived_at FROM topic WHERE id = $1', ['caches'])).toEqual([{ archived_at: null }])
+	})
+
+	// Session-only authorization: a plain member may manage topics for now.
+	it('allows topic management to any signed-in user', async () => {
+		expect((await call('POST', '/api/topics', { cookie: learner.cookie, body: { name: 'N', slug: 'n' } })).status).toBe(201)
+		expect((await call('DELETE', '/api/topics/caches', { cookie: learner.cookie })).status).toBe(200)
 	})
 
 	it('surfaces a duplicate topic slug as a 500', async () => {
@@ -297,7 +297,6 @@ describe('topics', () => {
 describe('moderation queues', () => {
 	async function inStatus(status: 'submitted' | 'in_review' | 'approved', slug: string) {
 		const created = await call('POST', '/api/questions', { cookie: admin.cookie, body: validQuestion({ slug, title: slug }) })
-		fga.linkQuestion(created.body.id, admin.id, 'caches')
 		const path = { submitted: ['submit'], in_review: ['submit', 'start_review'], approved: ['submit', 'start_review', 'approve'] }[status]
 		for (const action of path) await call('POST', `/api/questions/${created.body.id}/${action}`, { cookie: admin.cookie, body: {} })
 		return created.body.id

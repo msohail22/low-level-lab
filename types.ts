@@ -61,16 +61,8 @@ export const workflowTransitionSchema = z.object({
 	reason: z.string().trim().max(1_000).nullable().optional(),
 })
 
-export const roleAssignmentSchema = z.object({
-	userId: nonEmptyText.max(200),
-	role: z.enum(roles),
-	organizationId: nonEmptyText.max(200).optional(),
-	topicId: nonEmptyText.max(200).optional(),
-})
-
 export type QuestionSearch = z.infer<typeof questionSearchSchema>
 export type AnswerSubmission = z.infer<typeof answerSubmissionSchema>
-export type RoleAssignment = z.infer<typeof roleAssignmentSchema>
 
 export const questionResponseSchema = z.object({
 	id: z.string(),

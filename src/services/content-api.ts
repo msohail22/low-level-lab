@@ -82,17 +82,3 @@ export function transitionQuestion(id: string, action: string, reason?: string) 
 export function listModeration(queue: 'reviewer' | 'admin') {
 	return api<{ items: ApiQuestion[]; total: number }>(`/api/moderation/${queue}`)
 }
-
-export type RoleTuple = { user: string; relation: string; object: string }
-
-export function listRoleTuples() {
-	return api<{ items: RoleTuple[] }>('/api/admin/roles')
-}
-
-export function assignRole(input: { userId: string; role: string; organizationId?: string; topicId?: string }) {
-	return api<{ item: RoleTuple }>('/api/admin/roles', { method: 'POST', body: JSON.stringify(input) })
-}
-
-export function removeRole(input: { userId: string; role: string; organizationId?: string; topicId?: string }) {
-	return api<{ item: RoleTuple }>('/api/admin/roles', { method: 'DELETE', body: JSON.stringify(input) })
-}

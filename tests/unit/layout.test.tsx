@@ -113,7 +113,6 @@ describe('Sidebar', () => {
 		['Review queue', '/manage?view=review'],
 		['Admin moderation', '/manage?view=admin'],
 		['Manage topics', '/manage?view=topics'],
-		['Super admin', '/manage?view=super-admin'],
 		['Profile', '/profile'],
 	])('links %s to %s', (name, href) => {
 		renderSidebar()
