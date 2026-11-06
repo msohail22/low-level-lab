@@ -48,13 +48,16 @@ export async function getAuthenticatedUser(request: Request, env: Env) {
 export async function requirePermission(
 	request: Request,
 	env: Env,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	permission: Permission,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	topicId?: string,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	questionId?: string,
 ) {
+	// Discarded on purpose while authorization is session-only. `void` rather than an `_` prefix or a
+	// lint suppression, because both `noUnusedParameters` and eslint count it as a read, and deleting
+	// the parameters would mean editing all seven call sites again when a real check returns here.
+	void permission
+	void topicId
+	void questionId
 	return getAuthenticatedUser(request, env)
 }
 
