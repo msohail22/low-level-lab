@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTopic, TOPIC_SLUGS } from "@/lib/topics";
-import { countsByDifficulty, questionsByTopic } from "@/lib/questions";
-import { DifficultyBadge } from "@/components/DifficultyBadge";
-import { KindBadge } from "@/components/KindBadge";
+import { getTopic, TOPIC_SLUGS, type Difficulty } from "@/lib/topics";
+import { questionsByTopic } from "@/lib/questions";
+import { QuestionList, type Row } from "@/components/QuestionList";
+import type { Kind } from "@/lib/kinds";
 
 export function generateStaticParams() {
   return TOPIC_SLUGS.map((topic) => ({ topic }));
@@ -18,8 +18,14 @@ export default async function TopicPage({
   const topic = getTopic(topicSlug);
   if (!topic) notFound();
 
-  const questions = questionsByTopic(topicSlug);
-  const counts = countsByDifficulty(topicSlug);
+  // Only what a row needs. Sending the whole question would ship every
+  // answer in the topic to the list page.
+  const rows: Row[] = questionsByTopic(topicSlug).map((q) => ({
+    slug: q.slug,
+    title: q.title,
+    kind: q.kind as Kind,
+    difficulty: q.difficulty as Difficulty,
+  }));
 
   return (
     <div>
@@ -29,48 +35,9 @@ export default async function TopicPage({
         </Link>
       </nav>
 
-      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{topic.name}</h1>
-        <span className="flex gap-3 text-xs font-medium">
-          <span className="text-easy">{counts.easy} easy</span>
-          <span className="text-medium">{counts.medium} medium</span>
-          <span className="text-hard">{counts.hard} hard</span>
-        </span>
-      </div>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight">{topic.name}</h1>
 
-      <ul className="mt-6 overflow-hidden rounded-lg border border-border bg-surface">
-        {questions.map((q, i) => (
-          <li key={q.slug} className="border-b border-border last:border-0">
-            <Link
-              href={`/topics/${topicSlug}/${q.slug}`}
-              className="flex items-baseline gap-3 px-4 py-3 hover:bg-bg"
-            >
-              <span className="w-5 shrink-0 text-sm text-muted">{i + 1}</span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{q.title}</span>
-                <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted sm:hidden">
-                  <DifficultyBadge difficulty={q.difficulty} />
-                  <KindBadge kind={q.kind} />
-                </span>
-              </span>
-
-              <span className="hidden shrink-0 items-center gap-3 sm:flex">
-                <KindBadge kind={q.kind} />
-                <span className="w-16 text-right">
-                  <DifficultyBadge difficulty={q.difficulty} />
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
-
-        {questions.length === 0 ? (
-          <li className="px-4 py-8 text-center text-sm text-muted">
-            No questions yet.
-          </li>
-        ) : null}
-      </ul>
+      <QuestionList topicSlug={topicSlug} rows={rows} />
     </div>
   );
 }
