@@ -37,31 +37,6 @@
   }
 }
 
-/*
- * The same values again, for a theme the reader chose rather than one the
- * operating system reported. The media query above still handles "system".
- */
-:root[data-theme="dark"] {
-  /* Shiki's light-dark() reads color-scheme, so a forced theme must set it too
-     or the code blocks stay on whatever the operating system reports. */
-  color-scheme: dark;
-  --color-bg: #0c0a09;
-  --color-surface: #1c1917;
-  --color-border: #292524;
-  --color-text: #fafaf9;
-  --color-muted: #a8a29e;
-  --color-accent: #fafaf9;
-  --color-easy: #4ade80;
-  --color-medium: #fbbf24;
-  --color-hard: #f87171;
-}
-
-/* Light chosen explicitly: the @theme values are already light, so only the
-   scheme needs pinning. */
-:root[data-theme="light"] {
-  color-scheme: light;
-}
-
 :root {
   /* Shiki emits light-dark() colours, which need this to resolve. */
   color-scheme: light dark;
