@@ -12,3 +12,6 @@ next-env.d.ts
 !.dev.vars.example
 !.env.example
 tsconfig.tsbuildinfo
+
+# Local agent instructions, deliberately untracked
+CLAUDE.md

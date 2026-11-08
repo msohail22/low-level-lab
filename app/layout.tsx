@@ -4,8 +4,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Low Level Lab",
-  description:
-    "A project to learn programming by practice (a lot of practice).",
+  description: "A project to learn programming by practice (a lot of practice).",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -30,13 +34,9 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="mx-auto max-w-5xl px-4 py-10">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">{children}</main>
 
-        <footer className="mt-16 border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-6 text-xs text-muted">
-            Questions live in this repository as MDX. Open a pull request to add one.
-          </div>
-        </footer>
+        <div className="h-16" />
       </body>
     </html>
   );

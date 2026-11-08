@@ -5,7 +5,6 @@ import { allQuestions, findQuestion, loadQuestionBody } from "@/lib/questions";
 import { QuestionBody } from "@/components/QuestionBody";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
 import { KindBadge } from "@/components/KindBadge";
-import { KIND_BLURBS, type Kind } from "@/lib/kinds";
 
 const REPO = "https://github.com/msohail22/low-level-lab";
 
@@ -30,45 +29,32 @@ export default async function QuestionPage({
   return (
     <article className="mx-auto max-w-3xl">
       <nav className="text-xs text-muted">
-        <Link href="/topics" className="hover:text-accent">
-          Topics
-        </Link>
-        <span className="mx-1.5">/</span>
         <Link href={`/topics/${topicSlug}`} className="hover:text-accent">
           {topic.name}
         </Link>
       </nav>
 
-      <header className="mt-3 border-b border-border pb-5">
-        <h1 className="text-2xl font-semibold tracking-tight">{question.title}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+      <header className="mt-3 border-b border-border pb-4">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          {question.title}
+        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <DifficultyBadge difficulty={question.difficulty} />
           <KindBadge kind={question.kind} />
-          {question.tags.length > 0 ? <span>{question.tags.join(" · ")}</span> : null}
-          <span>by {question.authors.join(", ")}</span>
           <a
             href={`${REPO}/blob/master/${question.file}`}
-            className="hover:text-accent"
+            className="text-xs text-muted hover:text-accent"
             target="_blank"
             rel="noreferrer"
           >
             Edit on GitHub ↗
           </a>
         </div>
-        <p className="mt-3 text-sm text-muted">
-          {KIND_BLURBS[question.kind as Kind]}
-        </p>
       </header>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <QuestionBody Body={Body} question={question} />
       </div>
-
-      <footer className="mt-12 border-t border-border pt-5 text-sm text-muted">
-        <Link href={`/topics/${topicSlug}`} className="hover:text-accent">
-          ← Back to {topic.name}
-        </Link>
-      </footer>
     </article>
   );
 }

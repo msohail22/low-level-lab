@@ -35,15 +35,6 @@ export const KIND_LABELS: Record<Kind, string> = {
   "true-false": "True or false",
 };
 
-export const KIND_BLURBS: Record<Kind, string> = {
-  coding: "Write and compile a program that matches the described output.",
-  "predict-output": "Read the program and say exactly what it prints.",
-  debug: "The program is wrong. Find the defect.",
-  mcq: "Pick the one correct option.",
-  multi: "Pick every correct option.",
-  "true-false": "Decide whether the claim holds.",
-};
-
 /**
  * Headings every question of a kind must contain.
  *
