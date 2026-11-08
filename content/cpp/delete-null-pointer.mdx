@@ -9,12 +9,10 @@ authors: [msohail22]
 choices:
   - text: "True"
     correct: true
-    why: "Correct. `delete nullptr;` is explicitly defined to do nothing, so the null check before it is redundant."
   - text: "False"
-    why: "A common belief, because dereferencing null is undefined. `delete` is the exception: the standard requires it to be a no-op on a null pointer."
 ---
 
-## Question
+## Description
 
 Consider this line, where `p` may or may not be null:
 
@@ -22,55 +20,37 @@ Consider this line, where `p` may or may not be null:
 delete p;
 ```
 
-**True or false:** if `p` is a null pointer, this line is safe and does nothing.
+True or false: if `p` is a null pointer, this line is safe and does nothing.
 
 <Choices />
 
-## Explanation
+<Answer>
 
 True. The standard says that if the pointer passed to `delete` is null, the
-operation has no effect. You do not need to guard it.
-
-So this is redundant:
+operation has no effect. You do not need to guard it, so the null check here buys
+you nothing:
 
 ```cpp
-if (p != nullptr) {   // this check buys you nothing
+if (p != nullptr) {   // redundant
   delete p;
 }
 ```
 
-and this is enough:
-
-```cpp
-delete p;
-```
-
-The confusion comes from a reasonable generalisation. *Dereferencing* a null pointer
-is undefined behaviour, so people assume every operation on null is. `delete` is
-carved out as an exception, specifically so that cleanup code does not need null
-checks scattered through it.
+The confusion comes from a reasonable generalisation. Dereferencing a null pointer
+is undefined, so people assume every operation on null is. `delete` is carved out as
+an exception, specifically so cleanup code does not need null checks scattered
+through it.
 
 ```
 delete p
-   │
-   ├── p == nullptr ──▶ do nothing, return        ← defined, safe
-   │
-   ├── p from new ────▶ run destructor, free      ← defined, correct
-   │
-   ├── p already deleted ──▶ UNDEFINED            ← double free
-   │
-   └── p from malloc ──────▶ UNDEFINED            ← mismatched allocator
+   ├── p == nullptr ──────▶ do nothing              ← defined, safe
+   ├── p from new ────────▶ destructor, then free   ← defined, correct
+   ├── p already deleted ─▶ UNDEFINED               ← double free
+   └── p from malloc ─────▶ UNDEFINED               ← mismatched allocator
 ```
 
-Everyday comparison: handing an empty tray back to the kitchen. There is nothing on
-it, so nothing happens, and nobody has to check whether it was empty first.
+Deleting the same non-null pointer twice is a double free and is undefined. So is
+mixing allocators. `std::unique_ptr` avoids the question entirely: it deletes once,
+at the right time, and nulls itself when moved from.
 
-Two things that are *not* safe, and which the diagram shows:
-
-- Deleting the same non-null pointer twice. That is a double free, and it is
-  undefined.
-- Mixing allocators — `delete` on memory from `malloc`, or `free` on memory from
-  `new`.
-
-The usual advice is to avoid the question entirely by using `std::unique_ptr`, which
-deletes once, at the right time, and sets itself to null when moved from.
+</Answer>

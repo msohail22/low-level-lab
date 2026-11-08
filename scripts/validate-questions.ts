@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { frontmatterSchema } from "../lib/schema.ts";
 import { TOPIC_SLUGS } from "../lib/topics.ts";
-import { REQUIRED_BLOCK, REQUIRED_HEADINGS, type Kind } from "../lib/kinds.ts";
+import { REQUIRED_HEADINGS, requiredBlocks, type Kind } from "../lib/kinds.ts";
 
 const CONTENT_DIR = join(import.meta.dirname, "..", "content");
 
@@ -79,9 +79,28 @@ for (const topic of topicDirs) {
       fail(rel, `kind "${kind}" requires heading(s): ${missing.join(", ")}`);
     }
 
-    const block = REQUIRED_BLOCK[kind];
-    if (!text.includes(block)) {
-      fail(rel, `kind "${kind}" requires a ${block}> block in the body.`);
+    for (const block of requiredBlocks(kind)) {
+      if (!text.includes(block)) {
+        fail(rel, `kind "${kind}" requires a ${block}> block in the body.`);
+      }
+    }
+
+    // The "Show answer" button has to sit at the bottom of the page, so the
+    // <Answer> block must be the last thing in the file. A heading after it
+    // would render below the button.
+    const answerAt = text.indexOf("<Answer");
+    if (answerAt !== -1) {
+      const after = text.slice(answerAt + "<Answer".length);
+      const strayHeading = after.match(/^## .+$/m);
+      if (strayHeading) {
+        fail(
+          rel,
+          `"${strayHeading[0]}" comes after the <Answer> block. <Answer> must be last so the Show answer button stays at the bottom.`,
+        );
+      }
+      if (after.includes("<Choices")) {
+        fail(rel, "<Choices /> comes after the <Answer> block. Put the options before it.");
+      }
     }
   }
 }

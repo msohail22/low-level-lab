@@ -8,17 +8,13 @@ tags: [memory, alignment, structs]
 authors: [msohail22]
 choices:
   - text: "`7`"
-    why: "That is the sum of the members. It ignores alignment, which the compiler does not."
+  - text: "`8`"
   - text: "`12`"
     correct: true
-    why: "Correct. 1 byte, 3 padding, 4 bytes, 2 bytes, 2 padding."
-  - text: "`8`"
-    why: "Too small. A 4-byte `int` cannot start at offset 1, so padding pushes the total past 8."
   - text: "`16`"
-    why: "That would be right if the struct had to align to 8. Its largest member is 4 bytes, so it aligns to 4."
 ---
 
-## Question
+## Description
 
 On a typical x86-64 Linux build with default settings, what does `sizeof(Packet)`
 return?
@@ -33,14 +29,15 @@ struct Packet {
 
 <Choices />
 
-## Explanation
+<Answer>
+
+`12`.
 
 The members add up to 7 bytes, but a struct is almost never the sum of its parts.
-
-Every type has an *alignment*: an address it must start at. A 4-byte `int` must
-start at an address divisible by 4. The compiler inserts unnamed **padding** bytes
-to make that true, and then pads the end so the whole struct can sit in an array
-without breaking the rule for the next element.
+Every type has an alignment: an address it must start at. A 4-byte `int` must start
+at an address divisible by 4, so the compiler inserts padding bytes to make that
+true, then pads the end so the struct can sit in an array without breaking the rule
+for the next element.
 
 ```
 offset   0     1  2  3     4  5  6  7     8  9     10 11
@@ -48,19 +45,14 @@ offset   0     1  2  3     4  5  6  7     8  9     10 11
         |flag | padding   | length      | crc   | padding|
         +-----+-----------+-------------+-------+--------+
          1 B    3 B         4 B           2 B     2 B
-
-total = 12, and the struct aligns to 4 (its largest member)
 ```
 
 `flag` takes offset 0. `length` cannot start at offset 1, so three padding bytes
-push it to offset 4. `crc` lands at offset 8, which is already divisible by 2. That
-reaches 10 bytes — but 10 is not a multiple of 4, so two trailing bytes round the
-struct up to 12. Now `Packet arr[2]` puts the second `length` at offset 16, still
-divisible by 4.
+push it to offset 4. `crc` lands at offset 8. That reaches 10 bytes, but 10 is not a
+multiple of 4, so two trailing bytes round the struct up to 12. Now `Packet arr[2]`
+puts the second `length` at offset 16, still divisible by 4.
 
-Everyday comparison: a car park where buses may only use bays numbered in multiples
-of 4. A motorbike parks in bay 0, and the next bus has to skip to bay 4. The empty
-bays are wasted, but the rule keeps every bus parked legally.
+Reordering the members largest-first — `int`, `short`, `char` — gives 8 bytes
+instead of 12. This is why field order matters in hot data structures.
 
-Reordering the members largest-first — `int`, `short`, `char` — gives 8 bytes instead
-of 12. This is why struct field order matters in hot data structures.
+</Answer>

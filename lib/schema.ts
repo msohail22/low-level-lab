@@ -6,8 +6,6 @@ const choiceSchema = z.object({
   /** Shown to the reader. Inline markdown such as `code` is rendered. */
   text: z.string().min(1),
   correct: z.boolean().default(false),
-  /** Optional per-option feedback, shown after the reader checks. */
-  why: z.string().optional(),
 });
 
 export type Choice = z.infer<typeof choiceSchema>;

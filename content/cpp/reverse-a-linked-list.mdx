@@ -8,12 +8,12 @@ tags: [linked-list, pointers]
 authors: [msohail22]
 ---
 
-## Problem
+## Description
 
-You are given the head pointer of a singly linked list. Reverse the list in place
-and return the new head.
+Given the head of a singly linked list, reverse it in place and return the new head.
 
-A node looks like this:
+In place means you must not allocate new nodes. You may only change the `next`
+pointer of the nodes you already have. Use `O(n)` time and `O(1)` extra space.
 
 ```cpp
 struct Node {
@@ -22,18 +22,17 @@ struct Node {
 };
 ```
 
-"In place" means you must not allocate new nodes. You may only change the `next`
-pointer of the nodes you already have.
+## Input
 
-## Constraints
+Line 1 — an integer `n`, the number of nodes, where `0 <= n <= 10^6`.
 
-- `0 <= n <= 10^6` nodes.
-- Each value fits in a 32-bit signed integer.
-- Time: `O(n)`. Extra space: `O(1)`.
+Line 2 — `n` integers separated by spaces, the values in list order. Each value
+fits in a 32-bit signed integer. This line is empty when `n` is 0.
 
-## Example
+## Output
 
-The input format is one line with `n`, then one line with `n` values.
+One line with the `n` values in reversed order, separated by single spaces. Print an
+empty line when `n` is 0.
 
 ```text
 5
@@ -44,53 +43,7 @@ The input format is one line with `n`, then one line with `n` values.
 5 4 3 2 1
 ```
 
-## Test cases
-
-Empty list.
-
-```text
-0
-
-```
-
-```text
-
-```
-
-Single node. A reversed one-node list is itself.
-
-```text
-1
-42
-```
-
-```text
-42
-```
-
-Two nodes. This is the smallest case where a pointer mistake shows up.
-
-```text
-2
-7 9
-```
-
-```text
-9 7
-```
-
-Longer list.
-
-```text
-6
-1 1 2 3 5 8
-```
-
-```text
-8 5 3 2 1 1
-```
-
-<Solution language="cpp">
+<Answer>
 
 ```cpp
 Node* reverse(Node* head) {
@@ -108,35 +61,18 @@ Node* reverse(Node* head) {
 }
 ```
 
-</Solution>
-
-## Explanation
-
-You walk the list once and flip one arrow per step. Three pointers are enough.
-
-`prev` is the part of the list you have already reversed. `curr` is the node you are
-flipping now. `next` only exists because the moment you write `curr->next = prev`
-you have destroyed the only reference to the rest of the list — so you copy it out
-first.
+Walk the list once and flip one arrow per step. `prev` is the part already
+reversed, `curr` is the node being flipped, and `next` exists only because
+writing `curr->next = prev` destroys the only reference to the rest of the list.
 
 ```
-start        prev=null   curr=1 -> 2 -> 3 -> null
-
-step 1       null <- 1        curr=2 -> 3 -> null
-                    prev
-
-step 2       null <- 1 <- 2        curr=3 -> null
-                         prev
-
-step 3       null <- 1 <- 2 <- 3        curr=null
-                              prev
-
+start      prev=null   curr=1 -> 2 -> 3 -> null
+step 1     null <- 1        curr=2 -> 3 -> null
+step 2     null <- 1 <- 2        curr=3 -> null
+step 3     null <- 1 <- 2 <- 3        curr=null
 return prev = 3
 ```
 
-Everyday comparison: it is a line of people each pointing at the person in front.
-You walk down the line and ask each one to turn around and point behind instead. You
-have to remember who was in front before they turn, or you lose the rest of the line.
+Starting `prev` at `nullptr` is what turns the old head into the new tail.
 
-The `prev = nullptr` start is what makes the old head become the new tail: the first
-node's `next` is set to null, which is exactly what the end of a list looks like.
+</Answer>

@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Solution, Answer } from "./Solution";
+import { Answer } from "./Answer";
 import { Choices } from "./Choices";
 import type { Question } from "@/lib/questions";
 
@@ -19,7 +19,6 @@ export function QuestionBody({
   question: Question;
 }) {
   const components = {
-    Solution,
     Answer,
     Choices: () => (
       <Choices choices={question.choices ?? []} multiple={question.kind === "multi"} />

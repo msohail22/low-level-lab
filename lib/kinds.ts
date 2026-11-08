@@ -2,11 +2,8 @@
  * A question kind decides two things: what the reader does, and how the answer
  * is checked.
  *
- * There are two families.
- *
  * OPEN kinds have no machine-checkable answer. The reader works it out, then
- * reveals a written answer. The answer lives in the MDX body inside a
- * <Solution> or <Answer> block.
+ * presses "Show answer" at the bottom of the page.
  *
  * CHOICE kinds have options the browser can grade with no server. The options
  * live in frontmatter, not in the body, so the validator can prove that an
@@ -39,30 +36,35 @@ export const KIND_LABELS: Record<Kind, string> = {
 };
 
 export const KIND_BLURBS: Record<Kind, string> = {
-  coding: "Write and compile a program that passes the test cases.",
+  coding: "Write and compile a program that matches the described output.",
   "predict-output": "Read the program and say exactly what it prints.",
-  debug: "The program is wrong. Find the defect and explain the fix.",
+  debug: "The program is wrong. Find the defect.",
   mcq: "Pick the one correct option.",
-  multi: "Pick every correct option. Partial answers do not count.",
+  multi: "Pick every correct option.",
   "true-false": "Decide whether the claim holds.",
 };
 
-/** Headings every question of a kind must contain, checked by the validator. */
+/**
+ * Headings every question of a kind must contain.
+ *
+ * Deliberately short. A question is a clear description and nothing else. Only
+ * a coding question needs more, because the reader has to know what arrives on
+ * stdin and what is expected on stdout.
+ */
 export const REQUIRED_HEADINGS: Record<Kind, string[]> = {
-  coding: ["## Problem", "## Constraints", "## Example", "## Test cases", "## Explanation"],
-  "predict-output": ["## Program", "## Explanation"],
-  debug: ["## Program", "## Explanation"],
-  mcq: ["## Question", "## Explanation"],
-  multi: ["## Question", "## Explanation"],
-  "true-false": ["## Question", "## Explanation"],
+  coding: ["## Description", "## Input", "## Output"],
+  "predict-output": ["## Description"],
+  debug: ["## Description"],
+  mcq: ["## Description"],
+  multi: ["## Description"],
+  "true-false": ["## Description"],
 };
 
-/** The MDX component a kind must use, checked by the validator. */
-export const REQUIRED_BLOCK: Record<Kind, string> = {
-  coding: "<Solution",
-  "predict-output": "<Answer",
-  debug: "<Answer",
-  mcq: "<Choices",
-  multi: "<Choices",
-  "true-false": "<Choices",
-};
+/**
+ * Every kind ends with an <Answer> block, and choice kinds also carry a
+ * <Choices /> marker. The <Answer> block must be last in the file, so the
+ * "Show answer" button always sits at the bottom of the page.
+ */
+export function requiredBlocks(kind: Kind): string[] {
+  return isChoiceKind(kind) ? ["<Choices", "<Answer"] : ["<Answer"];
+}

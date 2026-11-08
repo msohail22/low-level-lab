@@ -35,48 +35,40 @@ export function Choices({
   multiple: boolean;
 }) {
   const [picked, setPicked] = useState<Set<number>>(new Set());
-  const [checked, setChecked] = useState(false);
+  const [result, setResult] = useState<"right" | "wrong" | null>(null);
 
   function toggle(i: number) {
-    if (checked) return;
+    setResult(null);
     setPicked((prev) => {
       if (!multiple) return new Set([i]);
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
       return next;
     });
   }
 
-  const correctIndexes = choices.flatMap((c, i) => (c.correct ? [i] : []));
-  const allRight =
-    picked.size === correctIndexes.length &&
-    correctIndexes.every((i) => picked.has(i));
+  function submit() {
+    const correct = choices.flatMap((c, i) => (c.correct ? [i] : []));
+    const right =
+      picked.size === correct.length && correct.every((i) => picked.has(i));
+    setResult(right ? "right" : "wrong");
+  }
 
   return (
     <section className="my-8">
-      <p className="mb-3 text-xs text-muted">
-        {multiple ? "Select every correct option." : "Select one option."}
-      </p>
-
       <ul className="space-y-2">
         {choices.map((choice, i) => {
           const isPicked = picked.has(i);
-          const reveal = checked;
-
-          let tone = "border-border";
-          if (reveal && choice.correct) tone = "border-easy";
-          else if (reveal && isPicked) tone = "border-hard";
-          else if (isPicked) tone = "border-accent";
 
           return (
             <li key={i}>
               <button
                 type="button"
                 onClick={() => toggle(i)}
-                disabled={checked}
                 aria-pressed={isPicked}
-                className={`flex w-full items-start gap-3 rounded-lg border bg-surface px-4 py-3 text-left text-sm ${tone} ${
-                  checked ? "cursor-default" : "cursor-pointer hover:border-accent"
+                className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border bg-surface px-4 py-3 text-left text-sm hover:border-accent ${
+                  isPicked ? "border-accent" : "border-border"
                 }`}
               >
                 <span
@@ -87,67 +79,36 @@ export function Choices({
                 >
                   {isPicked ? "✓" : ""}
                 </span>
-
                 <span className="flex-1">
                   <Inline text={choice.text} />
-
-                  {reveal && choice.why ? (
-                    <span className="mt-1.5 block text-xs text-muted">
-                      <Inline text={choice.why} />
-                    </span>
-                  ) : null}
                 </span>
-
-                {reveal ? (
-                  <span
-                    className={`shrink-0 text-xs font-semibold ${
-                      choice.correct ? "text-easy" : isPicked ? "text-hard" : "text-muted"
-                    }`}
-                  >
-                    {choice.correct ? "correct" : isPicked ? "wrong" : ""}
-                  </span>
-                ) : null}
               </button>
             </li>
           );
         })}
       </ul>
 
-      <div className="mt-4 flex items-center gap-3">
-        {checked ? (
-          <>
-            <span
-              className={`text-sm font-semibold ${allRight ? "text-easy" : "text-hard"}`}
-            >
-              {allRight ? "Correct" : "Not quite"}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setChecked(false);
-                setPicked(new Set());
-              }}
-              className="cursor-pointer rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:border-accent hover:text-accent"
-            >
-              Try again
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setChecked(true)}
-            disabled={picked.size === 0}
-            className="cursor-pointer rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Check answer
-          </button>
-        )}
-      </div>
+      <div className="mt-4 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={picked.size === 0}
+          className="cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Submit answer
+        </button>
 
-      <p className="mt-3 text-xs text-muted">
-        Grading happens in your browser. Nothing is sent anywhere. Read the
-        explanation below either way.
-      </p>
+        {result ? (
+          <span
+            role="status"
+            className={`text-sm font-semibold ${
+              result === "right" ? "text-easy" : "text-hard"
+            }`}
+          >
+            {result === "right" ? "Correct" : "Wrong"}
+          </span>
+        ) : null}
+      </div>
     </section>
   );
 }

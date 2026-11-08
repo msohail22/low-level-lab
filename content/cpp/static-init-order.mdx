@@ -8,9 +8,9 @@ tags: [static, initialisation, lifetime]
 authors: [msohail22]
 ---
 
-## Program
+## Description
 
-Read this and write down exactly what it prints, including the order of the lines.
+Write down exactly what this program prints, including the order of the lines.
 
 ```cpp
 #include <iostream>
@@ -26,7 +26,7 @@ struct Noisy {
 };
 
 Noisy& instance() {
-  static Noisy n;     // constructed on first call, never again
+  static Noisy n;
   return n;
 }
 
@@ -50,40 +50,28 @@ end of main
 dtor
 ```
 
-</Answer>
+Two rules are at work, both from the word `static` on a local variable.
 
-## Explanation
+A `static` local is initialised once, not once per call. It lives for the whole
+program, so `static int n = 0;` runs the `= 0` exactly once. `counter()` prints 1
+then 2.
 
-Two separate rules are at work, and both come from the word `static` on a local
-variable.
-
-**The variable is initialised once, not once per call.** A `static` local lives for
-the whole program, not for the call. So `static int n = 0;` runs the `= 0` exactly
-once, on the first call. `counter()` therefore prints 1 then 2, not 1 then 1.
-
-**Initialisation happens on first use, and destruction at exit.** `static Noisy n;`
-inside `instance()` is not constructed when the program starts. It is constructed the
-first time control reaches that line. The second `instance()` call skips it entirely
-— hence one `ctor`, not two. The destructor runs after `main` returns, which is why
-`dtor` comes *after* `end of main`.
+A `static` local is built on first use and destroyed at exit. `static Noisy n;` is
+not constructed when the program starts, but the first time control reaches that
+line. The second `instance()` call skips it, so there is one `ctor`, not two. The
+destructor runs after `main` returns, which is why `dtor` comes after `end of main`.
 
 ```
-time ────────────────────────────────────────────────────▶
-
-counter()   n=0 created, ++n → 1        prints 1
-counter()   n already exists, ++n → 2   prints 2
-instance()  n not yet built → ctor      prints ctor
-instance()  n already built → skipped   prints nothing
-main returns                            prints end of main
-static destructors run                  prints dtor
+counter()   n created, ++n → 1       prints 1
+counter()   n exists, ++n → 2        prints 2
+instance()  n not yet built → ctor   prints ctor
+instance()  n already built          prints nothing
+main returns                         prints end of main
+static destructors run               prints dtor
 ```
-
-Everyday comparison: a shop's "open" sign. It is put up the first morning someone
-opens the shop, not when the building was built, and it is taken down only when the
-business closes for good — after the last customer has left.
 
 This lazy-and-once behaviour is why `static` locals are the standard way to write a
-singleton in C++. It also fixes the static initialisation order problem: a global
-object's construction order across translation units is unspecified, but a `static`
-local is guaranteed to be built before the first use, because the first use is what
-builds it.
+singleton in C++, and why they dodge the static initialisation order problem: the
+first use is what builds the object.
+
+</Answer>
