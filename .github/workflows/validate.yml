@@ -5,19 +5,51 @@ on:
   push:
     branches: [master]
 
+# A new push to a PR cancels the previous run, so the queue never backs up.
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  questions:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
-      # Gates every contributed question on the frontmatter schema and the
-      # required headings. A malformed question cannot merge.
-      - run: pnpm validate
-      - run: pnpm exec tsc --noEmit
-      - run: pnpm build
+
+      # Every question's frontmatter, required headings, required blocks and
+      # tests file. This is the review: a question that breaks the contract
+      # cannot merge, so nobody has to read the diff to catch it.
+      - name: Validate questions
+        run: pnpm validate
+
+      # Parses every test case and rejects malformed JSON or duplicates.
+      - name: Validate and chunk test cases
+        run: pnpm build:tests
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Build
+        run: pnpm build
+
+      # A question file must not reach master without being reachable, so fail
+      # if someone commits the generated chunks instead of the source file.
+      - name: Check generated files are not committed
+        run: |
+          if git ls-files --error-unmatch public/tests >/dev/null 2>&1; then
+            echo "::error::public/tests is generated. Remove it from the commit."
+            exit 1
+          fi
+          if git ls-files --error-unmatch CLAUDE.md >/dev/null 2>&1; then
+            echo "::error::CLAUDE.md must stay untracked."
+            exit 1
+          fi

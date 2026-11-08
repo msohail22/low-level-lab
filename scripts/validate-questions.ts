@@ -9,12 +9,12 @@
  *
  * It reads files with node:fs, which is fine: it never ships to Workers.
  */
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { frontmatterSchema } from "../lib/schema.ts";
 import { TOPIC_SLUGS } from "../lib/topics.ts";
-import { REQUIRED_HEADINGS, requiredBlocks, type Kind } from "../lib/kinds.ts";
+import { needsTestFile, REQUIRED_HEADINGS, requiredBlocks, type Kind } from "../lib/kinds.ts";
 
 const CONTENT_DIR = join(import.meta.dirname, "..", "content");
 
@@ -83,6 +83,21 @@ for (const topic of topicDirs) {
       if (!text.includes(block)) {
         fail(rel, `kind "${kind}" requires a ${block}> block in the body.`);
       }
+    }
+
+    // A coding question is solved by running it, so the cases must exist. Any
+    // other kind must not carry a tests file, or it would never be served.
+    const testFile = join(CONTENT_DIR, topic, `${expected}.tests.jsonl`);
+    const hasTests = existsSync(testFile);
+
+    if (needsTestFile(kind) && !hasTests) {
+      fail(rel, `kind "${kind}" requires content/${topic}/${expected}.tests.jsonl`);
+    }
+    if (!needsTestFile(kind) && hasTests) {
+      fail(
+        rel,
+        `kind "${kind}" must not carry a tests file, but content/${topic}/${expected}.tests.jsonl exists.`,
+      );
     }
 
     // The "Show answer" button has to sit at the bottom of the page, so the

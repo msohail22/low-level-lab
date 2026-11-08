@@ -1,11 +1,17 @@
 ---
-title: Predict the output — static local initialisation
+title: Static local initialisation
 slug: static-init-order
 kind: predict-output
 difficulty: medium
 order: 30
 tags: [static, initialisation, lifetime]
 authors: [msohail22]
+expected: |
+  1
+  2
+  ctor
+  end of main
+  dtor
 ---
 
 ## Description
@@ -39,6 +45,8 @@ int main() {
   return 0;
 }
 ```
+
+<Response />
 
 <Answer>
 

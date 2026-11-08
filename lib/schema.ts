@@ -25,9 +25,31 @@ export const frontmatterSchema = z
     authors: z.array(z.string().min(1)).min(1),
     /** Required for choice kinds, forbidden otherwise. */
     choices: z.array(choiceSchema).optional(),
+    /**
+     * The exact text a predict-output question must print. Graded against what
+     * the reader types, after trimming trailing whitespace on each line.
+     */
+    expected: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     const choiceKind = isChoiceKind(data.kind);
+
+    // Only predict-output has a machine-checkable free-text answer. A debug
+    // question's answer is prose, so it cannot be graded.
+    if (data.kind === "predict-output" && data.expected === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["expected"],
+        message: "predict-output needs an `expected` block holding the exact output.",
+      });
+    }
+    if (data.kind !== "predict-output" && data.expected !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["expected"],
+        message: `kind "${data.kind}" must not define expected; only predict-output is graded on typed text.`,
+      });
+    }
 
     if (!choiceKind) {
       if (data.choices !== undefined) {

@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { allQuestions } from "@/lib/questions";
 
 export default function Home() {
-  const total = allQuestions().length;
-
   return (
     <div className="mx-auto max-w-2xl py-4 sm:py-8">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -24,7 +21,7 @@ export default function Home() {
           href="/topics"
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white"
         >
-          {total} question{total === 1 ? "" : "s"}
+          Browse topics
         </Link>
         <Link
           href="/contribute"

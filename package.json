@@ -32,12 +32,13 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "node scripts/validate-questions.ts && vite build",
+    "dev": "node scripts/build-tests.ts && vite dev",
+    "build": "node scripts/validate-questions.ts && node scripts/build-tests.ts && vite build",
     "start": "vite preview",
     "deploy": "vinext-cloudflare deploy",
     "preview": "pnpm run build && pnpm run start",
     "cf-typegen": "cf workers types",
-    "validate": "node scripts/validate-questions.ts"
+    "validate": "node scripts/validate-questions.ts",
+    "build:tests": "node scripts/build-tests.ts"
   }
 }

@@ -43,7 +43,7 @@ export const KIND_LABELS: Record<Kind, string> = {
  * stdin and what is expected on stdout.
  */
 export const REQUIRED_HEADINGS: Record<Kind, string[]> = {
-  coding: ["## Description", "## Input", "## Output"],
+  coding: ["## Description", "## Input", "## Output", "## Test cases"],
   "predict-output": ["## Description"],
   debug: ["## Description"],
   mcq: ["## Description"],
@@ -57,5 +57,14 @@ export const REQUIRED_HEADINGS: Record<Kind, string[]> = {
  * "Show answer" button always sits at the bottom of the page.
  */
 export function requiredBlocks(kind: Kind): string[] {
-  return isChoiceKind(kind) ? ["<Choices", "<Answer"] : ["<Answer"];
+  if (isChoiceKind(kind)) return ["<Choices", "<Answer"];
+  // A coding question is solved by running it, so it must ship cases to run.
+  if (kind === "coding") return ["<TestCases", "<Answer"];
+  // Every other kind is answered in prose, so it needs somewhere to type.
+  return ["<Response", "<Answer"];
+}
+
+/** Only a coding question carries a .tests.jsonl file. */
+export function needsTestFile(kind: Kind): boolean {
+  return kind === "coding";
 }
