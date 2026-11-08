@@ -6,10 +6,10 @@
    * which are the only place colour means something. Interactive elements read
    * as interactive through weight, border and underline.
    *
-   * --color-accent is therefore the text colour, not a hue, and
-   * --color-on-accent is what sits on top of it. They swap between schemes, so
-   * a filled button is dark-on-light in light mode and light-on-dark in dark
-   * mode. Never write text-white on an accent background.
+   * --color-accent is therefore the text colour, not a hue. A filled button is
+   * `bg-accent text-bg`: both tokens already invert with the scheme, so it is
+   * dark-on-light in light mode and light-on-dark in dark mode and cannot
+   * desync. Never write text-white on an accent background.
    */
   --color-bg: #fafaf9;
   --color-surface: #ffffff;
@@ -17,7 +17,6 @@
   --color-text: #1c1917;
   --color-muted: #78716c;
   --color-accent: #1c1917;
-  --color-on-accent: #fafaf9;
   --color-easy: #15803d;
   --color-medium: #b45309;
   --color-hard: #b91c1c;
@@ -32,11 +31,35 @@
     --color-text: #fafaf9;
     --color-muted: #a8a29e;
     --color-accent: #fafaf9;
-    --color-on-accent: #0c0a09;
     --color-easy: #4ade80;
     --color-medium: #fbbf24;
     --color-hard: #f87171;
   }
+}
+
+/*
+ * The same values again, for a theme the reader chose rather than one the
+ * operating system reported. The media query above still handles "system".
+ */
+:root[data-theme="dark"] {
+  /* Shiki's light-dark() reads color-scheme, so a forced theme must set it too
+     or the code blocks stay on whatever the operating system reports. */
+  color-scheme: dark;
+  --color-bg: #0c0a09;
+  --color-surface: #1c1917;
+  --color-border: #292524;
+  --color-text: #fafaf9;
+  --color-muted: #a8a29e;
+  --color-accent: #fafaf9;
+  --color-easy: #4ade80;
+  --color-medium: #fbbf24;
+  --color-hard: #f87171;
+}
+
+/* Light chosen explicitly: the @theme values are already light, so only the
+   scheme needs pinning. */
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 :root {

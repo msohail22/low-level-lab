@@ -74,7 +74,7 @@ export function Choices({
                 <span
                   className={`mt-0.5 grid size-4 shrink-0 place-items-center border text-[10px] ${
                     multiple ? "rounded-sm" : "rounded-full"
-                  } ${isPicked ? "border-accent bg-accent text-on-accent" : "border-border"}`}
+                  } ${isPicked ? "border-accent bg-accent text-bg" : "border-border"}`}
                   aria-hidden
                 >
                   {isPicked ? "✓" : ""}
@@ -93,7 +93,7 @@ export function Choices({
           type="button"
           onClick={submit}
           disabled={picked.size === 0}
-          className="cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-medium text-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           Submit answer
         </button>

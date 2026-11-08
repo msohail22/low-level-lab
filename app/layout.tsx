@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,21 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/*
+          Runs before the first paint and sets data-theme from storage. Without
+          it the page paints in the system theme and then flips, which is the
+          flash every theme switcher has to kill. It must be inline and
+          synchronous; a module would run too late.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
@@ -30,6 +45,7 @@ export default function RootLayout({
               <Link href="/contribute" className="hover:text-accent">
                 Contribute
               </Link>
+              <ThemeToggle />
             </nav>
           </div>
         </header>
