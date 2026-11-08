@@ -21,6 +21,17 @@ const CONTENT_DIR = join(import.meta.dirname, "..", "content");
 const problems: string[] = [];
 let checked = 0;
 
+/**
+ * Titles already seen, keyed by topic, for the duplicate check below.
+ *
+ * Two questions cannot share a slug inside one topic — the slug is the
+ * filename, so git stops that as an add/add conflict before CI ever runs. What
+ * git cannot see is the same question added twice under different slugs, which
+ * merges cleanly and leaves a duplicate. A matching title is the cheap signal
+ * for that.
+ */
+const titles = new Map<string, Map<string, string>>();
+
 function fail(file: string, message: string) {
   problems.push(`${file}\n  ${message}`);
 }
@@ -83,6 +94,23 @@ for (const topic of topicDirs) {
       if (!text.includes(block)) {
         fail(rel, `kind "${kind}" requires a ${block}> block in the body.`);
       }
+    }
+
+    // Normalised so "Two Sum" and "two  sum" collide.
+    const titleKey = parsed.data.title.toLowerCase().replace(/\s+/g, " ").trim();
+    let topicTitles = titles.get(topic);
+    if (topicTitles === undefined) {
+      topicTitles = new Map();
+      titles.set(topic, topicTitles);
+    }
+    const clash = topicTitles.get(titleKey);
+    if (clash !== undefined) {
+      fail(
+        rel,
+        `title "${parsed.data.title}" is already used by ${clash}. Two questions in one topic must not share a title.`,
+      );
+    } else {
+      topicTitles.set(titleKey, rel);
     }
 
     // A coding question is solved by running it, so the cases must exist. Any

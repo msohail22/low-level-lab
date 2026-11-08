@@ -15,6 +15,7 @@ so you can see what will fail before CI tells you.
 ### Adding a question
 
 - [ ] The file is `content/<topic>/<slug>.mdx` and the filename matches `slug`
+- [ ] No existing question in that topic already asks this, under any slug
 - [ ] `kind` is one of `coding`, `mcq`, `multi`, `true-false`
 - [ ] `## Description` is clear and concise, and the title does not repeat the kind
 - [ ] `coding` only: `## Input`, `## Output`, `## Test cases`, and a

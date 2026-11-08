@@ -2,6 +2,12 @@ name: validate
 
 on:
   pull_request:
+  # Fires when a PR enters a merge queue, if one is enabled. The queue builds
+  # master + the PRs ahead + this one and runs the checks on that combination,
+  # which is the only way two independently-green PRs get tested together.
+  # Enabling the queue itself is a repository setting; this trigger is the half
+  # that lives in a file.
+  merge_group:
   push:
     branches: [master]
 
@@ -15,6 +21,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Needed for the up-to-date check below, which walks history.
+          fetch-depth: 0
+
+      # On a pull_request event GitHub checks out the merge of this branch with
+      # the base, so every check below already sees master as it was when the
+      # run started. What it cannot see is another PR merging afterwards: this
+      # run stays green and its result is still honoured at merge time.
+      #
+      # Failing when the branch is behind closes that window. The author
+      # rebases, CI re-runs against the combination, and a duplicate title
+      # introduced by the other PR is caught.
+      - name: Branch must be up to date with the base
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          if ! git merge-base --is-ancestor \
+                "origin/${{ github.base_ref }}" \
+                "${{ github.event.pull_request.head.sha }}"; then
+            echo "::error::${{ github.base_ref }} has moved since this branch was last updated. Rebase or merge it in so the checks run against the combined result."
+            exit 1
+          fi
 
       - uses: pnpm/action-setup@v4
 
