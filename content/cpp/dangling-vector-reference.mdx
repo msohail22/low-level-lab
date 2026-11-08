@@ -1,17 +1,23 @@
 ---
 title: The reference that stops being valid
 slug: dangling-vector-reference
-kind: debug
+kind: mcq
 difficulty: medium
 order: 40
 tags: [vector, references, iterator-invalidation]
 authors: [msohail22]
+choices:
+  - text: "`push_back` may reallocate the buffer, so `first` ends up referring to freed memory"
+    correct: true
+  - text: "Nothing is wrong. `first` refers to element 0, which never moves."
+  - text: "`values[0]` is out of bounds until the vector has been resized"
+  - text: "`first` must be `const int&`, because `values` is modified afterwards"
 ---
 
 ## Description
 
-This compiles with no warnings and often prints the right answer. It is still
-broken. Find the defect and give the fix.
+This compiles with no warnings and often prints `1`. It is still broken. What is the
+defect?
 
 ```cpp
 #include <iostream>
@@ -31,27 +37,13 @@ int main() {
 }
 ```
 
-<Response />
+<Choices />
 
 <Answer>
 
 `first` is a reference into the vector's heap buffer. `push_back` may reallocate
 that buffer, which frees the old one. After the first reallocation `first` refers to
 freed memory, so reading it is a use-after-free.
-
-The fix is to not hold the reference across the mutation. Either take a copy:
-
-```cpp
-int first = values[0];
-```
-
-or re-acquire the reference after the loop:
-
-```cpp
-for (int i = 0; i < 100; ++i) values.push_back(i);
-int& first = values[0];
-std::cout << first << "\n";
-```
 
 A `std::vector` is a pointer to a heap buffer, plus a size and a capacity. When
 `push_back` finds size equal to capacity it allocates a larger buffer, moves every
@@ -70,13 +62,22 @@ after      buffer B: [ 1 ][ 2 ][ 3 ][ 0 ]   size 4, cap 6
                      ^ first ... dangling
 ```
 
+The fix is to not hold the reference across the mutation. Either take a copy:
+
+```cpp
+int first = values[0];
+```
+
+or re-acquire the reference after the loop:
+
+```cpp
+for (int i = 0; i < 100; ++i) values.push_back(i);
+int& first = values[0];
+```
+
 What makes this dangerous is that it usually appears to work: the freed memory is
 often still readable and still holds the old value, so testing prints `1`. It breaks
 later, under a different allocator or optimisation level. Build with
-`-fsanitize=address` and it fails immediately — that is the tool for this whole
-class of defect.
-
-Note that `reserve(103)` before the loop also stops the crash, because no
-reallocation happens. That fixes this program, not the habit.
+`-fsanitize=address` and it fails immediately.
 
 </Answer>

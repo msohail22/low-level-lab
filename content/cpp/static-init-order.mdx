@@ -1,28 +1,28 @@
 ---
 title: Static local initialisation
 slug: static-init-order
-kind: predict-output
+kind: mcq
 difficulty: medium
 order: 30
 tags: [static, initialisation, lifetime]
 authors: [msohail22]
-expected: |
-  1
-  2
-  ctor
-  end of main
-  dtor
+choices:
+  - text: "`1`, `2`, `ctor`, `end of main`, `dtor`"
+    correct: true
+  - text: "`1`, `2`, `ctor`, `ctor`, `end of main`, `dtor`, `dtor`"
+  - text: "`1`, `1`, `ctor`, `end of main`, `dtor`"
+  - text: "`1`, `2`, `ctor`, `dtor`, `end of main`"
 ---
 
 ## Description
 
-Write down exactly what this program prints, including the order of the lines.
+What does this program print, in order?
 
 ```cpp
 #include <iostream>
 
 int counter() {
-  static int n = 0;   // note: static
+  static int n = 0;
   return ++n;
 }
 
@@ -46,7 +46,7 @@ int main() {
 }
 ```
 
-<Response />
+<Choices />
 
 <Answer>
 
@@ -62,12 +62,13 @@ Two rules are at work, both from the word `static` on a local variable.
 
 A `static` local is initialised once, not once per call. It lives for the whole
 program, so `static int n = 0;` runs the `= 0` exactly once. `counter()` prints 1
-then 2.
+then 2 — not 1 then 1.
 
 A `static` local is built on first use and destroyed at exit. `static Noisy n;` is
 not constructed when the program starts, but the first time control reaches that
 line. The second `instance()` call skips it, so there is one `ctor`, not two. The
-destructor runs after `main` returns, which is why `dtor` comes after `end of main`.
+destructor runs after `main` returns, which is why `dtor` comes after
+`end of main`.
 
 ```
 counter()   n created, ++n → 1       prints 1

@@ -15,10 +15,10 @@ so you can see what will fail before CI tells you.
 ### Adding a question
 
 - [ ] The file is `content/<topic>/<slug>.mdx` and the filename matches `slug`
-- [ ] `kind` is one of `coding`, `predict-output`, `debug`, `mcq`, `multi`, `true-false`
+- [ ] `kind` is one of `coding`, `mcq`, `multi`, `true-false`
 - [ ] `## Description` is clear and concise, and the title does not repeat the kind
 - [ ] `coding` only: `## Input`, `## Output`, `## Test cases`, and a
       `<slug>.tests.jsonl` beside the question
-- [ ] `predict-output` only: an `expected` block with the exact output
+- [ ] Every other kind: `choices` in frontmatter and a bare `<Choices />` in the body
 - [ ] `<Answer>` is the last thing in the file
 - [ ] No generated files committed — `public/tests/` is built by CI

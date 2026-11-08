@@ -2,21 +2,12 @@
  * A question kind decides two things: what the reader does, and how the answer
  * is checked.
  *
- * OPEN kinds have no machine-checkable answer. The reader works it out, then
- * presses "Show answer" at the bottom of the page.
- *
- * CHOICE kinds have options the browser can grade with no server. The options
- * live in frontmatter, not in the body, so the validator can prove that an
- * mcq has exactly one correct answer before the question is allowed to merge.
+ * Only two shapes exist. A coding question is compiled locally against test
+ * cases. Every other kind is graded in the browser from options that live in
+ * frontmatter. There is no free-text kind: an answer nobody can check is not
+ * worth asking the reader to type.
  */
-export const KINDS = [
-  "coding",
-  "predict-output",
-  "debug",
-  "mcq",
-  "multi",
-  "true-false",
-] as const;
+export const KINDS = ["coding", "mcq", "multi", "true-false"] as const;
 
 export type Kind = (typeof KINDS)[number];
 
@@ -28,8 +19,6 @@ export function isChoiceKind(kind: string): boolean {
 
 export const KIND_LABELS: Record<Kind, string> = {
   coding: "Coding",
-  "predict-output": "Predict the output",
-  debug: "Find the bug",
   mcq: "Multiple choice",
   multi: "Multi-select",
   "true-false": "True or false",
@@ -44,24 +33,19 @@ export const KIND_LABELS: Record<Kind, string> = {
  */
 export const REQUIRED_HEADINGS: Record<Kind, string[]> = {
   coding: ["## Description", "## Input", "## Output", "## Test cases"],
-  "predict-output": ["## Description"],
-  debug: ["## Description"],
   mcq: ["## Description"],
   multi: ["## Description"],
   "true-false": ["## Description"],
 };
 
 /**
- * Every kind ends with an <Answer> block, and choice kinds also carry a
- * <Choices /> marker. The <Answer> block must be last in the file, so the
- * "Show answer" button always sits at the bottom of the page.
+ * Every kind ends with an <Answer> block, which must be last in the file so the
+ * "Show answer" button stays at the bottom of the page.
  */
 export function requiredBlocks(kind: Kind): string[] {
   if (isChoiceKind(kind)) return ["<Choices", "<Answer"];
   // A coding question is solved by running it, so it must ship cases to run.
-  if (kind === "coding") return ["<TestCases", "<Answer"];
-  // Every other kind is answered in prose, so it needs somewhere to type.
-  return ["<Response", "<Answer"];
+  return ["<TestCases", "<Answer"];
 }
 
 /** Only a coding question carries a .tests.jsonl file. */
