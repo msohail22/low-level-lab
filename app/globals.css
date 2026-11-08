@@ -1,12 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #f8fafc;
+  /*
+   * Warm neutral. Nothing carries a hue except the three difficulty colours,
+   * which are the only place colour means something. Interactive elements read
+   * as interactive through weight, border and underline.
+   *
+   * --color-accent is therefore the text colour, not a hue, and
+   * --color-on-accent is what sits on top of it. They swap between schemes, so
+   * a filled button is dark-on-light in light mode and light-on-dark in dark
+   * mode. Never write text-white on an accent background.
+   */
+  --color-bg: #fafaf9;
   --color-surface: #ffffff;
-  --color-border: #e2e8f0;
-  --color-text: #111827;
-  --color-muted: #64748b;
-  --color-accent: #2563eb;
+  --color-border: #e7e5e4;
+  --color-text: #1c1917;
+  --color-muted: #78716c;
+  --color-accent: #1c1917;
+  --color-on-accent: #fafaf9;
   --color-easy: #15803d;
   --color-medium: #b45309;
   --color-hard: #b91c1c;
@@ -15,12 +26,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #0b0f17;
-    --color-surface: #121824;
-    --color-border: #243044;
-    --color-text: #e6edf6;
-    --color-muted: #90a1bb;
-    --color-accent: #60a5fa;
+    --color-bg: #0c0a09;
+    --color-surface: #1c1917;
+    --color-border: #292524;
+    --color-text: #fafaf9;
+    --color-muted: #a8a29e;
+    --color-accent: #fafaf9;
+    --color-on-accent: #0c0a09;
     --color-easy: #4ade80;
     --color-medium: #fbbf24;
     --color-hard: #f87171;
