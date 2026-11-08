@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getTopic } from "@/lib/topics";
 import { allQuestions, findQuestion, loadQuestionBody } from "@/lib/questions";
 import { QuestionBody } from "@/components/QuestionBody";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
 import { KindBadge } from "@/components/KindBadge";
+import { PREFS_COOKIE, decodePrefs } from "@/lib/settings";
 
 const REPO = "https://github.com/msohail22/low-level-lab";
 
@@ -25,6 +27,9 @@ export default async function QuestionPage({
 
   const Body = await loadQuestionBody(topicSlug, slug);
   if (!Body) notFound();
+
+  // From the cookie, not the database: see the note in app/layout.tsx.
+  const prefs = decodePrefs((await cookies()).get(PREFS_COOKIE)?.value);
 
   return (
     <article className="mx-auto max-w-3xl">
@@ -53,7 +58,11 @@ export default async function QuestionPage({
       </header>
 
       <div className="mt-6">
-        <QuestionBody Body={Body} question={question} />
+        <QuestionBody
+          Body={Body}
+          question={question}
+          revealAnswers={prefs.revealAnswers === "on"}
+        />
       </div>
     </article>
   );

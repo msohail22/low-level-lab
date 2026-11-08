@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { AuthNav } from "@/components/AuthNav";
+import { PREFS_COOKIE, decodePrefs } from "@/lib/settings";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,11 +15,28 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+/**
+ * The reader's settings are applied here, as attributes on <html>, so the CSS
+ * in globals.css can key off them. They come from the preferences cookie and
+ * not from D1: this renders on every page, and no page should pay a database
+ * read to pick a colour. /settings/save and /settings/sync keep that cookie
+ * in step with the rows, which stay the source of truth.
+ *
+ * Rendered on the server, so the correct theme is in the first byte of HTML.
+ * There is no inline script and so no flash — which is what broke the toggle
+ * this replaces.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const prefs = decodePrefs((await cookies()).get(PREFS_COOKIE)?.value);
+
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      data-theme={prefs.theme}
+      data-code-size={prefs.codeSize}
+    >
       <body>
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">

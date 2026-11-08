@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { Answer } from "./Answer";
 import { Choices } from "./Choices";
 import { TestCases } from "./TestCases";
@@ -15,12 +15,16 @@ import type { Question } from "@/lib/questions";
 export function QuestionBody({
   Body,
   question,
+  revealAnswers = false,
 }: {
   Body: ComponentType<any>;
   question: Question;
+  revealAnswers?: boolean;
 }) {
   const components = {
-    Answer,
+    Answer: (props: { children: ReactNode }) => (
+      <Answer defaultOpen={revealAnswers}>{props.children}</Answer>
+    ),
     Choices: () => (
       <Choices choices={question.choices ?? []} multiple={question.kind === "multi"} />
     ),

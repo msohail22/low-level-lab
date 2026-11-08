@@ -5,5 +5,5 @@ import { syncWorkosEnv } from "@/lib/workos-env";
 // so it bridges the environment itself.
 export async function GET(request: Request) {
   syncWorkosEnv();
-  return handleAuth({ returnPathname: "/me" })(request as never);
+  return handleAuth({ returnPathname: "/me/sync" })(request as never);
 }

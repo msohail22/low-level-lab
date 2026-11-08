@@ -5,9 +5,18 @@ import { useState, type ReactNode } from "react";
 /**
  * The answer reveal. Authors put it last in the MDX file and the validator
  * enforces that, so the button always sits at the bottom of the page.
+ *
+ * `defaultOpen` carries the reader's "Answers" setting. It is only the initial
+ * state: Hide still works on a page that opened expanded.
  */
-export function Answer({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+export function Answer({
+  children,
+  defaultOpen = false,
+}: {
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
 
   if (!open) {
     return (
