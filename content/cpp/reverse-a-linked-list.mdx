@@ -1,0 +1,141 @@
+---
+title: Reverse a singly linked list
+slug: reverse-a-linked-list
+difficulty: easy
+order: 10
+tags: [linked-list, pointers]
+authors: [msohail22]
+---
+
+## Problem
+
+You are given the head pointer of a singly linked list. Reverse the list in place
+and return the new head.
+
+A node looks like this:
+
+```cpp
+struct Node {
+  int value;
+  Node* next;
+};
+```
+
+"In place" means you must not allocate new nodes. You may only change the `next`
+pointer of the nodes you already have.
+
+## Constraints
+
+- `0 <= n <= 10^6` nodes.
+- Each value fits in a 32-bit signed integer.
+- Time: `O(n)`. Extra space: `O(1)`.
+
+## Example
+
+The input format is one line with `n`, then one line with `n` values.
+
+```text
+5
+1 2 3 4 5
+```
+
+```text
+5 4 3 2 1
+```
+
+## Test cases
+
+Empty list.
+
+```text
+0
+
+```
+
+```text
+
+```
+
+Single node. A reversed one-node list is itself.
+
+```text
+1
+42
+```
+
+```text
+42
+```
+
+Two nodes. This is the smallest case where a pointer mistake shows up.
+
+```text
+2
+7 9
+```
+
+```text
+9 7
+```
+
+Longer list.
+
+```text
+6
+1 1 2 3 5 8
+```
+
+```text
+8 5 3 2 1 1
+```
+
+<Solution language="cpp">
+
+```cpp
+Node* reverse(Node* head) {
+  Node* prev = nullptr;
+  Node* curr = head;
+
+  while (curr != nullptr) {
+    Node* next = curr->next;  // save it before we destroy the link
+    curr->next = prev;        // point backwards
+    prev = curr;              // walk both pointers forward
+    curr = next;
+  }
+
+  return prev;  // curr is null here, so prev is the last node we saw
+}
+```
+
+</Solution>
+
+## Explanation
+
+You walk the list once and flip one arrow per step. Three pointers are enough.
+
+`prev` is the part of the list you have already reversed. `curr` is the node you are
+flipping now. `next` only exists because the moment you write `curr->next = prev`
+you have destroyed the only reference to the rest of the list — so you copy it out
+first.
+
+```
+start        prev=null   curr=1 -> 2 -> 3 -> null
+
+step 1       null <- 1        curr=2 -> 3 -> null
+                    prev
+
+step 2       null <- 1 <- 2        curr=3 -> null
+                         prev
+
+step 3       null <- 1 <- 2 <- 3        curr=null
+                              prev
+
+return prev = 3
+```
+
+Everyday comparison: it is a line of people each pointing at the person in front.
+You walk down the line and ask each one to turn around and point behind instead. You
+have to remember who was in front before they turn, or you lose the rest of the line.
+
+The `prev = nullptr` start is what makes the old head become the new tail: the first
+node's `next` is set to null, which is exactly what the end of a list looks like.

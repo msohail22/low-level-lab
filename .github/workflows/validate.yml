@@ -1,0 +1,23 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  questions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Gates every contributed question on the frontmatter schema and the
+      # required headings. A malformed question cannot merge.
+      - run: pnpm validate
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build

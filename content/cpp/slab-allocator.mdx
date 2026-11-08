@@ -1,0 +1,152 @@
+---
+title: Implement a fixed-size slab allocator
+slug: slab-allocator
+difficulty: medium
+order: 10
+tags: [memory, allocator]
+authors: [msohail22]
+---
+
+## Problem
+
+Write an allocator that hands out fixed-size blocks from one big buffer you own.
+It must support two operations and neither may call `malloc` or `new` after
+construction.
+
+```cpp
+class SlabAllocator {
+ public:
+  SlabAllocator(void* buffer, std::size_t bytes, std::size_t block_size);
+  void* allocate();        // nullptr when the slab is full
+  void deallocate(void* p);
+};
+```
+
+## Constraints
+
+- `block_size >= sizeof(void*)`.
+- Both operations must be `O(1)`.
+- No extra heap allocation. All bookkeeping lives inside the buffer itself.
+
+## Example
+
+```text
+alloc
+alloc
+free 0
+alloc
+```
+
+```text
+block 0
+block 1
+ok
+block 0
+```
+
+## Test cases
+
+Fill the slab, then confirm the next allocate fails.
+
+```text
+capacity 2
+alloc
+alloc
+alloc
+```
+
+```text
+block 0
+block 1
+null
+```
+
+Free then reuse. The freed block comes back.
+
+```text
+capacity 1
+alloc
+free 0
+alloc
+```
+
+```text
+block 0
+ok
+block 0
+```
+
+<Solution language="cpp">
+
+```cpp
+class SlabAllocator {
+ public:
+  SlabAllocator(void* buffer, std::size_t bytes, std::size_t block_size)
+      : block_size_(block_size) {
+    auto* base = static_cast<std::byte*>(buffer);
+    std::size_t count = bytes / block_size;
+
+    // Thread a singly linked list through the free blocks themselves.
+    free_list_ = nullptr;
+    for (std::size_t i = count; i-- > 0;) {
+      auto* block = base + i * block_size;
+      *reinterpret_cast<void**>(block) = free_list_;
+      free_list_ = block;
+    }
+  }
+
+  void* allocate() {
+    if (free_list_ == nullptr) return nullptr;
+    void* block = free_list_;
+    free_list_ = *reinterpret_cast<void**>(block);  // pop
+    return block;
+  }
+
+  void deallocate(void* p) {
+    if (p == nullptr) return;
+    *reinterpret_cast<void**>(p) = free_list_;      // push
+    free_list_ = p;
+  }
+
+ private:
+  void* free_list_;
+  std::size_t block_size_;
+};
+```
+
+</Solution>
+
+## Explanation
+
+The trick is that a free block is not storing anything useful, so you are allowed to
+scribble in it. You store the address of the next free block in the first bytes of
+each free block. That gives you a linked list of free space that costs zero extra
+memory. This is why `block_size >= sizeof(void*)` is a constraint — the pointer has
+to fit.
+
+Allocating is popping the head of that list. Freeing is pushing onto it. Both are a
+couple of pointer writes, which is where the `O(1)` comes from.
+
+```
+buffer (3 blocks of 16 bytes)
+
+ +----------------+----------------+----------------+
+ | next -> B1     | next -> B2     | next -> null   |
+ +----------------+----------------+----------------+
+   B0               B1               B2
+   ^
+ free_list_
+
+allocate()  ->  returns B0, free_list_ = B1
+allocate()  ->  returns B1, free_list_ = B2
+deallocate(B0) -> B0.next = B2 ... wait, free_list_ was B2
+                  so B0.next = B2, free_list_ = B0
+```
+
+Everyday comparison: a cloakroom with 200 identical hooks. Instead of a register of
+which hooks are taken, each empty hook holds a tag naming the next empty hook. The
+attendant only remembers the first one. Handing out a hook is reading one tag.
+
+Note the allocator never learns which blocks are *in use*. It only tracks free ones.
+That is also why a double `deallocate` of the same pointer corrupts the list — the
+block ends up pointing at itself and `allocate` returns it forever.
