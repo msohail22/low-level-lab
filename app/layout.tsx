@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthNav } from "@/components/AuthNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
               <Link href="/contribute" className="hover:text-accent">
                 Contribute
               </Link>
+              <AuthNav />
             </nav>
           </div>
         </header>

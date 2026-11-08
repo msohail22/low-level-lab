@@ -14,6 +14,13 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       IMAGES: bindings.images(),
+      // WorkOS. The client id is not sensitive; the other two are.
+      // In dev these come from .dev.vars; in production from Worker secrets.
+      WORKOS_CLIENT_ID: bindings.secret(),
+      WORKOS_API_KEY: bindings.secret(),
+      WORKOS_COOKIE_PASSWORD: bindings.secret(),
+      // Progress and settings. Identity lives in WorkOS, not here.
+      DB: bindings.d1({ name: "low-level-lab" }),
     },
   }),
 });
