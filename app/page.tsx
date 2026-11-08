@@ -1,6 +1,17 @@
 import Link from "next/link";
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import { syncWorkosEnv } from "@/lib/workos-env";
 
-export default function Home() {
+export default async function Home() {
+  syncWorkosEnv();
+
+  let user = null;
+  try {
+    ({ user } = await withAuth());
+  } catch {
+    user = null;
+  }
+
   return (
     <div className="mx-auto max-w-2xl py-4 sm:py-8">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -23,13 +34,23 @@ export default function Home() {
         >
           Browse topics
         </Link>
-        <Link
-          href="/contribute"
-          className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent"
-        >
-          Add a question
-        </Link>
+
+        {user ? (
+          <Link
+            href="/me"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent"
+          >
+            Your progress
+          </Link>
+        ) : null}
       </div>
+
+      {!user ? (
+        <p className="mt-4 text-sm text-muted">
+          Reading everything is free and needs no account. Sign in only to save
+          which questions you have solved.
+        </p>
+      ) : null}
     </div>
   );
 }
