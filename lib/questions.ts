@@ -84,14 +84,6 @@ export function questionsByTopic(topic: string): Question[] {
   return QUESTIONS.filter((q) => q.topic === topic);
 }
 
-export function countsByDifficulty(topic: string) {
-  const counts: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0 };
-  for (const q of questionsByTopic(topic)) {
-    counts[q.difficulty as Difficulty] += 1;
-  }
-  return counts;
-}
-
 export function findQuestion(topic: string, slug: string): Question | undefined {
   return QUESTIONS.find((q) => q.topic === topic && q.slug === slug);
 }

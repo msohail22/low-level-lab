@@ -207,6 +207,7 @@ function Chip({
   children,
 }: {
   active: boolean;
+  /** Drives the disabled state only. Never rendered. */
   count: number;
   tone?: string;
   onClick: () => void;
@@ -228,7 +229,7 @@ function Chip({
             : `cursor-pointer border-border hover:border-accent ${tone ? TONES[tone] : ""}`
       }`}
     >
-      {children} <span className="opacity-60">{count}</span>
+      {children}
     </button>
   );
 }
