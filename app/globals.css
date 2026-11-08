@@ -87,8 +87,16 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-a {
-  color: inherit;
+/*
+ * In @layer base, not unlayered. An unlayered rule beats every layered one
+ * whatever its specificity, so a bare `a { color: inherit }` would override
+ * Tailwind's own text-* utilities, which live in @layer utilities. That is
+ * what made `bg-accent text-bg` render a white button with white text.
+ */
+@layer base {
+  a {
+    color: inherit;
+  }
 }
 
 /* --- question prose ------------------------------------------------------ */
