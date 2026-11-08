@@ -1,0 +1,74 @@
+---
+title: Which of these are undefined behaviour?
+slug: undefined-behaviour-multi
+kind: multi
+difficulty: medium
+order: 20
+tags: [undefined-behaviour, pointers]
+authors: [msohail22]
+choices:
+  - text: "Reading `v[10]` from a `std::vector<int>` that holds 5 elements"
+    correct: true
+    why: "Out-of-bounds access through `operator[]` is undefined. `v.at(10)` instead throws, which is defined."
+  - text: "Signed integer overflow, such as `INT_MAX + 1`"
+    correct: true
+    why: "Undefined for signed types. Unsigned overflow is defined and wraps."
+  - text: "Dereferencing a pointer after `delete`"
+    correct: true
+    why: "Use-after-free is undefined. The memory may still hold the old value, which is what makes it so hard to catch."
+  - text: "Unsigned integer overflow, such as `UINT_MAX + 1u`"
+    why: "Defined. Unsigned arithmetic wraps modulo 2^N, which the standard guarantees."
+  - text: "Comparing two pointers into the same array with `<`"
+    why: "Defined. Relational comparison of pointers into one array is allowed. Comparing pointers to unrelated objects is where it stops being meaningful."
+---
+
+## Question
+
+C++ has a category of program behaviour the standard refuses to define. If your
+program does any of it, the compiler owes you nothing — not a crash, not a value,
+not consistency between builds.
+
+Select every option below that is **undefined behaviour**.
+
+<Choices />
+
+## Explanation
+
+Undefined behaviour is not "it does something unpredictable at runtime". It is a
+promise *you* make to the compiler. The compiler optimises on the assumption you
+kept it.
+
+That is the part people get wrong. Consider this:
+
+```cpp
+int f(int x) {
+  return x + 1 > x;   // signed overflow is UB
+}
+```
+
+The compiler reasons: signed overflow cannot happen, because the programmer promised
+it would not. Therefore `x + 1 > x` is always true. Therefore `return true;`. On
+`INT_MAX` the function returns true even though the arithmetic wrapped. No crash, no
+warning, just a different answer than the source suggests.
+
+```
+what you wrote           what the compiler is allowed to emit
+──────────────           ────────────────────────────────────
+x + 1 > x                "overflow can't happen"
+                             │
+                             ▼
+                         always true
+                             │
+                             ▼
+                         return 1;      ← the addition is gone
+```
+
+Everyday comparison: you tell a builder "the ground here is solid rock, no need to
+survey". They build on that promise. If it turns out to be sand, the problem is not
+that the house wobbles — it is that every decision downstream assumed rock.
+
+The two defined cases are worth memorising because they look like the undefined
+ones. Unsigned overflow wraps, guaranteed. Pointer comparison inside one array is
+fine. The asymmetry between signed and unsigned overflow exists for exactly the
+optimisation reason above: making signed overflow undefined lets the compiler treat
+`int` as real mathematical integers.

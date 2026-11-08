@@ -4,11 +4,6 @@ export const TOPICS = [
     name: "C++",
     tagline: "Pointers, memory, and the machine underneath.",
   },
-  {
-    slug: "rust",
-    name: "Rust",
-    tagline: "Ownership, borrows, and zero-cost abstractions.",
-  },
 ] as const;
 
 export type TopicSlug = (typeof TOPICS)[number]["slug"];

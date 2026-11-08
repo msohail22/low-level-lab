@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTopic, TOPIC_SLUGS } from "@/lib/topics";
 import { countsByDifficulty, questionsByTopic } from "@/lib/questions";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
+import { KindBadge } from "@/components/KindBadge";
 
 export function generateStaticParams() {
   return TOPIC_SLUGS.map((topic) => ({ topic }));
@@ -49,6 +50,7 @@ export default async function TopicPage({
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
               <th className="w-12 px-4 py-2.5 font-medium">#</th>
               <th className="px-4 py-2.5 font-medium">Name</th>
+              <th className="hidden px-4 py-2.5 font-medium md:table-cell">Type</th>
               <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Tags</th>
               <th className="w-24 px-4 py-2.5 font-medium">Difficulty</th>
               <th className="w-20 px-4 py-2.5 text-center font-medium">Solved</th>
@@ -68,6 +70,9 @@ export default async function TopicPage({
                   >
                     {q.title}
                   </Link>
+                </td>
+                <td className="hidden px-4 py-3 md:table-cell">
+                  <KindBadge kind={q.kind} />
                 </td>
                 <td className="hidden px-4 py-3 text-xs text-muted sm:table-cell">
                   {q.tags.join(", ")}

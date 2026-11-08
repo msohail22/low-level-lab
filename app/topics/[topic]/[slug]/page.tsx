@@ -4,6 +4,8 @@ import { getTopic } from "@/lib/topics";
 import { allQuestions, findQuestion, loadQuestionBody } from "@/lib/questions";
 import { QuestionBody } from "@/components/QuestionBody";
 import { DifficultyBadge } from "@/components/DifficultyBadge";
+import { KindBadge } from "@/components/KindBadge";
+import { KIND_BLURBS, type Kind } from "@/lib/kinds";
 
 const REPO = "https://github.com/msohail22/low-level-lab";
 
@@ -41,6 +43,7 @@ export default async function QuestionPage({
         <h1 className="text-2xl font-semibold tracking-tight">{question.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
           <DifficultyBadge difficulty={question.difficulty} />
+          <KindBadge kind={question.kind} />
           {question.tags.length > 0 ? <span>{question.tags.join(" · ")}</span> : null}
           <span>by {question.authors.join(", ")}</span>
           <a
@@ -52,10 +55,13 @@ export default async function QuestionPage({
             Edit on GitHub ↗
           </a>
         </div>
+        <p className="mt-3 text-sm text-muted">
+          {KIND_BLURBS[question.kind as Kind]}
+        </p>
       </header>
 
       <div className="mt-8">
-        <QuestionBody Body={Body} />
+        <QuestionBody Body={Body} question={question} />
       </div>
 
       <footer className="mt-12 border-t border-border pt-5 text-sm text-muted">

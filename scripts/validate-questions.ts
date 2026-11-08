@@ -14,9 +14,9 @@ import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { frontmatterSchema } from "../lib/schema.ts";
 import { TOPIC_SLUGS } from "../lib/topics.ts";
+import { REQUIRED_BLOCK, REQUIRED_HEADINGS, type Kind } from "../lib/kinds.ts";
 
 const CONTENT_DIR = join(import.meta.dirname, "..", "content");
-const REQUIRED_HEADINGS = ["## Problem", "## Constraints", "## Example", "## Test cases", "## Explanation"];
 
 const problems: string[] = [];
 let checked = 0;
@@ -70,13 +70,18 @@ for (const topic of topicDirs) {
       fail(rel, `slug "${parsed.data.slug}" must match the filename "${expected}".`);
     }
 
-    const missing = REQUIRED_HEADINGS.filter((h) => !text.includes(h));
+    // Heading and block rules depend on the kind, so a coding question is not
+    // held to an mcq's contract and the other way round.
+    const kind = parsed.data.kind as Kind;
+
+    const missing = REQUIRED_HEADINGS[kind].filter((h) => !text.includes(h));
     if (missing.length > 0) {
-      fail(rel, `missing required heading(s): ${missing.join(", ")}`);
+      fail(rel, `kind "${kind}" requires heading(s): ${missing.join(", ")}`);
     }
 
-    if (!text.includes("<Solution")) {
-      fail(rel, "no <Solution> block. Every question must ship an accepted solution.");
+    const block = REQUIRED_BLOCK[kind];
+    if (!text.includes(block)) {
+      fail(rel, `kind "${kind}" requires a ${block}> block in the body.`);
     }
   }
 }

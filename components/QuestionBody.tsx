@@ -1,13 +1,31 @@
 import type { ComponentType } from "react";
-import { Solution } from "./Solution";
+import { Solution, Answer } from "./Solution";
+import { Choices } from "./Choices";
+import type { Question } from "@/lib/questions";
 
 /**
- * Components an MDX question may use without importing anything.
- * Add to this map, not to the MDX files.
+ * Builds the component map an MDX question may use without importing anything.
+ *
+ * `<Choices />` takes no props in the MDX. The options live in frontmatter, so
+ * the map binds them here. That keeps the options as validated data rather than
+ * prose, which is what lets the validator prove an mcq has exactly one correct
+ * answer.
  */
-const components = { Solution };
+export function QuestionBody({
+  Body,
+  question,
+}: {
+  Body: ComponentType<any>;
+  question: Question;
+}) {
+  const components = {
+    Solution,
+    Answer,
+    Choices: () => (
+      <Choices choices={question.choices ?? []} multiple={question.kind === "multi"} />
+    ),
+  };
 
-export function QuestionBody({ Body }: { Body: ComponentType<any> }) {
   return (
     <div className="prose-q">
       <Body components={components} />

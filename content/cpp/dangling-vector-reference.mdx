@@ -1,0 +1,92 @@
+---
+title: Find the bug — the reference that stops being valid
+slug: dangling-vector-reference
+kind: debug
+difficulty: medium
+order: 40
+tags: [vector, references, iterator-invalidation]
+authors: [msohail22]
+---
+
+## Program
+
+This compiles with no warnings and often prints the right answer. It is still
+broken. Find the defect, say why it is a defect, and give the fix.
+
+```cpp
+#include <iostream>
+#include <vector>
+
+int main() {
+  std::vector<int> values{1, 2, 3};
+
+  int& first = values[0];
+
+  for (int i = 0; i < 100; ++i) {
+    values.push_back(i);
+  }
+
+  std::cout << first << "\n";   // expecting 1
+  return 0;
+}
+```
+
+<Answer>
+
+`first` is a reference into the vector's heap buffer. `push_back` may reallocate
+that buffer, which frees the old one. After the first reallocation `first` refers to
+freed memory, so reading it is undefined behaviour — a use-after-free.
+
+The fix is to not hold the reference across the mutation. Either read the value
+before pushing:
+
+```cpp
+int first = values[0];        // a copy, not a reference
+```
+
+or re-acquire the reference after the loop:
+
+```cpp
+for (int i = 0; i < 100; ++i) values.push_back(i);
+int& first = values[0];       // taken after all growth is done
+std::cout << first << "\n";
+```
+
+</Answer>
+
+## Explanation
+
+A `std::vector` is a pointer to a heap buffer, plus a size, plus a capacity. When
+`push_back` finds size equal to capacity it allocates a **new, larger** buffer,
+copies or moves every element across, and frees the old one.
+
+Anything that pointed into the old buffer — a reference, a pointer, an iterator — is
+now pointing at memory the allocator has reclaimed. The standard calls this
+*iterator invalidation*.
+
+```
+before growth     buffer A: [ 1 ][ 2 ][ 3 ]        size 3, cap 3
+                            ^
+                          first
+
+push_back needs cap 4 → allocate B, copy, free A
+
+after growth      buffer B: [ 1 ][ 2 ][ 3 ][ 0 ]   size 4, cap 6
+                  buffer A: FREED
+                            ^
+                          first ... dangling
+```
+
+Everyday comparison: you write down a friend's house number, then they move. The
+number still exists and someone still lives there, so your note looks perfectly
+valid. It just no longer points at your friend.
+
+The reason this bug is dangerous is that it usually *appears* to work. The freed
+memory is often still readable and often still holds the old value, so testing prints
+`1` and everyone moves on. It breaks later, under a different allocator, a different
+optimisation level, or load. Build with `-fsanitize=address` and it fails loudly and
+immediately — that is the tool for this entire class of defect.
+
+Note that `reserve(103)` before the loop would also stop the crash, because no
+reallocation happens. That is a fix for *this* program, not for the habit: the
+reference is still invalidated by any later growth.

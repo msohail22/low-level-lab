@@ -20,7 +20,9 @@ export default function Home() {
           solution you can reveal when you are ready.
         </p>
         <p className="text-muted">
-          {total} question{total === 1 ? "" : "s"} across {TOPICS.length} topics.
+          {`${total} question${total === 1 ? "" : "s"} across ${TOPICS.length} topic${
+            TOPICS.length === 1 ? "" : "s"
+          }.`}
           Reading everything is free and needs no account.
         </p>
       </div>
