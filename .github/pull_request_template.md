@@ -4,7 +4,8 @@
 
 ## ✅ Checks
 
-CI runs all of these. The list is so you see what will fail before it tells you.
+**CI is switched off right now, so these are not run for you.** Run them and
+tick them. An unchecked pull request will be sent back.
 
 ```sh
 pnpm validate && pnpm build:tests && pnpm typecheck && pnpm build

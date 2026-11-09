@@ -27,6 +27,12 @@ Programming questions as plain files in a git repository. No database, no CMS,
 no submit box — **you compile locally**, which is the point. A reader who never
 leaves the browser never learns the toolchain.
 
+> [!IMPORTANT]
+> **Running code locally is the whole product.** A sandboxed remote execution
+> engine exists in `apps/engine`, but it is a proof of concept and is expected
+> to be **dropped**. Nothing here will ever require it. If you are looking for
+> a browser IDE that runs your code for you, this is deliberately not that.
+
 - 📝 **One MDX file per question.** Adding one is a pull request.
 - ✅ **CI is the review.** A question that breaks the format cannot merge, so
   nobody has to read a diff to catch it.
@@ -63,11 +69,17 @@ A pnpm workspace. Two things deploy, to two different machines.
 Workers has no filesystem and no processes, so compiling someone's C++ can
 never happen there. That split is why this is a workspace and not one package.
 
-## 🛡 How the engine runs untrusted code
+## 🛡 The engine (proof of concept)
 
-It doesn't invent a sandbox. [`isolate`](https://github.com/ioi/isolate) — what
-the IOI grades on — does that, behind cgroups, namespaces and seccomp. The
-engine compiles, calls it, and reads the result.
+`apps/engine` compiles and grades C++ without the reader installing anything.
+**It is a proof of concept and is expected to be dropped.** It is not wired
+into the site, no question depends on it, and none ever will — local compiling
+is the product.
+
+It is kept because the isolation was worth learning and proving. It doesn't
+invent a sandbox: [`isolate`](https://github.com/ioi/isolate), what the IOI
+grades on, does that behind cgroups, namespaces and seccomp. The engine
+compiles, calls it, and reads the result.
 
 Every boundary is measured, not assumed:
 

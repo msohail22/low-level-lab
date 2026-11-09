@@ -111,18 +111,34 @@ every reader loading that chunk pays for it.
 
 ## ✅ Before you open the PR
 
+**Run these. They are the review.**
+
 ```sh
 pnpm validate
+pnpm build:tests
 pnpm typecheck
 pnpm build
 ```
 
-CI runs all three plus `pnpm build:tests`. It also fails if generated files
+> [!WARNING]
+> **Automated checks are switched off right now** — the workflow has a startup
+> fault and is being fixed. Nothing on the server will catch a mistake for
+> you, so a pull request that has not been checked locally will be sent back.
+> Say in the PR that you ran them.
+
+When CI is back it runs all four. It also fails if generated files
 (`apps/web/public/tests/`) are committed — those are built, never checked in.
 
 One more thing CI enforces: **your branch must be up to date with `master`.**
 If someone merged while your PR was open, rebase. That is how a duplicate
 introduced by the other PR gets caught.
+
+## ⚠️ One thing not to build on
+
+`apps/engine` is a proof of concept and is expected to be dropped. Do not write
+a question that depends on remote execution, and do not send a pull request
+that makes the site call it. Every question must be solvable with a compiler
+and nothing else.
 
 ## 🐛 Found a bug instead?
 

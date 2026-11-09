@@ -1,5 +1,15 @@
 # engine
 
+> **Proof of concept. Expected to be dropped.**
+>
+> Solving questions locally is the product. This engine exists so remote
+> execution could be *tried*, not depended on: it is not wired into the site,
+> no question needs it, and none ever will. If it is removed, nothing about
+> Low Level Lab stops working.
+>
+> It is kept for now because proving the isolation was worth doing, and the
+> `--meta` contract and the measurements are written down.
+
 Compiles and runs untrusted C++ against a question's test cases.
 
 ```sh
