@@ -1,9 +1,10 @@
-import { and, eq } from "drizzle-orm";
-import { getDb } from "./db";
-import { progress } from "./db/schema";
-
 /**
- * Reader settings.
+ * Reader settings: the part that is only data.
+ *
+ * This file is imported by client components, so it must not reach a server
+ * module. Anything touching D1 or KV lives in ./settings, which re-exports
+ * everything here — a server file can import one module as before, while the
+ * browser bundle cannot pull `cloudflare:workers` in behind it.
  *
  * D1 is the source of truth — one `kind = 'setting'` row per setting, the
  * shape `lib/db/schema.ts` already defines, so a setting follows the reader to
@@ -74,7 +75,7 @@ export function isValid(key: string, value: string): key is SettingKey {
 }
 
 /** Fills in every missing or unknown value with its default. */
-function normalise(raw: Partial<Record<string, string>>): Prefs {
+export function normalise(raw: Partial<Record<string, string>>): Prefs {
   const out = { ...DEFAULTS };
   for (const [key, value] of Object.entries(raw)) {
     if (typeof value === "string" && isValid(key, value)) out[key] = value;
@@ -98,37 +99,3 @@ export function decodePrefs(raw: string | undefined): Prefs {
   return normalise(Object.fromEntries(new URLSearchParams(raw)));
 }
 
-/* --- D1 ------------------------------------------------------------------ */
-
-/** Every setting this user has saved, defaults filled in. */
-export async function loadPrefs(userId: string): Promise<Prefs> {
-  const rows = await getDb()
-    .select({ key: progress.key, value: progress.value })
-    .from(progress)
-    .where(and(eq(progress.userId, userId), eq(progress.kind, "setting")));
-
-  return normalise(Object.fromEntries(rows.map((r) => [r.key, r.value ?? ""])));
-}
-
-/**
- * Write one setting. An upsert, not an insert: the primary key is
- * (user_id, kind, key), so changing the theme twice updates the one row
- * rather than failing or growing a history.
- */
-export async function savePref(userId: string, key: SettingKey, value: string) {
-  await getDb()
-    .insert(progress)
-    .values({ userId, kind: "setting", key, value, at: Math.floor(Date.now() / 1000) })
-    .onConflictDoUpdate({
-      target: [progress.userId, progress.kind, progress.key],
-      set: { value, at: Math.floor(Date.now() / 1000) },
-    });
-}
-
-/**
- * Delete everything this site stores about a reader: settings and solved
- * marks. It does not delete the WorkOS account, which the site does not own.
- */
-export async function forgetUser(userId: string) {
-  await getDb().delete(progress).where(eq(progress.userId, userId));
-}

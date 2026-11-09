@@ -1,0 +1,8 @@
+CompileFlags:
+  CompilationDatabase: quarantine-engine/build
+
+Diagnostics:
+  UnusedIncludes: Strict
+  ClangTidy:
+    Add: [bugprone-*, modernize-*, performance-*]
+    Remove: [modernize-use-trailing-return-type]

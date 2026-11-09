@@ -1,6 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { syncWorkosEnv } from "@/lib/workos-env";
-import { SETTINGS, loadPrefs } from "@/lib/settings";
+import { loadPrefs } from "@/lib/settings";
+import { SettingsForm } from "@/components/SettingsForm";
 
 /**
  * The reader's own page: who they are signed in as, their settings, and the
@@ -48,53 +49,14 @@ export default async function MePage() {
       </header>
 
       {/*
-       * A plain form posting to a route handler. Saving writes a cookie, and a
-       * page render may not write cookies — the same reason /signin and
-       * /signout are routes. It also means settings work with no JavaScript.
+       * The controls are a client component: a press saves on its own, with
+       * the change applied before the server answers. The values it starts
+       * with are rendered here on the server, so the page is correct before
+       * any JavaScript runs.
        */}
-      <form method="post" action="/me/save" className="mt-8">
-        <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
-          {SETTINGS.map((setting) => (
-            <fieldset
-              key={setting.key}
-              className="border-0 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6"
-            >
-              <div className="sm:min-w-0">
-                <legend className="text-sm font-medium">{setting.label}</legend>
-                <p className="mt-0.5 text-sm text-muted">{setting.hint}</p>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2 sm:mt-0 sm:shrink-0">
-                {setting.options.map((option) => (
-                  <label
-                    key={option.value}
-                    className="cursor-pointer rounded-md border border-border px-3 py-1.5 text-sm whitespace-nowrap has-checked:border-accent has-checked:font-medium has-focus-visible:outline has-focus-visible:outline-2 has-focus-visible:outline-accent"
-                  >
-                    <input
-                      type="radio"
-                      name={setting.key}
-                      value={option.value}
-                      defaultChecked={prefs[setting.key] === option.value}
-                      className="sr-only"
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          ))}
-
-          {/* The button sits in the card it applies to, not loose beneath it. */}
-          <div className="flex justify-end bg-bg p-4">
-            <button
-              type="submit"
-              className="cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-medium text-bg"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </form>
+      <div className="mt-8">
+        <SettingsForm initialPrefs={prefs} />
+      </div>
 
       <section className="mt-10">
         <h2 className="text-sm font-medium">Account</h2>

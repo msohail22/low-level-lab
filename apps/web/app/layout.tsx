@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { AuthNav } from "@/components/AuthNav";
+import { Providers } from "@/components/Providers";
 import { PREFS_COOKIE, decodePrefs } from "@/lib/settings";
 import "./globals.css";
 
@@ -38,26 +39,34 @@ export default async function RootLayout({
       data-code-size={prefs.codeSize}
     >
       <body>
-        <header className="border-b border-border">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-            <Link href="/" className="font-semibold tracking-tight">
-              Low Level Lab
-            </Link>
-            <nav className="flex items-center gap-5 text-sm text-muted">
-              <Link href="/topics" className="hover:text-accent">
-                Topics
+        {/*
+         * Everything is inside the providers, but the markup above them is
+         * already correct: the server rendered data-theme on <html> from the
+         * cookie. The client layer only applies later changes, so there is no
+         * flash and no theme script in the head.
+         */}
+        <Providers prefs={prefs}>
+          <header className="border-b border-border">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+              <Link href="/" className="font-semibold tracking-tight">
+                Low Level Lab
               </Link>
-              <Link href="/contribute" className="hover:text-accent">
-                Contribute
-              </Link>
-              <AuthNav />
-            </nav>
-          </div>
-        </header>
+              <nav className="flex items-center gap-5 text-sm text-muted">
+                <Link href="/topics" className="hover:text-accent">
+                  Topics
+                </Link>
+                <Link href="/contribute" className="hover:text-accent">
+                  Contribute
+                </Link>
+                <AuthNav />
+              </nav>
+            </div>
+          </header>
 
-        <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">{children}</main>
+          <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">{children}</main>
 
-        <div className="h-16" />
+          <div className="h-16" />
+        </Providers>
       </body>
     </html>
   );

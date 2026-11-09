@@ -1,3 +1,12 @@
+# The monorepo. Each entry is an independently deployed thing:
+#   apps/web    → Cloudflare Workers (the site)
+#   apps/engine → arrakis (the sandboxed execution engine)
+# They share this lockfile and nothing else yet. A shared package for the
+# `.tests.jsonl` contract waits on T4 (adopt vs build): if the engine ends up
+# in C++ or Go, a TypeScript package is worthless to it.
+packages:
+  - apps/*
+
 # Pre-approve build scripts for the packages C3 itself installs that need
 # them: `workerd` downloads the platform binary and `esbuild` downloads/
 # builds native bindings. Without these, pnpm 11+ aborts the install with

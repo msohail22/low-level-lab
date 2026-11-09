@@ -64,7 +64,7 @@ jobs:
         run: pnpm build:tests
 
       - name: Typecheck
-        run: pnpm exec tsc --noEmit
+        run: pnpm typecheck
 
       - name: Build
         run: pnpm build
@@ -73,11 +73,27 @@ jobs:
       # if someone commits the generated chunks instead of the source file.
       - name: Check generated files are not committed
         run: |
-          if git ls-files --error-unmatch public/tests >/dev/null 2>&1; then
-            echo "::error::public/tests is generated. Remove it from the commit."
+          if git ls-files --error-unmatch apps/web/public/tests >/dev/null 2>&1; then
+            echo "::error::apps/web/public/tests is generated. Remove it from the commit."
             exit 1
           fi
           if git ls-files --error-unmatch CLAUDE.md >/dev/null 2>&1; then
             echo "::error::CLAUDE.md must stay untracked."
+            exit 1
+          fi
+
+      # infra/ arrived from a repository where `tofu/*.tfstate` was anchored one
+      # level too shallow, so `tofu/k8s/terraform.tfstate` — holding a plaintext
+      # POSTGRES_PASSWORD and a Grafana admin password — was tracked, next to
+      # 81 MB of provider binaries. State is never reviewable and a leaked
+      # password cannot be un-pushed, so this is a check and not a note.
+      - name: No Terraform state or provider binaries committed
+        run: |
+          bad=$(git ls-files \
+            '*.tfstate' '*.tfstate.*' '*.tfvars' \
+            '**/.terraform/**' '*.kubeconfig')
+          if [ -n "$bad" ]; then
+            echo "::error::Terraform state, tfvars or provider plugins are committed. These hold secrets. Remove them and add them to .gitignore unanchored (**/*.tfstate)."
+            echo "$bad"
             exit 1
           fi

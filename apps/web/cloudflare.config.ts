@@ -21,6 +21,13 @@ export default defineConfig({
       WORKOS_COOKIE_PASSWORD: bindings.secret(),
       // Progress and settings. Identity lives in WorkOS, not here.
       DB: bindings.d1({ name: "low-level-lab" }),
+      /**
+       * A read cache in front of DB for a reader's settings. D1 stays the
+       * source of truth; KV only saves the round trip on a page that has to
+       * read settings. Every write updates it, so a stale entry needs the
+       * write itself to fail — and a miss is only a slower correct answer.
+       */
+      PREFS: bindings.kv({ id: "9811c8698389480eb8ded2549766818a" }),
     },
   }),
 });

@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "quarantine"
+abstract: "Sandboxed remote code execution engine for running untrusted C/C++, assembly, sockets, and systems-level code safely."
+type: software
+authors:
+  - family-names: "Sohail"
+    given-names: "Mohammed"
+repository-code: "https://github.com/msohail22/quarantine"
+license: MIT

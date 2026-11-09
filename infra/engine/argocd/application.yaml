@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hono-engine
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/msohail22/low-level-lab.git
+    targetRevision: HEAD
+    # Monorepo: watch only the engine's manifests. D1 split the repositories
+    # so machine tweaks could not trigger a deploy; this path does that job
+    # inside one repository, because Argo CD syncs a path and not a repo root.
+    path: infra/engine/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hono-engine
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
