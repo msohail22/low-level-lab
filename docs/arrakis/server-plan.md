@@ -6,6 +6,31 @@ one idea in one sentence.
 
 Last change: 2026-10-31.
 
+> **Status note, added 2026-11-09.** This design is sound and stays as written.
+> Three parts of it are **deferred**, because the engine accepts latency:
+>
+> | Section | What it describes | Why it is deferred |
+> |---|---|---|
+> | 5.2 | C and GNU `as` assembly as accepted input | C++ only for now. `cpp` is the one topic that exists. |
+> | 5.6 | Keep the sandboxes ready (a pool) | `isolate --init` per request costs about 10 ms. |
+> | 5.7 | Cache the compiled program | Recompile every time. This also closes open question 10.6, the list of language standards, because nothing is keyed any more. |
+> | 6 | The data services, Redis in particular | Redis existed to hold the compile cache from 5.7. |
+>
+> Two decisions were taken against this document and are **not** deferred:
+>
+> 1. **Section 5.3 is implemented by [`isolate`](https://github.com/ioi/isolate).**
+>    The layer list in 5.3 — cgroup v2, user/mount/PID/network namespaces,
+>    seccomp-bpf, rlimits, `no_new_privs` — is what isolate already does. It is
+>    what the IOI grades on. Nothing here is hand-written, so open question 10.5
+>    ("the seccomp list is not written") is closed: isolate ships the list.
+> 2. **Section 5.4 is confirmed, not deferred.** The service runs as a systemd
+>    unit on the host. isolate's own man page says running in containers is "not
+>    recommended", which is the same reason 5.4 already gives. The k8s manifests
+>    that contradicted this were removed on 2026-11-09.
+>
+> Phases 2, 4, 6 and 12 of section 11 therefore drop out of the order of work.
+> Phase 2 becomes installing a package.
+
 ## 1. Goal
 
 Run a sandbox code execution service on one small server. Serve the largest
@@ -90,6 +115,10 @@ The service uses the GNU assembler (`as`) for the assembly input. It does not
 use NASM. It does not use any other assembler.
 
 ### 5.3 The isolation method
+
+**IMPLEMENTED BY `isolate` 2026-11-09.** Every layer below is what
+[ioi/isolate](https://github.com/ioi/isolate) already does. Do not hand-write
+this. Open question 10.5 is closed by adopting it.
 
 The service uses **native execution with namespaces, cgroups, and seccomp**.
 
@@ -249,6 +278,9 @@ service.
 
 ### 5.6 Keep the sandboxes ready
 
+**DEFERRED 2026-11-09.** Latency is acceptable, so `isolate --init` runs per
+request. Revisit when a measurement says the init cost matters.
+
 The cost to start a sandbox is in the namespace setup, not in `fork`. Start a
 pool of sandbox processes when the service starts. Each process waits inside its
 own namespaces. Each process waits on a socket for work.
@@ -259,6 +291,9 @@ For each request the service then does only two steps.
 2. Start the program.
 
 ### 5.7 Cache the compiled program
+
+**DEFERRED 2026-11-09.** The engine recompiles every time. This also closes
+open question 10.6: with no cache there is nothing to key by language standard.
 
 Do not compile for each request. Use this sequence.
 
@@ -341,6 +376,9 @@ Set these limits for every run.
 6. No write access, except to one small tmpfs.
 
 ## 6. The data services
+
+**DEFERRED 2026-11-09.** Redis here held the compile cache from 5.7, which is
+deferred. The site keeps reader progress in Cloudflare D1, not in PostgreSQL.
 
 | Service | Purpose | RAM |
 |---|---|---|

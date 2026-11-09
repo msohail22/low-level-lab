@@ -1,47 +1,62 @@
 # engine
 
-Sandboxed execution engine for untrusted C/C++. Runs on arrakis, never on
-Workers: compiling someone's code needs a filesystem and processes, and
-Cloudflare Workers has neither.
+Compiles and runs untrusted **C++** against a question's test cases. Runs on
+arrakis, never on Cloudflare Workers: compiling needs a filesystem and
+processes, and Workers has neither.
 
-**This is a stub.** `src/main.cpp` prints one line. Ported from the
-`quarantine` repository on 2026-11-09, which is where it already was.
+Not built yet. This directory holds the decisions and nothing else.
 
-The design is written and is the useful part: **`docs/arrakis/server-plan.md`**,
-508 lines covering the isolation method, the accepted input, caching the
-compiled program, per-run limits and the RAM budget. Read that before writing
-code here.
+## Scope: C++ only
 
-## Unresolved: what language is this in?
+`docs/arrakis/server-plan.md` §5.2 also accepts C and GNU `as` assembly. Both
+are deferred. The only topic that exists is `cpp` (`apps/web/lib/topics.ts`),
+so anything else would be a feature with no question behind it.
 
-The ported pieces disagree, and it was left that way rather than silently
-picked:
+## The sandbox is not ours
 
-| Says | Where |
-|---|---|
-| C++20, CMake, a binary called `quarantine-engine` | this directory |
-| a service named `hono-engine` listening on port 3000 | `infra/engine/k8s/*`, `infra/engine/nginx/nginx.conf` |
+[`isolate`](https://github.com/ioi/isolate) already implements every layer
+§5.3 asks for: cgroup v2, user/mount/PID/network namespaces, seccomp-bpf,
+rlimits, `no_new_privs`. It is what the IOI grades on, and it is maintained
+(v2.7, 2026-08-24). Hand-writing a seccomp filter is how you ship your own CVE.
 
-Hono is a TypeScript web framework. So the manifests deploy an HTTP service
-that this CMake project does not build, and the C++ target has no HTTP server
-in it. One of the two is the plan and the other is left over.
+isolate runs setuid root and compiles nothing. We compile, then hand it the
+binary.
 
-This is the adopt-vs-build decision, T4 in `docs/todo-later.md`, and it is
-unmade. It also decides D67: whether the `.tests.jsonl` contract becomes a
-shared TypeScript package or a JSON Schema.
+## Shape
 
-Likely shape, not a decision: a TypeScript HTTP service that accepts the
-submission and queues it, with the sandbox itself a separate short-lived
-process. That matches the manifests and keeps the C++ out of the request path.
-
-## Build
-
-```sh
-cmake -S apps/engine -B apps/engine/build -DCMAKE_BUILD_TYPE=Release
-cmake --build apps/engine/build
-./apps/engine/build/quarantine-engine
+```
+POST /run  {source, slug}
+   │
+   ├─ 1. write source to a temp dir
+   ├─ 2. g++ ...                      ← compile, OUTSIDE the sandbox
+   ├─ 3. isolate --cg --run ...       ← the security-critical step, not ours
+   └─ 4. read the --meta file → {stdout, time, killed, exitcode}
 ```
 
-Out-of-tree on purpose, so `**/build/` in `.gitignore` keeps the output out of
-git. The old repository had a 50-file in-tree `build/` directory; it was not
-ported.
+TypeScript and Hono, port 3000. Same language as `apps/web`, so the
+`.tests.jsonl` contract becomes one shared Zod schema instead of two copies
+that drift.
+
+No compile cache and no sandbox pool. Latency is acceptable, and dropping both
+also drops §10.6 — which language standards to cache — because nothing is
+keyed any more.
+
+## It runs as a systemd unit, not in Kubernetes
+
+Decided 2026-11-09. §5.4 gives the reason: a sandbox inside a container must
+create namespaces inside namespaces, which needs more rights and adds delay.
+isolate's own man page agrees and says running in containers is "not
+recommended".
+
+`infra/engine/` used to hold k8s manifests, an nginx proxy and an Argo CD
+`Application` for a service named `hono-engine` on port 3000. They described a
+service that never existed and contradicted this decision, so they were
+removed on 2026-11-09. The unit file replaces them and is not written yet.
+
+## Why there is no C++ in this directory
+
+`src/main.cpp` printed one line. It was removed on 2026-11-09 along with
+`CMakeLists.txt`, `.clangd` and its `build/` tree. It implied the engine would
+be written in C++, which was never the plan: the C++ here is the *input*, not
+the implementation. The implementation that matters is isolate, and it is
+already written, in C, by someone else.

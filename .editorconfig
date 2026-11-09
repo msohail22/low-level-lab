@@ -1,0 +1,25 @@
+# The filename matters: EditorConfig reads `.editorconfig` only. This arrived
+# from quarantine as `.editor-config`, with a hyphen, so no editor had ever
+# read it in either repository.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.conf]
+indent_size = 4
+
+# Two trailing spaces are a line break in Markdown, so trimming them edits the
+# prose.
+[*.md]
+trim_trailing_whitespace = false
+
+# OpenTofu's own formatter aligns `=` with spaces. tofu fmt is the authority
+# here; this only stops an editor fighting it.
+[*.tf]
+indent_size = 2

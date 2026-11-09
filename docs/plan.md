@@ -2,252 +2,157 @@
 
 > A project to learn programming by practice (a lot of practice).
 
-Status: plan agreed 2026-11-08. Nothing built yet beyond the vinext scaffold.
+**This file is what is true now, and what to do next.** `docs/todo-later.md` is
+the parking lot. `docs/arrakis/learning.md` is the history and the reasons.
+
+Rewritten 2026-11-09. The 2026-11-08 version described a plan, and the code has
+since gone a different way in several places. Reversed decisions are struck
+through, never deleted.
 
 ## 1. Decisions
 
 | ID | Decision | Reason |
 |---|---|---|
 | D1 | Questions are MDX files in this repo. Git is the database. | Contribution = pull request. GitHub's own permissions decide who merges, so there is no RBAC code to write. |
-| D2 | The accepted solution lives inside the same question MDX file. | User's call. One file per question, nothing to keep in sync. Revealed behind a click. |
-| D3 | Difficulty is hard-coded in frontmatter: `easy` / `medium` / `hard`. | No judge exists, so a solve count would be self-reported and gameable. Sort easy → medium → hard. No nightly job, no aggregation, for now. |
-| D4 | GitHub OAuth is the only sign-in. D1 holds per-user rows. KV is bound but unused at first. | Contributors already have GitHub accounts. No passwords, no email flow. KV binding is created now so the ranking job can be added later without a migration. |
-| D5 | Only two topics: C++ and Rust. | Keeps the codebase small, as asked. Topics are a typed list in code, not a database table. |
-| D6 | Everything except progress is public. Sign-in is required only to save progress. | A visitor can read every question and every solution without an account. |
-| D7 | Content is enumerated with Vite's `import.meta.glob`, never `fs`. | vinext deploys to Cloudflare Workers. The docs do not say `node:fs` works at request time, so the design must not need it. `import.meta.glob` resolves at build time and bundles the result. |
+| D2 | The accepted answer lives inside the same question MDX file. | One file per question, nothing to keep in sync. Revealed behind a click. |
+| D3 | Difficulty is hard-coded in frontmatter: `easy` / `medium` / `hard`. | No judge exists, so a solve count would be self-reported and gameable. No nightly job, no aggregation. |
+| ~~D4~~ | ~~GitHub OAuth is the only sign-in.~~ | **REVERSED.** Shipped as **WorkOS AuthKit** in #60, which fronts GitHub *and* Google. The rest of D4 held: D1 holds per-user rows, and the KV binding exists. |
+| ~~D5~~ | ~~Only two topics: C++ and Rust.~~ | **REVERSED.** `apps/web/lib/topics.ts` has `cpp` alone. Rust was never added, and nothing is waiting on it. Topics are still a typed list in code, not a table. |
+| D6 | Everything except progress is public. Sign-in is required only to save progress. | A visitor can read every question and every answer without an account. |
+| D7 | Content is enumerated with Vite's `import.meta.glob`, never `fs`. | vinext deploys to Cloudflare Workers. `node:fs` is not documented as working at request time, so the design must not need it. |
+| D8 | One repository, as a pnpm workspace. | 2026-11-09. `arrakis` and `quarantine` merged in. The site and the engine deploy to different machines, so they are separate packages — but the `.tests.jsonl` contract is written by one and read by the other, and that must change in one reviewable commit. |
+| D9 | The execution engine adopts [`isolate`](https://github.com/ioi/isolate). | 2026-11-09. isolate already implements every isolation layer `docs/arrakis/server-plan.md` §5.3 asks for, and is what the IOI grades on. Hand-writing a seccomp filter is how you ship your own CVE. |
+| D10 | The engine is C++ only, and runs as a systemd unit on the host. | 2026-11-09. `cpp` is the one topic that exists. A sandbox inside a container must nest namespaces, and isolate's man page says containers are "not recommended". |
+| D11 | There is no users table. | WorkOS holds identity and the session cookie carries it, so a profile page renders with no database read. A local users table would be a cache that goes stale. |
 
 ## 2. Content model
 
-One file per question. No folders, no sidecar test files — test cases go in the MDX
-as fenced code blocks, because the user compiles locally and only needs to read them.
+The question format contract — frontmatter fields, required headings, the four
+kinds, the test-case rules — lives in **`CLAUDE.md`**, and
+`apps/web/scripts/validate-questions.ts` enforces it. It is not repeated here,
+because two copies of a contract drift and only one of them is executable.
 
-```
-content/
-  cpp/
-    reverse-a-linked-list.mdx
-    two-sum.mdx
-  rust/
-    borrow-checker-warmup.mdx
-```
+What matters at plan level:
 
-The directory name IS the topic. A new topic is a new directory plus one line in
-`lib/topics.ts`.
+- One MDX file per question at `apps/web/content/<topic>/<slug>.mdx`. The
+  directory is the topic. The filename equals the `slug`.
+- Four kinds: `coding`, `mcq`, `multi`, `true-false`. `coding` is compiled
+  locally against test cases; the other three are graded in the browser from
+  frontmatter.
+- `coding` questions carry `<slug>.tests.jsonl` beside the MDX. Test cases are
+  never in the body and never in frontmatter.
+- The answer is an `<Answer>` block, and it must be the last thing in the file.
 
-### Frontmatter contract
+Earlier versions of this plan specified `## Constraints`, `## Example`,
+`## Explanation` and a `<Solution>` component. All four are gone. The component
+is `<Answer>`, and the three headings were removed on purpose — do not
+reintroduce them.
 
-```yaml
----
-title: Reverse a linked list
-slug: reverse-a-linked-list      # must equal the filename
-difficulty: easy                 # easy | medium | hard
-order: 10                        # tie-break inside a difficulty band, low first
-tags: [linked-list, pointers]
-authors: [msohail22]             # GitHub logins
----
-```
+## 3. Pages
 
-Validated by a Zod schema at build time. A bad frontmatter fails the build, so a
-malformed pull request cannot merge. That failing build is the entire moderation
-system.
-
-### Body contract
-
-The MDX body uses a fixed set of headings so every question reads the same way:
-
-```mdx
-## Problem
-...prose...
-
-## Constraints
-...
-
-## Example
-```text
-input
-```
-```text
-output
-```
-
-## Test cases
-...fenced input/output pairs...
-
-<Solution language="cpp">
-```cpp
-// the accepted solution
-```
-</Solution>
-
-## Explanation
-...why the solution works...
-```
-
-`<Solution>` is a client component that renders collapsed with a "Reveal solution"
-button. The code is still in the page source — that is accepted, per D2.
-
-## 3. How the questions are loaded
-
-Two globs in `lib/questions.ts`. No filesystem call, at build time or at runtime.
-
-```ts
-// index: frontmatter only, eager, so the list page is a pure array
-const meta = import.meta.glob('/content/*/*.mdx', {
-  eager: true,
-  import: 'frontmatter',
-});
-
-// bodies: lazy, so each question becomes its own chunk
-const bodies = import.meta.glob('/content/*/*.mdx');
-```
-
-Why two globs and not one: an eager glob of the bodies would bundle every question's
-prose and solution into the chunk that renders the list page. The frontmatter is tiny,
-so it is cheap to load all of it. The bodies are not, so they load one at a time.
-
-```
-build time                                   request time
-──────────                                   ────────────
-content/cpp/*.mdx
-   │
-   │ @mdx-js/rollup + remark-frontmatter
-   ▼
-JS modules (frontmatter + component)
-   │
-   │ import.meta.glob
-   ▼
-questions[] in the bundle  ───────────────▶   /topics/cpp renders from the array
-   │                                          (zero I/O)
-   └─ lazy chunk per question ───────────▶    /topics/cpp/two-sum imports one chunk
-```
-
-Everyday comparison: the frontmatter is the index card in a library catalogue, the
-body is the book on the shelf. You load every card to show the list. You fetch one
-book only when somebody asks for it.
-
-## 4. Pages
+What exists today, from `apps/web/app/`:
 
 | Route | Auth | What it shows |
 |---|---|---|
-| `/` | public | The mission statement — "Low Level Lab: a project to learn programming by practice (a lot of practice)" — a one-paragraph what-this-is, and a button to `/topics`. |
-| `/topics` | public | Topic cards. Two cards: C++ and Rust. Each card shows the topic name, a one-line description, the question count, and a count per difficulty band. |
-| `/topics/[topic]` | public | The question list for that topic, Codeforces-style (see §5). |
-| `/topics/[topic]/[slug]` | public | The question. Statement, constraints, example, test cases, reveal-solution, explanation. A "Mark solved" button that prompts sign-in if the visitor has no account. An "Edit on GitHub" link. |
-| `/contribute` | public | The frontmatter reference, the heading contract, a copy-paste template, and a link to open a new-question pull request. |
-| `/profile` | signed in | Public-ish profile: GitHub avatar, display name, solved count per topic, solved list. |
-| `/settings` | signed in | Personalisation: display name, preferred language (C++ or Rust), theme, hide-solved toggle, and sign out. |
-| `/login` | public | One GitHub button. |
-| `/api/auth/github` + `/api/auth/callback` | public | OAuth start and callback. |
-| `/api/solved` | signed in | POST to toggle a solved mark. |
+| `/` | public | The mission statement and a way into `/topics`. |
+| `/topics` | public | A card per topic. Name and tagline only — no counts, by the UI rule. |
+| `/topics/[topic]` | public | The question list for that topic (§4). |
+| `/topics/[topic]/[slug]` | public | The question, its test cases or choices, and the `<Answer>` reveal. |
+| `/contribute` | public | The format reference and how to open a pull request. |
+| `/me` | signed in | Profile and the three settings. Replaces the planned `/profile` and `/settings` as one page. |
+| `/signin`, `/callback`, `/signout` | public | WorkOS AuthKit. Replaces the planned `/login` and `/api/auth/*`. |
+| `/me/sync`, `/me/forget` | signed in | Write and clear progress. Replaces the planned `/api/solved`. |
+| `/api/settings` | signed in | Write a setting. |
 
-Deliberately absent: no submit box, no judge, no sandbox, no contests, no leaderboard,
-no admin panel. The user compiles locally. Removing the judge removes the sandbox,
-which is most of the work and all of the security risk.
+Deliberately absent from the **site**: no submit box, no judge, no sandbox, no
+contests, no leaderboard, no admin panel. The reader compiles locally. That is
+D6's bargain, and it is why the site can be a static-ish Worker.
 
-## 5. The question list box
+The judge is not cancelled — it is `apps/engine`, on a different machine, and
+local compiling must keep working without it.
 
-Modelled on the Codeforces problem list. One table, dense, no cards.
+## 4. The question list
+
+One dense table, modelled on the Codeforces problem list. Sort: difficulty band
+(easy, medium, hard), then `order` ascending, then title. The `#` column is the
+position in that sorted list, computed on render, so inserting a question
+renumbers automatically.
+
+Shows 50 rows, then a "Load more" button. Paging caps what is *rendered*: the
+index is already in the bundle, unlike test cases which are fetched per chunk.
+
+No counts anywhere — not beside the heading, not on a filter chip. A chip with
+nothing behind it is disabled and dimmed, which says the same thing. The one
+exception is paging progress ("Showing 50 of 312"), which exists to make the
+button mean something.
+
+The ✓ column is the only part that needs the database. Signed out, it renders
+empty.
+
+## 5. Data
+
+### D1
+
+One table, `progress`. One row per fact, never a JSON blob per user, so marking
+a question solved is a single INSERT that cannot lose a concurrent write from
+another tab, and clicking twice is harmless.
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│ C++                                            24 questions          │
-│ [ all ] [ easy 9 ] [ medium 10 ] [ hard 5 ]   [x] hide solved        │
-├────┬─────────────────────────────────┬────────────┬────────┬─────────┤
-│ #  │ Name                            │ Tags       │ Diff   │ Solved  │
-├────┼─────────────────────────────────┼────────────┼────────┼─────────┤
-│ 1  │ Reverse a linked list           │ pointers   │ easy   │   ✓     │
-│ 2  │ Two sum                         │ hashing    │ easy   │         │
-│ …  │                                 │            │        │         │
-│ 10 │ Implement a slab allocator      │ memory     │ medium │         │
-└────┴─────────────────────────────────┴────────────┴────────┴─────────┘
+progress(user_id, kind, key, value, at)
+  primary key (user_id, kind, key)
+  kind = 'solved'   → key is "<topic>/<slug>", value is NULL
+  kind = 'setting'  → key is the setting name, value is the value
+  index progress_by_key (kind, key)   -- for a future ranking job
+  check  kind in ('solved','setting')
 ```
 
-Sort: `difficulty` band (easy, then medium, then hard), then `order` ascending, then
-title. The `#` column is the position in that sorted list, computed on render — it is
-not stored, so inserting a question renumbers automatically.
-
-The ✓ column is the only part that needs the database. For a signed-out visitor the
-column renders empty and the header shows a quiet "sign in to save your progress".
-
-## 6. Data
-
-### D1 schema
-
-```sql
-CREATE TABLE users (
-  id          TEXT PRIMARY KEY,   -- github:<numeric id>, never the login
-  login       TEXT NOT NULL,      -- github login, can change
-  name        TEXT,
-  avatar_url  TEXT,
-  created_at  INTEGER NOT NULL
-);
-
-CREATE TABLE settings (
-  user_id     TEXT PRIMARY KEY REFERENCES users(id),
-  display_name TEXT,
-  language    TEXT,               -- 'cpp' | 'rust'
-  theme       TEXT,               -- 'system' | 'light' | 'dark'
-  hide_solved INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE solved (
-  user_id     TEXT NOT NULL REFERENCES users(id),
-  topic       TEXT NOT NULL,
-  slug        TEXT NOT NULL,
-  solved_at   INTEGER NOT NULL,
-  PRIMARY KEY (user_id, topic, slug)
-);
-```
-
-`users.id` is the GitHub numeric id, not the login. A login can be renamed and then
-claimed by somebody else; the numeric id cannot.
-
-The `solved` table does not reference a questions table. Questions live in git, so
-there is nothing to foreign-key against. A deleted question leaves an orphan row,
-which is harmless — it is filtered out when the row is joined against the bundled
-question index.
+`user_id` is the WorkOS id (`user_01H…`), not an email, because an email can
+change and the id cannot.
 
 ### KV
 
-One binding, `RANKING`, created in `cloudflare.config.ts` now and left unused. It is
-where the nightly solve-count aggregation will go when the time comes (D3).
+`PREFS` is a read cache in front of D1 for a reader's settings. D1 stays the
+source of truth. Every write updates KV, so a stale entry needs the write
+itself to fail — and a miss is only a slower correct answer.
+
+### Settings
+
+Three, in `apps/web/lib/settings-shared.ts`: `theme`, `codeSize`,
+`revealAnswers`. The planned display name and preferred-language settings do
+not exist. Display name comes from WorkOS, and there is one language.
 
 ### Session
 
-A signed, HTTP-only cookie holding the user id. Signed with an HMAC secret in a
-Worker secret. No session table, so sign-out is client-side cookie clearing. Good
-enough for a practice site; note it as a known limitation.
+WorkOS AuthKit holds the session in a sealed cookie. There is no session table.
 
-## 7. Build order
+## 6. Build order
 
-Each step ends with something that works and can be committed.
+| # | Work | State |
+|---|---|---|
+| 1 | Foundation: MDX, Zod schema, the two globs, real questions | **done** |
+| 2 | Shell and home | **done** |
+| 3 | Topics list and per-topic list | **done** |
+| 4 | Question page, component map, `<Answer>` reveal | **done** |
+| 5 | Auth | **done** — WorkOS, not GitHub OAuth (D4) |
+| 6 | Progress: `/me/sync`, the ✓ column, `/me` | **done** |
+| 7 | Settings | **done** — three settings on `/me`, with the KV cache |
+| 8 | Contribute page, PR template, CI validation | **partly done** — the page and CI exist. No pull-request template yet. |
+| 9 | Brand the sign-in page | not started — T1 |
+| 10 | The engine: `isolate` on arrakis, then a Hono `/run` | not started — T4 to T7, and `apps/engine/README.md` |
 
-1. **Foundation.** Add `@mdx-js/rollup`, `remark-frontmatter`, `remark-mdx-frontmatter`,
-   `zod`. Wire MDX into `vite.config.ts`. Write `lib/topics.ts`, the Zod schema, and
-   `lib/questions.ts` with the two globs. Add three real questions (two C++, one Rust)
-   to prove the format before writing fifty.
-2. **Shell and home.** Root layout, header, footer, Tailwind base, the mission
-   statement on `/`.
-3. **Topics.** `/topics` cards and `/topics/[topic]` list box, sorted by band. Fully
-   static, no auth. *This is shippable and useful with no account system at all.*
-4. **Question page.** `/topics/[topic]/[slug]` with the MDX renderer, the component
-   map, and the `<Solution>` reveal.
-5. **Auth.** GitHub OAuth app, the two API routes, the session cookie, D1 migrations,
-   a header that shows the signed-in user.
-6. **Progress.** `/api/solved`, the Mark-solved button, the ✓ column, `/profile`.
-7. **Settings.** `/settings` form writing to the `settings` table, and the
-   hide-solved and language preferences actually applied to the list.
-8. **Contribute.** `/contribute` page, a pull-request template, and a CI job that runs
-   the Zod validation so a bad question cannot merge.
+The site is shippable now. Everything left is either polish or the engine.
 
-## 8. Risks
+## 7. Risks
 
-- `vinext` is beta and its own README says it is "not yet a drop-in replacement" for
-  Next.js. Static prerendering of dynamic routes is opt-in via `prerender: true` with
-  `staticAssetsAdapter()`. Verify step 4 against a real `pnpm build` early, not at the
-  end.
-- Manual `@mdx-js/rollup` wiring is not documented for vinext; only `vinext init`
-  auto-detection is. If the manual wiring fights the plugin order, the fallback is a
-  prebuild script that compiles each MDX to a `.tsx` component. More machinery, but it
-  removes the plugin from the equation.
-- `node:fs` at request time on Workers is undocumented. The design does not use it.
-  Keep it that way.
+- `vinext` is beta and its own README says it is "not yet a drop-in replacement"
+  for Next.js. It does build from a workspace sub-directory — verified
+  2026-11-09, 824 ms, 12 routes — but that is not documented, so a vinext
+  upgrade is the thing most likely to break the build.
+- `node:fs` at request time on Workers is undocumented. The design does not use
+  it. Keep it that way.
+- The engine is the security surface. Adopting isolate (D9) moves that risk to
+  maintained code, but a wrong `--cg` or seccomp configuration still gives
+  access to the host. arrakis has no public address and Tailscale carries all
+  traffic, which is why this is acceptable for a learning server.
+- RAM on arrakis is the binding limit: 8704 MB allocated to four VMs on an
+  11690 MB host. See AB11 in `docs/todo-later.md`.
