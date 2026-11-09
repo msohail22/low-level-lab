@@ -22,7 +22,7 @@ through, never deleted.
 | D7 | Content is enumerated with Vite's `import.meta.glob`, never `fs`. | vinext deploys to Cloudflare Workers. `node:fs` is not documented as working at request time, so the design must not need it. |
 | D8 | One repository, as a pnpm workspace. | 2026-11-09. `arrakis` and `quarantine` merged in. The site and the engine deploy to different machines, so they are separate packages — but the `.tests.jsonl` contract is written by one and read by the other, and that must change in one reviewable commit. |
 | D9 | The execution engine adopts [`isolate`](https://github.com/ioi/isolate). | 2026-11-09. isolate already implements every isolation layer `docs/arrakis/server-plan.md` §5.3 asks for, and is what the IOI grades on. Hand-writing a seccomp filter is how you ship your own CVE. |
-| D10 | The engine is C++ only, and runs as a systemd unit on the host. | 2026-11-09. `cpp` is the one topic that exists. A sandbox inside a container must nest namespaces, and isolate's man page says containers are "not recommended". |
+| D10 | The engine is C++ only, and runs as a systemd unit — **in a dedicated VM**, not on the host. | 2026-11-09. `cpp` is the one topic that exists. Not a container, because a sandbox inside one must nest namespaces and isolate's man page says containers are "not recommended". Not the host either: a VM is not a container, so that objection never applied to a VM, and an escape on the hypervisor would reach `shieldwall`. The VM is `sietch`, repurposed out of the cluster. See D80 and D83, and A27. |
 | D11 | There is no users table. | WorkOS holds identity and the session cookie carries it, so a profile page renders with no database read. A local users table would be a cache that goes stale. |
 
 ## 2. Content model
@@ -138,7 +138,7 @@ WorkOS AuthKit holds the session in a sealed cookie. There is no session table.
 | 7 | Settings | **done** — three settings on `/me`, with the KV cache |
 | 8 | Contribute page, PR template, CI validation | **partly done** — the page and CI exist. No pull-request template yet. |
 | 9 | Brand the sign-in page | not started — T1 |
-| 10 | The engine: `isolate` on arrakis, then a real `/run` | **started** — `apps/engine` is a Hono server with `/health`. `/run` returns 501. T4 to T7. |
+| 10 | The engine: `isolate`, then a real `/run`, then the VM | **in progress, unblocked.** `isolate` 2.5-1 is installed on the laptop and proven: a program runs, an infinite loop is killed on CPU time, and a memory hog is killed by the cgroup (Q65). `apps/engine` answers `/health` and `/config`; `/run` returns 501 and is the next code. The VM is A27 — reuse `sietch` (D83), so no new RAM and no A9. |
 
 The site is shippable now. Everything left is either polish or the engine.
 
@@ -155,4 +155,6 @@ The site is shippable now. Everything left is either polish or the engine.
   access to the host. arrakis has no public address and Tailscale carries all
   traffic, which is why this is acceptable for a learning server.
 - RAM on arrakis is the binding limit: 8704 MB allocated to four VMs on an
-  11690 MB host. See AB11 in `docs/todo-later.md`.
+  11690 MB host, measured 2026-11-08. See AB11 in `docs/todo-later.md`. This is
+  not on the engine's path, because D83 reuses the idle `sietch` rather than
+  building a fifth VM. It binds the *next* thing wanted after that.

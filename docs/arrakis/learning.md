@@ -14,6 +14,19 @@ Rules for this file:
 
 | # | Date | Decision | Reason |
 |---|---|---|---|
+| D92 | 2026-11-09 | `ENGINE_PROCESSES` is read as **a total**, including the submitted program itself. Default 64 therefore allows 63 children. | Measured 2026-11-09: `fork()` returned `EAGAIN` after 63 children at `--processes=64`, and after 7 at `--processes=8`. isolate counts the parent. Recorded because the off-by-one only appears under load: a question that genuinely needs 8 threads must be given 9, and nothing in the flag's name says so. |
+| D86 | 2026-11-09 | **A failing submission is HTTP 200.** Non-2xx means the engine could not answer. | The caller asked whether the code passes, so "no" is a successful answer to a successful request. Mapping a wrong answer to 4xx would make a 500 indistinguishable from a reader's bug, and the engine's own failures are the thing worth alerting on. |
+| D87 | 2026-11-09 | **Verdict order: OOM, timeout, crash, then compare output.** | Comparing output first reports a program killed at the time limit as a wrong answer, which sends the reader to fix arithmetic that was never broken. The kill reason is always more specific than the diff, so it wins. |
+| D88 | 2026-11-09 | **Do not sandbox the compiler.** `g++` runs outside isolate. | The compiler is ours and trusted; the compiled program is the threat. A sandbox around `g++` costs one sandbox per request and prevents nothing. A compile timeout (10 s) covers the one real risk, a pathological template. |
+| D89 | 2026-11-09 | **Box ids are an async queue, not a counter.** The 5th concurrent request waits. | isolate keeps one directory per `--box-id`, so two runs sharing an id overwrite each other's binary. This is a correctness bound, not a tuning knob — raising it without raising the id range would corrupt results rather than slow them. |
+| D90 | 2026-11-09 | **Output comparison ignores trailing whitespace, and nothing else.** | Ignoring more accepts wrong answers. Ignoring less fails a correct program over a missing final newline, which no reader would understand or be able to debug from the verdict. |
+| D91 | 2026-11-09 | **A probe must observe the effect, never the attempt.** | Two probes written today reported healthy isolation as broken: `socket()` succeeding was read as the network being open, and 10000 serial `fork()` calls were read as the process limit failing. Both checked whether a system call returned rather than whether the prevented thing happened. A sandbox works by making calls **useless**, not by making them fail. The same error in the other direction would report broken isolation as healthy, and that one would ship. See Q66. |
+| D83 | 2026-11-09 | **Reuse `sietch` as the sandbox VM. Remove it from the k3s cluster. Do not build a fifth VM.** Unblocks D80. | `sietch.tf` line 1 says "a Kubernetes worker node", so there was never a code-execution VM — but `sietch` is already 2048 MB that exists. Confirmed with the user 2026-11-09 that nothing runs on the cluster yet, so removing it costs no workload. This deletes the A9 dependency entirely: the requirement was a VM, not *more RAM*, and repurposing satisfies it at zero RAM cost. **Why not leave it in the cluster:** a worker holds kubelet credentials on disk, so an isolate escape reaches `mentat`; and the CNI is Flannel, which `server-plan.md` §8 itself records as "no network policy", so the pod network is flat and `windtrap`'s PostgreSQL and Redis are reachable from it. A22 would fix the second, and it is not started. Out of the cluster, both problems disappear rather than being mitigated. |
+| D84 | 2026-11-09 | **Do not act on `isolate-check-environment`'s three FAILs on the laptop.** Revisit on `sietch` only. | It asks for ASLR off, transparent hugepages off, and `core_pattern` set to `core`. All three exist to make *timings reproducible* for competition grading. None of them is a security control for the sandbox, and the first is the opposite: `randomize_va_space=0` would weaken every process on a daily-driver machine to make a practice site's millisecond figures steadier. A practice site does not rank by time, so the trade is not worth making anywhere, and certainly not here. |
+| D85 | 2026-11-09 | Develop the engine against real `isolate` on the laptop, not on `sietch`. | During development the C++ is the author's own, so there is no untrusted input and the VM's whole purpose is not yet engaged. Waiting for the VM to write `/run` would block code on infrastructure for no safety gain. D81 already made the host a setting, so the move later is a unit file and not a rewrite. |
+| D80 | 2026-11-09 | **The engine runs in a dedicated VM on arrakis, not on the arrakis host.** Supersedes part of D72. ~~Blocked on A9.~~ **Unblocked 2026-11-09 by D83.** | A VM is not a container. §5.4 rejected Kubernetes because a sandbox in a container must create namespaces inside namespaces, which needs extra rights and adds delay. A guest VM runs its own kernel, so namespaces, cgroups and seccomp are native and full-depth inside it — no nesting, so that objection never applied to a VM. The cost of the host option is the part that decided it: `shieldwall` holds OpenBao and sits outside the cluster so that rebuilding a dead cluster does not need secrets only the dead cluster has (Q48). A setuid-root isolate on the hypervisor undoes that, because the host can read `shieldwall`'s disk image. An escape on the host costs four VMs at once; in a VM it costs one. |
+| D81 | 2026-11-09 | **Do not decide how the Worker reaches the engine yet. Make it configuration instead.** | The tunnel-versus-Tailscale question is A13a and it does not block writing `/run`. What does block it is hard-coding a host, so `apps/engine/src/config.ts` takes `ENGINE_HOST`, `ENGINE_PORT`, `ISOLATE_BIN`, `ENGINE_CXX` and every limit from the environment. The engine binds `0.0.0.0` and not `127.0.0.1`, because under D80 the caller is on another machine. Deciding the access path later is cheap; discovering a hard-coded localhost later is not. |
+| D82 | 2026-11-09 | `allowImportingTsExtensions` is on in `apps/engine/tsconfig.json`. | Node 26 runs TypeScript directly (D78) but does no extension rewriting, so an import must say `./config.ts`. `tsc` rejects that spelling unless this flag is set. It is safe here only because `noEmit` is true — the flag exists to stop tsc emitting an import that would not resolve at runtime, and we emit nothing. |
 | D76 | 2026-11-09 | **`infra/arrakis/` becomes `arrakis/` at the repository root. `infra/` is removed.** | `infra/` held exactly one child once the k8s manifests went (D72), so it was a directory that existed only to group one thing. `arrakis` already names the machine and already means the infrastructure, so the extra level said nothing. Note for anyone reading section 3: the `rsync` and `rg` commands logged there were run against `infra/arrakis`, which was the real path at the time. They are not corrected. |
 | D77 | 2026-11-09 | **`apps/engine` is a real Hono server now, not a README.** `GET /health` works. `POST /run` returns 501. | A directory holding only prose cannot be run, so nothing proved the decisions in D69-D74 are buildable. A server that answers `/health` does. `/run` returns 501 rather than a fake result on purpose: nothing grades anything until isolate is wired up, and a stub that returns a plausible pass is worse than one that refuses. |
 | D78 | 2026-11-09 | **No build step for the engine.** `node src/index.ts` runs TypeScript directly. | Measured 2026-11-09: `node --version` is v26.5.0, and `node t.ts` on a file with a type annotation printed `ts ok 1`. Node strips types natively, so a bundler here would add a step and a config file for nothing. `pnpm typecheck` still runs `tsc --noEmit`, because stripping types is not checking them. |
@@ -21,7 +34,7 @@ Rules for this file:
 | D69 | 2026-11-09 | **Adopt `isolate` for the sandbox. Do not write one.** | `server-plan.md` §5.3 lists cgroup v2, user/mount/PID/network namespaces, seccomp-bpf, rlimits and `no_new_privs`. That list *is* ioi/isolate, which is what the IOI grades on and is maintained (v2.7, 2026-08-24). Writing a seccomp filter by hand is shipping your own CVE. This closes §10.5, "the seccomp list is not written": isolate ships the list. Closes T4. |
 | D70 | 2026-11-09 | **The engine is TypeScript and Hono, not C++.** The C++ stub is removed. | isolate compiles nothing and runs setuid root, so our part is glue: write a temp file, call `g++`, call `isolate --cg --run`, read the `--meta` file. The C++ in this system is the *input*, not the implementation. Same language as `apps/web` also lets the `.tests.jsonl` contract be one shared Zod schema instead of two that drift — which answers D67. |
 | D71 | 2026-11-09 | **C++ only.** C and GNU `as` assembly are deferred. | `apps/web/lib/topics.ts` has one topic, `cpp`. Anything else is a feature with no question behind it. |
-| D72 | 2026-11-09 | **Systemd unit on the host, not Kubernetes. `infra/engine/` removed.** | §5.4 already said this: a sandbox in a container must nest namespaces, which needs more rights and adds delay. isolate's man page independently agrees and says containers are "not recommended". The ported manifests deployed a `hono-engine` on port 3000 that never existed, pointing at a placeholder repo URL and an unbuilt image. They contradicted the plan and described nothing real. |
+| ~~D72~~ | 2026-11-09 | ~~Systemd unit on the host, not Kubernetes.~~ `infra/engine/` removed. | **SUPERSEDED IN PART 2026-11-09 by D80.** Still a systemd unit, still not Kubernetes, and the manifests are still gone — all of that holds. But "on the host" was wrong, and wrong because the comparison was never made: §5.4 weighed the host against a *pod* and never against a *VM*. |
 | D73 | 2026-11-09 | **Reject Judge0.** | It is the obvious off-the-shelf answer and its sandbox *is* isolate, so adopting it buys a Rails app, PostgreSQL, Redis and a worker pool for the same isolation we get direct. The RAM budget (§9) peaks at 6250–8250 MB of 11690 MB before any of that. Its assembly is also NASM, and §5.2 says GNU `as` and "no other assembler". It does not know our test cases either, so the grading logic would still be ours. |
 | D74 | 2026-11-09 | **No compile cache, no sandbox pool.** | Latency is acceptable for a practice site. `isolate --init` costs about 10 ms. Dropping the cache also closes §10.6, the list of language standards to cache, because nothing is keyed any more. Drops phases 2, 4, 6 and 12 from §11. |
 | D75 | 2026-11-09 | **One open-work file.** `docs/arrakis/TODO.md` merged into `docs/todo-later.md`, arrakis items renumbered `T<n>`→`A<n>` and `B<n>`→`AB<n>`. | Both files used `T1`–`T12` for different work, so every cross-reference was ambiguous. The site keeps `T<n>`; arrakis takes `A<n>`. Numbers are not reused. |
@@ -2785,6 +2798,256 @@ a rule that matters belongs in a check, not a review checklist.
 repository is read-only, not private. The passwords are still real and must be
 rotated. That is B7 and T12, and it is the one urgent thing the port produced.
 
+### Q65. `isolate` is installed and proven. What it does, and what the AUR package got wrong
+
+**The question.** How does a sandbox actually stop a stranger's C++, and does this
+one really do it?
+
+**What a sandbox is.** A box the kernel builds around one program. The program
+runs normally. It just cannot see or touch anything outside the box.
+
+**Everyday comparison.** A hotel key card. The corridor doors are not locked
+and nothing is boarded up. Your card simply only opens your own room. You can
+try the manager's office all night and nothing happens.
+
+**The layers, outside in.** `isolate` builds all of these for every run. None of
+it is ours, and that is the point of D69.
+
+```
+cgroup v2        caps memory, process count, CPU      ──► kills the memory hog
+user namespace   no real root inside
+mount namespace  read-only root + one small tmpfs      ──► cannot write anywhere
+PID namespace    cannot see any other process
+network ns       no network at all (default)
+seccomp-bpf      only approved system calls
+rlimits          CPU time, file size, open files       ──► kills the infinite loop
+no_new_privs     a setuid file cannot raise rights
+```
+
+**What a system call is**, because seccomp means nothing without it: the only
+way a program can affect the world outside itself. Printing, opening a file,
+sending a packet — each is a request to the kernel. Block the request and the
+action cannot happen, whatever the code says.
+
+```
+program                               kernel
+  write(1, "42")   ──────────► ✓ allowed  ──► prints
+  socket(...)      ──────────► ✗ denied   ──► killed
+  execve("/bin/sh")──────────► ✗ denied   ──► killed
+```
+
+That is why a sandbox cannot be fooled by clever code. It does not read the
+source looking for bad words. It refuses the action.
+
+**The three things measured, 2026-11-09, all on the laptop.** Each one is the
+whole command and its `--meta` output; the commands are in section 3.
+
+| Test | Expected | Got |
+|---|---|---|
+| read a number, double it | `42`, clean exit | `42`, `exitcode:0`, `time:0.002` |
+| `int main(){for(;;);}` | killed on CPU time | `status:TO killed:1 time:1.088` |
+| grow a vector forever | killed on memory | `cg-oom-killed:1 exitsig:9 cg-mem:65536` |
+
+Two of the three are the product. A sandbox that runs code is easy. A sandbox
+that reliably *kills* code is the thing being bought.
+
+Note `time:1.088` against a `--time=1` limit. The overshoot is normal: the
+kernel notices the CPU budget is spent on a timer tick, not at the instant it
+is spent. So a limit is "about one second", never exactly one. Anything built
+on top must not treat the number as exact.
+
+Note also `cg-mem:65536` exactly, and `max-rss:68620` **above** it. `cg-mem` is
+the cgroup ceiling that fired. `max-rss` is what the kernel had handed over
+before the kill landed. They disagree by design, and the one that proves the
+limit worked is `cg-oom-killed:1`.
+
+**The `--meta` file is the whole interface.** Everything the engine will ever
+know about a run is these lines, and `/run` is a parser for them:
+
+```
+time:0.002          CPU seconds
+time-wall:0.014     wall-clock seconds
+max-rss:3832        peak memory, KB
+cg-mem:480          cgroup memory, KB
+exitcode:0          the program's own exit code
+status:TO           absent on success. TO = timeout, SG = signal, RE = runtime error
+killed:1            absent on success
+cg-oom-killed:1     the memory limit fired
+exitsig:9           the signal that ended it
+message:...         human text
+```
+
+So "correct answer" is not one field. It is: no `status`, `exitcode:0`, and
+stdout equal to the expected output. Three conditions, and a parser that checks
+only the exit code would call a timeout a wrong answer instead of a timeout.
+
+**What the AUR package got wrong.** The install left a service that could not
+start:
+
+```
+isolate-cg-keeper[106878]: User isolate not found in /etc/subuid
+```
+
+The cause is ordering inside pacman:
+
+```
+1. pacman installs the files
+2. pacman runs isolate.install (the package's own scriptlet)
+     useradd -g isolate ... isolate
+     ✗ "group 'isolate' does not exist"      ← the group is not there YET
+3. pacman runs post-transaction hooks
+     systemd-sysusers → creates group 'isolate' (GID 959)   ← too late
+```
+
+So the group exists and the user never does. `/etc/isolate` says
+`subid_user = isolate`, and isolate 2.3 and later allocate a distinct uid per
+`--box-id` out of that user's range in `/etc/subuid`. No user, no range, no
+daemon.
+
+Proof of the cause, rather than a guess: `getent group isolate` printed
+`isolate:x:959:msohail22` and `getent passwd isolate` printed nothing. Group
+yes, user no — which is exactly what that ordering predicts and nothing else
+does.
+
+Recorded as B8. It is fixed here but still broken for everyone else, so it is
+worth reporting upstream. The proper fix is a `u isolate` line in
+`isolate.sysusers`, not a scriptlet that races a hook.
+
+**Why `isolate-check-environment`'s three FAILs were ignored (D84).** It wants
+ASLR off, transparent hugepages off, and `core_pattern` set to `core`. All
+three make *timings reproducible*, which is what a contest needs. None is a
+security control. Turning ASLR off would weaken every process on the laptop to
+steady a millisecond figure that this project does not rank by. The checker is
+written for a judge machine. This is not one yet.
+
+### Q66. `/run` works. Two of my own tests were wrong, and that is the lesson
+
+**What was built.** `POST /run` takes C++ source and a list of test cases, and
+returns a verdict per case. Measured 2026-11-09 on the laptop.
+
+```
+POST /run {source, tests:[{in,out,note?}]}
+   │
+   ├─ 1. zod validates. 256 KB source cap, 200 cases max
+   ├─ 2. mkdtemp, write main.cpp
+   ├─ 3. g++ -std=c++20 -O2       ← OUTSIDE the sandbox
+   ├─ 4. per case: take a box id, isolate --cg --init,
+   │       copy the binary, run with stdin piped,
+   │       parse --meta, isolate --cg --cleanup
+   └─ 5. {verdict, passed, total, firstFailure, results[]}
+```
+
+**Why the compiler is not sandboxed.** `g++` is ours and trusted. The *compiled
+program* is the threat. A sandbox around the compiler would cost one sandbox
+per request and prevent nothing.
+
+**Why a failing submission returns HTTP 200.** The caller asked "does this
+pass". "No" is an answer, so the request succeeded. Non-2xx is kept for the
+engine being unable to answer at all — which is what makes a 500 meaningful.
+
+**Why the verdict order is fixed.** OOM, then timeout, then crash, then compare
+output. Compare first and a program killed at the time limit is reported as a
+wrong answer, which sends the reader to fix arithmetic that was never broken.
+
+**Everyday comparison.** Marking an exam: first check the candidate was still
+in the room at the end, then read the answer. Reading first tells you nothing
+useful about someone who walked out.
+
+**What passed, measured 2026-11-09, isolate 2.5-1, g++ 16.2.1:**
+
+| Probe | Result |
+|---|---|
+| correct program, 3 cases | `accepted`, `passed:3`, 0.002–0.004 s each |
+| triples instead of doubles | `wrong`, `stdout:"63\n"` |
+| not valid C++ | `compile-error`, g++ stderr returned verbatim |
+| `int main(){for(;;);}` | `timeout`, `time:2.088` against `--time=2` |
+| vector grown forever | `oom`, `max-rss:68612`, `signal 9` |
+| divide by zero | `crashed`, `signal 4` |
+| `connect()` to 1.1.1.1:80 | `-1`, **"Network is unreachable"** |
+| `/proc/net/dev` inside | **only `lo`** |
+| count pids in `/proc` | **1** |
+| read `/etc/shadow` | **blocked** |
+| open `/home/msohail22` | **blocked** |
+| write to `/box` | writable, as designed — the one tmpfs |
+| two requests at once | both correct, no interference |
+| fork bomb, children kept alive | `fork failed after 63`, `EAGAIN` — and `after 7` at `--processes=8` |
+| `tests: []` | HTTP 400 |
+
+The host's `/etc` and `/home` are **not** visible. That was worth checking
+rather than assuming: isolate binds `/bin`, `/usr`, `/lib` and `/lib64`
+read-only by default, and whether `/etc` rode along with them was not obvious
+from the man page.
+
+**Now the part worth keeping: two of my own probes were wrong, in the same way.**
+
+*First wrong probe — "is the network blocked?"*
+
+```c
+int s = socket(AF_INET, SOCK_STREAM, 0);
+puts(s < 0 ? "no socket" : "GOT SOCKET");
+```
+
+It printed `GOT SOCKET`, which read as a sandbox failure. It was not.
+`socket()` only allocates a file descriptor. It needs no network to exist, no
+route and no interface. An empty network namespace means there is nowhere to
+**go**, not that you cannot ask for a socket.
+
+The probe that actually answers the question calls `connect()`:
+
+```
+connect=-1 errno=Network is unreachable
+```
+
+*Second wrong probe — "does the process limit hold?"*
+
+```c
+for (int i = 0; i < 10000; i++) { if (fork() == 0) _exit(0); }
+printf("forked %d\n", n);   // printed: forked 10000
+```
+
+It printed `forked 10000` against `--processes=64`, which read as the limit
+being ignored. It was not. Each child called `_exit(0)` immediately, so at any
+instant about two processes were alive. `--processes` caps **concurrent**
+processes, not total forks. 10000 serial forks never approach a limit of 64.
+
+The corrected probe keeps children alive with `sleep(30)` so they accumulate,
+and reports the count at which `fork()` begins returning -1. Measured
+2026-11-09, run twice on purpose:
+
+| `--processes` | fork failed after | errno |
+|---|---|---|
+| 64 (default) | **63** | 11, `EAGAIN` |
+| 8 (`ENGINE_PROCESSES=8`) | **7** | 11, `EAGAIN` |
+
+Exact, and it tracks the setting — which is why it was run at two values. One
+run at the default could not tell "the limit works" apart from "something else
+capped it near there".
+
+**`--processes=N` counts the parent.** 63 children plus the program itself is
+64, and 7 plus itself is 8. So N is the total process count inside the box, not
+the number of children allowed. A question whose answer legitimately needs 8
+threads must be given `--processes=9`, and that off-by-one is the kind that
+only shows up under load.
+
+**The shared mistake, which is the real entry.** Both probes tested *whether a
+system call returned*, not *whether the thing being prevented happened*. Those
+are different questions, and the first one is the easy one to write.
+
+```
+WRONG QUESTION                 RIGHT QUESTION
+can I get a socket?       →    can I reach the internet?
+can I call fork()?        →    can I hold 10000 processes?
+```
+
+A sandbox does not work by making system calls fail. It works by making them
+**useless**. So a probe that only checks a return value will keep reporting
+healthy isolation as broken — and, far worse, the same error in the other
+direction would report broken isolation as healthy. The second kind would ship.
+
+**Rule taken from this:** a probe must observe the *effect*, never the
+*attempt*. Write the probe that a real attacker would have to beat, not the one
+that returns quickly.
+
 ## 3. Commands we ran, and what each one means
 
 ### Checking SSH and the key agent
@@ -3868,10 +4131,238 @@ in-tree build directory that existed on disk only because the old
 `pnpm typecheck` → clean. `pnpm build` → built in 824 ms, 12 routes.
 `apps/engine` → builds and prints `hello quarantine engine`.
 
+### Installing and proving `isolate` (2026-11-09, on the laptop)
+
+```sh
+yay -S --noconfirm isolate
+```
+
+`yay` and not `pacman` because `isolate` is in the AUR only — nothing in core,
+extra or multilib. The PKGBUILD was read before this ran, which is not optional
+for the AUR: it builds as you, with your rights. What was checked: the source
+is the upstream tag `v2.5.tar.gz` from github.com/ioi/isolate, all three files
+carry sha512sums, and `package()` installs the binary `4754` — setuid root,
+group `isolate`, and no execute bit for anyone else. `--noconfirm` is only
+defensible *because* that read happened first.
+
+```sh
+getent group isolate
+getent passwd isolate
+```
+
+The pair that found B8, and the reason it took one minute instead of an hour.
+Run either alone and the result misleads: the group exists, so `getent group`
+looks like success. Only the two together show group-yes/user-no, and that
+combination has exactly one cause — a scriptlet that ran before the hook which
+creates the group. A single command would have sent the search to the daemon.
+
+```sh
+journalctl -u isolate.service --no-pager -n 25
+```
+
+`-u` one unit, `--no-pager` because a pager waits for a key press and an agent
+then hangs, `-n 25` because the useful line is always near the end. This gave
+`User isolate not found in /etc/subuid` verbatim. `systemctl status` had
+already said only "exited, code=exited, status=1/FAILURE", which names the
+failure and not the reason. Status says *that* it broke; the journal says *why*.
+
+```sh
+echo 'isolate:200000:65536' | sudo tee -a /etc/subuid
+```
+
+`tee -a` and not `>>` because the redirect is performed by the *shell*, which
+is unprivileged — `sudo echo ... >> /etc/subuid` fails with permission denied,
+since `sudo` applies to `echo` and never to the `>>`. `tee` is the program that
+writes, so `sudo` applies to the write.
+
+`200000` is chosen, not copied: `/etc/subuid` already held
+`msohail22:100000:65536`, which spans 100000–165535. Starting at 200000 leaves
+a gap. 65536 ids is far more than the 1000 box-ids isolate supports, and
+unused range costs nothing.
+
+```sh
+sudo isolate-check-environment
+```
+
+Worth knowing it exists — it was found in the install log, not in the README.
+It checks the *host*, not the install: ASLR, transparent hugepages,
+`core_pattern`, hard-link protection, asymmetric cores. Its three FAILs here
+were deliberately not acted on. See D84.
+
+```sh
+BOX=$(sudo isolate --cg --init)
+sudo cp /tmp/double "$BOX/box/"
+echo 21 | sudo isolate --cg --meta=/tmp/meta.txt \
+    --time=2 --wall-time=10 --cg-mem=65536 --processes=64 --fsize=64 \
+    --run -- /box/double
+sudo isolate --cg --cleanup
+```
+
+The whole lifecycle, and the shape every `/run` request will take.
+
+`--init` prints the box path and is captured, never assumed: it was
+`/var/lib/isolate/0` here, and it is per-`--box-id`, so hard-coding it breaks
+the moment two runs overlap. `--cleanup` must pair with it or the directory
+leaks.
+
+`--cg` on **every** invocation, including `--init` and `--cleanup`. Drop it and
+the cgroup is never created, `--cg-mem` silently does nothing, and the memory
+test passes by not being run.
+
+The flags, and why each one and not another:
+
+- `--time=2` CPU seconds. This is the real limit. A program that sleeps burns
+  no CPU and would never hit it, which is what `--wall-time` is for.
+- `--wall-time=10` the backstop, set far higher on purpose. isolate's own man
+  page recommends exactly this split. Making them equal would fail slow-but-
+  correct programs on a loaded machine.
+- `--cg-mem=65536` KB, the **whole cgroup**. `-m/--mem` limits one process's
+  address space instead, which a program defeats by forking. The cgroup form
+  is the one that cannot be dodged.
+- `--processes=64` because the default is **1**. Leave it out and anything that
+  threads fails for a reason that looks nothing like the cause.
+- `--fsize=64` KB of output, so a program printing forever cannot fill the disk.
+- `--run --` and the `--` matters: it ends isolate's own flags, so a program
+  argument beginning with a dash is passed through instead of eaten.
+- `/box/double` is the path **inside** the sandbox, not the host path. The box
+  directory becomes `/box`.
+- No network flag appears anywhere, because none is needed. isolate makes a new
+  network namespace with only loopback by default. `--share-net` would be the
+  dangerous one, and it is absent.
+
+Note `echo 21 |` — stdin is piped straight in. The reader's test-case input
+needs no file inside the box.
+
+**Commands that misled, which are worth more than the ones that worked.**
+
+```sh
+yay -S --noconfirm isolate     # "(1/2) installing isolate ... 100%"
+```
+
+This printed success. The service was unusable. pacman reports whether files
+landed, not whether the thing works — and the scriptlet's own
+`useradd: group 'isolate' does not exist` scrolled past inside a wall of build
+output that ended in `100%`. **An install that prints 100% is not a working
+install.** The only reason this was caught at all is that the script went on to
+run `systemctl enable --now`, which failed loudly.
+
+```sh
+sg isolate -c '...'            # zsh: sg: command not found
+```
+
+Written to pick up the new group membership without logging out, from memory
+that `sg` is standard. It is not present on Arch — `pacman -Qo /usr/bin/newgrp`
+shows `util-linux` ships `newgrp` and no `sg`. The replacement was `sudo`,
+which needs no group at all because the binary is setuid root anyway. Checking
+`command -v sg` first would have cost one second.
+
+**Measured 2026-11-09**, all three on the laptop, kernel 7.2.15-1-omarchy,
+cgroup2fs, g++ 16.2.1, isolate 2.5-1:
+
+| Program | `--meta` result |
+|---|---|
+| read a number, double it | `time:0.002 time-wall:0.014 max-rss:3832 cg-mem:480 exitcode:0` |
+| `int main(){for(;;);}`, `--time=1` | `status:TO killed:1 time:1.088 time-wall:1.100` |
+| vector grown forever, `--cg-mem=65536` | `cg-oom-killed:1 exitsig:9 status:SG cg-mem:65536 max-rss:68620` |
+
+### Writing and proving `POST /run` (2026-11-09, on the laptop)
+
+```sh
+newgrp isolate
+```
+
+The reason the engine can call `isolate` at all. `/usr/bin/isolate` is mode
+`4754`, so only root and the `isolate` group may execute it, and `usermod -aG`
+changes the *database*, not the running session. `newgrp` starts a shell with
+the group applied, which avoids logging out. The alternative written first was
+`sg`, which does not exist on Arch — `pacman -Qo /usr/bin/newgrp` shows
+`util-linux` ships `newgrp` only.
+
+```sh
+ENGINE_PROCESSES=8 pnpm --filter engine start
+```
+
+How a limit is proved rather than trusted. Running the fork test twice, at 64
+and at 8, shows the number *tracks the setting*. A single run at the default
+cannot distinguish "the limit works" from "something else capped it near
+there". Every limit in `config.ts` is an environment variable for this reason,
+not for deployment convenience.
+
+**Node and child processes, which is where the implementation actually went
+wrong once:**
+
+```ts
+await exec(cmd, args, { input: test.in })   // ✗ does not compile
+```
+
+`execFile`'s promisified form has **no** `input` option — that belongs to
+`execFileSync`. `tsc` caught it: *"'input' does not exist in type
+'ExecFileOptions'"*. The fix was `spawn`, writing to `child.stdin` and
+collecting `stdout` by hand. Worth recording because the mistake is invisible
+at a glance: the option name is right, the function is wrong.
+
+Two details in that `spawn` wrapper that are not obvious:
+
+- `child.stderr.resume()` — stderr is drained and thrown away. isolate writes
+  its own status line there (`OK (0.002 sec real, 0.014 sec wall)`), which is
+  neither the program's output nor the truth about the run. Left *unread*
+  rather than ignored, the pipe fills at 64 KB and the child blocks forever.
+  Draining is required; reading it is not.
+- The promise never rejects. isolate exits non-zero every time it kills the
+  program, which is a normal outcome here. Treating a non-zero exit as an error
+  would turn every timeout into a 500.
+
+```sh
+curl -s -X POST localhost:3000/run -H 'content-type: application/json' -d '{...}'
+```
+
+`-H 'content-type: application/json'` is not decoration. Without it Hono's
+`c.req.json()` still parses, but the 400 path becomes untestable, and the
+malformed-body case is the one a caller hits first.
+
+**The probes, and what each one is really asking.** Full source in Q66.
+
+| Probe | Asks | Got |
+|---|---|---|
+| `connect()` to `1.1.1.1:80` | can it reach the internet | `-1`, Network is unreachable |
+| read `/proc/net/dev` | what interfaces exist | only `lo` |
+| count digit entries in `/proc` | can it see host processes | `1` |
+| `ifstream("/etc/shadow")` | is the host's `/etc` exposed | blocked |
+| `opendir("/home/msohail22")` | is the host's home exposed | blocked |
+| `ofstream("/box/scratch.txt")` | is anything writable | yes, by design |
+| two POSTs at once, 0.3 s each | do boxes collide | `A` and `B`, both correct |
+| fork children that `sleep(30)` | does the process cap hold | `fork failed after 63`, `EAGAIN` |
+| same at `ENGINE_PROCESSES=8` | does the cap track the setting | `fork failed after 7` |
+
+**Probes that misled, both mine, both the same error.**
+
+```c
+int s = socket(AF_INET, SOCK_STREAM, 0);   // printed GOT SOCKET
+```
+
+Read as the network being open. It is not. `socket()` allocates a file
+descriptor and needs no network, no route and no interface to succeed. The
+empty network namespace means there is nowhere to go, not that the call fails.
+`connect()` is the call that answers the question.
+
+```c
+for (int i = 0; i < 10000; i++) { if (fork() == 0) _exit(0); }  // forked 10000
+```
+
+Read as `--processes=64` being ignored. It is not. Each child exited at once,
+so about two processes were ever alive. The flag caps **concurrent** processes.
+The corrected probe keeps children in `sleep(30)` so they accumulate.
+
+Both asked whether a system call *returned*, not whether the prevented thing
+*happened*. A sandbox works by making calls useless, not by making them fail —
+so this class of probe reports healthy isolation as broken, and the same error
+inverted would report broken isolation as healthy. See D91.
+
 ## 4. Open blockers
 
 | # | Blocker | Why it matters |
 |---|---|---|
+| ~~B8~~ | ~~AUR `isolate` 2.5-1 installs an unusable service: `isolate-cg-keeper` exits 1 with "User isolate not found in /etc/subuid"~~ | **FIXED 2026-11-09.** Cause: `isolate.install` runs `useradd -g isolate ... isolate` in pacman's install scriptlet, but the `isolate` *group* is created later by `systemd-sysusers` in the post-transaction hook. The scriptlet therefore fails with `useradd: group 'isolate' does not exist`, the user is never created, and `/etc/isolate` names it as `subid_user`, so the daemon cannot resolve its subordinate uid range. Proof of the cause: `getent group isolate` returned `isolate:x:959:msohail22` while `getent passwd isolate` returned nothing. Fix: `sudo useradd -g isolate --system -d /nonexistent -s /usr/bin/nologin -M isolate`, then a range in `/etc/subuid` and `/etc/subgid`. Proof of the fix: `systemctl is-active isolate.service` returns `active`, and three sandboxed programs ran correctly (Q65). **Still to do: report it to the AUR maintainer** — a fresh install is broken for everyone, and the proper fix is a `u isolate` line in `isolate.sysusers` instead of the scriptlet. |
 | B7 | `tofu/k8s/terraform.tfstate` is committed in `arrakis` and holds plaintext passwords | Found 2026-11-09 during the port (D66). It carries `POSTGRES_PASSWORD` and the Grafana `admin-password` — both `random_password` results, which Terraform writes to state in clear. `terraform.tfstate.backup` holds the previous generation, and 81 MB of provider binaries are tracked beside them. The file was **excluded from the port**, so `low-level-lab` is clean, but archiving `arrakis` does not fix it: an archived repository is still readable. The passwords must be rotated. Tracked as T12 in `docs/todo-later.md`. |
 | ~~B1~~ | ~~Lid close suspends the machine~~ | **FIXED 2026-11-08.** Verified: `busctl` now returns `s "ignore"`. See D6. |
 | ~~B2~~ | ~~`hostname --ip-address` returns `127.0.1.1`~~ | **Not a blocker any more.** It was a Proxmox requirement only. Still worth tidying one day. |

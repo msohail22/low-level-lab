@@ -23,10 +23,12 @@ Last change: 2026-10-31.
 >    seccomp-bpf, rlimits, `no_new_privs` — is what isolate already does. It is
 >    what the IOI grades on. Nothing here is hand-written, so open question 10.5
 >    ("the seccomp list is not written") is closed: isolate ships the list.
-> 2. **Section 5.4 is confirmed, not deferred.** The service runs as a systemd
->    unit on the host. isolate's own man page says running in containers is "not
->    recommended", which is the same reason 5.4 already gives. The k8s manifests
->    that contradicted this were removed on 2026-11-09.
+> 2. **Section 5.4 is corrected, not deferred.** It is a systemd unit, and it is
+>    not a Kubernetes pod — isolate's own man page says running in containers is
+>    "not recommended", and the k8s manifests that contradicted this were removed
+>    on 2026-11-09. But the unit runs in a **dedicated VM**, not on the host
+>    (D80). A VM is not a container, so 5.4's nesting objection never applied to
+>    one. Blocked on A9.
 >
 > Phases 2, 4, 6 and 12 of section 11 therefore drop out of the order of work.
 > Phase 2 becomes installing a package.
@@ -149,8 +151,32 @@ that you use to learn.
 
 ### 5.4 Where the service runs
 
-The sandbox service runs as a **systemd service on the host**. It does not run
-in a Kubernetes pod.
+> **CORRECTED 2026-11-09 by D80.** This section said "on the host". The service
+> runs in a **dedicated VM** instead. The text below is kept because its
+> argument against Kubernetes still stands and is still the reason.
+>
+> What the original text missed: it compared the host against a *pod* only, and
+> never against a *VM*. The objection below is that a sandbox in a container
+> must create namespaces inside namespaces. **A VM is not a container.** The
+> guest runs its own kernel, so namespaces, cgroups and seccomp are native and
+> full-depth inside it. There is no nesting, and so no extra rights and no
+> added delay. The objection does not apply to a VM.
+>
+> What it costs to be wrong: `shieldwall` holds OpenBao and sits outside the
+> cluster on purpose, so that rebuilding a dead cluster does not need secrets
+> only the dead cluster has. isolate on the host undoes that — the host can
+> read `shieldwall`'s disk image. An escape from a setuid-root sandbox on the
+> hypervisor costs all four VMs at once. In a VM it costs one VM.
+>
+> This is **blocked on A9** (zram and KSM). Measured 2026-11-08: 8704 MB is
+> allocated to four VMs on an 11690 MB host (`mentat` 3072, `sietch` 2048,
+> `windtrap` 2048, `shieldwall` 1536). A new VM needs about 2048 MB and that
+> room does not exist yet. See AB11.
+>
+> Unchanged: it is a systemd unit, and it is not a Kubernetes pod.
+
+The sandbox service runs as a **systemd service in a dedicated VM**. It does not
+run in a Kubernetes pod.
 
 Reason: a sandbox inside a container must create namespaces inside namespaces.
 This needs more rights and adds delay. The host gives direct access to
@@ -364,13 +390,56 @@ Rule for this server: offer **gcc 14 and clang 22 only**. Add another version
 only to compare the output of two compilers. Accept the lower hit rate when you
 add one.
 
+### 5.9a The `--meta` file, measured
+
+Added 2026-11-09. `isolate --meta=<file>` writes this, and it is everything the
+engine can know about a run. Fields are absent on success, not zero, so a
+parser must test for presence and never read a missing key as 0.
+
+```
+time:0.002          CPU seconds
+time-wall:0.014     wall-clock seconds
+max-rss:3832        peak resident memory, KB
+cg-mem:480          cgroup memory high-water, KB
+csw-voluntary:5     context switches
+csw-forced:3
+exitcode:0          the program's own exit status
+status:TO           ABSENT on success. TO timeout, SG signal, RE runtime error, XX internal
+killed:1            ABSENT on success
+cg-oom-killed:1     the cgroup memory limit fired
+exitsig:9           the signal that ended it
+message:...         human-readable text
+```
+
+Measured, same day, laptop, isolate 2.5-1:
+
+| Program | Result |
+|---|---|
+| doubles a number | `time:0.002 cg-mem:480 exitcode:0`, no `status` |
+| `int main(){for(;;);}` at `--time=1` | `status:TO killed:1 time:1.088` |
+| vector grown forever at `--cg-mem=65536` | `cg-oom-killed:1 exitsig:9 status:SG max-rss:68620` |
+
+Two things that matter for the parser:
+
+1. **A correct answer is three conditions**, not one: no `status` key,
+   `exitcode:0`, and stdout equal to the expected output. Checking only
+   `exitcode` would report a timeout as a wrong answer instead of a timeout.
+2. **`time` overshoots the limit.** 1.088 against `--time=1`, because the
+   kernel charges CPU on a timer tick rather than at the instant the budget is
+   spent. A limit is "about one second". Do not display or compare it as exact.
+
+Note `max-rss:68620` exceeding `cg-mem:65536`: the ceiling is what fired, and
+RSS is what the kernel had already handed over before the kill landed. The
+field proving the limit worked is `cg-oom-killed`, not either number.
+
 ### 5.9 Limits for each run
 
 Set these limits for every run.
 
 1. A maximum run time. Start with 2 seconds.
 2. A maximum memory size. Start with 64 MB.
-3. A maximum process count. Start with 64.
+3. A maximum process count. Start with 64. **Measured 2026-11-09: this is a
+   total and includes the submitted program, so 64 permits 63 children.**
 4. A maximum output size. Start with 64 KB.
 5. No network access.
 6. No write access, except to one small tmpfs.

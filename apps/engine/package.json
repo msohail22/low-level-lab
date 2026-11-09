@@ -5,7 +5,8 @@
   "type": "module",
   "dependencies": {
     "@hono/node-server": "2.1.6",
-    "hono": "4.13.17"
+    "hono": "4.13.17",
+    "zod": "^4.6.7"
   },
   "scripts": {
     "dev": "node --watch src/index.ts",

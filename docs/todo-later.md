@@ -89,6 +89,36 @@ connected.
 ### Open work on arrakis
 
 
+### A27. Take `sietch` out of the k3s cluster and make it the sandbox VM
+
+**Status:** open. **This is the next infrastructure step.** Decided 2026-11-09
+by D83.
+
+`sietch.tf` line 1 says "a Kubernetes worker node". It is 2048 MB, it is
+running, and nothing is scheduled on it, so it is the sandbox VM at no RAM
+cost. That is what removed A9 from the engine's path.
+
+**Why it must leave the cluster, not just host `isolate` alongside kubelet:**
+
+1. A worker keeps credentials on disk so it can talk to the control plane. An
+   escape from `isolate` would read them and reach `mentat`.
+2. The CNI is Flannel, and `server-plan.md` §8 records it as "no network
+   policy". The pod network is flat, so `windtrap`'s PostgreSQL and Redis are
+   reachable from `sietch`. A22 would fix that and is not started.
+
+Out of the cluster both problems stop existing. Inside it, they are mitigations
+waiting to be written.
+
+**Done means:** `kubectl get nodes` does not list `sietch`; `sietch` has no
+k3s agent and no cluster credentials on disk; `isolate.service` is active on
+it; and `apps/engine` answers `/health` from another machine on the tailnet.
+
+**Watch for:** the cluster drops to two nodes. That is accepted — nothing is
+deployed yet. If the cluster is later wanted as a three-node teaching
+environment, build a fifth VM then, which is what A9 is the lever for.
+
+---
+
 ### A23. Close the GitOps loop
 
 **Status:** open. **This is the next step.** Nothing else is blocked by it, but
@@ -631,6 +661,11 @@ from.
 ### A9. zram and KSM — NO LONGER OPTIONAL
 
 **Status:** open. **Promoted 2026-11-08 by decision D54.**
+
+**2026-11-09: briefly thought to block the engine, then did not.** D80 needs a
+dedicated VM and there was no room for a fifth one. D83 reuses `sietch`
+instead, which already exists and is idle, so the engine needs no new RAM. This
+item is back to what it was: the lever for whatever is wanted *next*. See AB11.
 
 D26 parked this because RAM was not the binding limit. **It now is.**
 
