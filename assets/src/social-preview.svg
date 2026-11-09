@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <!--
+    SOURCE ONLY. GitHub accepts PNG, GIF or JPG for a social preview and
+    rejects SVG, so the file to upload is assets/social-preview.png. This
+    lives in assets/src/ so a file dialog cannot offer it by mistake.
+
+    Safe area: nothing readable within 100px of any edge. Twitter serves this
+    at 2:1, other readers crop to 1.91:1, and GitHub's settings panel lays an
+    Edit button over the bottom-left corner.
+
+    Centred, and deliberately sparse. A social card is read in about a second
+    in a feed, usually at a third of this size, so it carries the mark, the
+    name and one line. Showing a sample question here was doing a
+    screenshot's job at a size where none of it could be read.
+  -->
+  <rect width="1280" height="640" fill="#0c0a09"/>
+
+  <g transform="translate(528,150) scale(0.88)">
+    <path d="M36 170 H78 V86 H120 V170 H162 V86 H220" fill="none" stroke="#fafaf9"
+          stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="640" y="430" text-anchor="middle" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="86" font-weight="700" fill="#fafaf9">Low Level Lab</text>
+
+  <text x="640" y="492" text-anchor="middle" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="30" fill="#a8a29e">Learn programming by practice. A lot of practice.</text>
+
+  <text x="640" y="548" text-anchor="middle" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="22" fill="#57534e">low-level-lab.msohail22.workers.dev</text>
+</svg>
