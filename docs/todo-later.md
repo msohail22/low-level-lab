@@ -42,7 +42,7 @@ The large piece. It will take time, and that is accepted.
 
 | ID | Item | Notes |
 |---|---|---|
-| ~~T8~~ | ~~Archive `~/Github/arrakis` and `~/Github/quarantine`~~ | **PORTED 2026-11-09.** Both repos are now in this one: engine → `apps/engine`, manifests → `infra/engine`, machine config → `infra/arrakis`, prose → `docs/arrakis/`. The site moved to `apps/web` and this became a pnpm workspace. **The archiving itself is not done** — it is a `gh repo archive` the agent does not run. Four paths were deliberately *not* ported, see T12. |
+| ~~T8~~ | ~~Archive `~/Github/arrakis` and `~/Github/quarantine`~~ | **PORTED 2026-11-09.** Both repos are now in this one: engine → `apps/engine`, machine config → `arrakis/`, prose → `docs/arrakis/`. The ported k8s manifests were removed the same day (D72). The site moved to `apps/web` and this became a pnpm workspace. **The archiving itself is not done** — it is a `gh repo archive` the agent does not run. Four paths were deliberately *not* ported, see T12. |
 | T12 | Rotate the secrets arrakis committed, then archive | `tofu/k8s/terraform.tfstate` is tracked in arrakis and holds a plaintext `POSTGRES_PASSWORD` and Grafana `admin-password` (`random_password` results, written to state). `.terraform.tfstate.backup` holds the previous generation, and 81 MB of provider binaries are tracked beside them. Cause: `.gitignore` anchored `tofu/*.tfstate`, which never matched `tofu/k8s/`. Archiving does not remove them — a read of the archived repo still shows them. Rotate the passwords, then decide whether the repo is scrubbed or deleted. |
 | T9 | Decide what `learning.md` becomes now that arrakis is ported | Copied to `docs/arrakis/learning.md` so nothing was lost, but the hard rule in `~/.claude/CLAUDE.md` still names `~/Github/arrakis` as its home, and that path is about to be archived. Either the rule's path changes to this repo, or the log is declared closed. Not decided, so nothing in the global rules was edited. |
 
@@ -97,8 +97,8 @@ nothing is connected without it.
 Argo CD is running and manages **zero** applications. Its entire purpose is:
 watch a Git repository, make the cluster match it. That link does not exist yet.
 
-**The stale manifests are gone.** They were ported into this repository as
-`infra/engine/` on 2026-11-09 and removed the same day. They described a
+**The stale manifests are gone.** They were ported into this repository on
+2026-11-09 and removed the same day. They described a
 service named `hono-engine` on port 3000, from an earlier version of the
 project, pointing at the placeholder `github.com/example/quarantine.git` and an
 image `hono-engine:latest` that was never built.

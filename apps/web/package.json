@@ -47,6 +47,7 @@
     "validate": "node scripts/validate-questions.ts",
     "build:tests": "node scripts/build-tests.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "cf d1 migrations apply"
+    "db:migrate": "cf d1 migrations apply",
+    "typecheck": "tsc --noEmit"
   }
 }

@@ -1,13 +1,16 @@
 # arrakis: infrastructure plan
 
-This repository holds the infrastructure for the host `arrakis`. The application
-lives in the `quarantine` repository. This document is the single source of truth
-for the host.
+This document is the single source of truth for the host `arrakis`. The
+configuration it describes is in `arrakis/` at the repository root.
+
+Changed 2026-11-09: arrakis and quarantine are no longer separate repositories.
+Both are in `low-level-lab`. The application is `apps/engine`. It is not
+`quarantine`.
 
 This document uses Simplified Technical English (ASD-STE100). Keep sentences
 short. Use active voice. Write one idea in one sentence.
 
-Last change: 2026-11-08.
+Last change: 2026-11-09.
 
 ## 0. Read this first: two plans disagree
 

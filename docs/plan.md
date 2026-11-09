@@ -138,7 +138,7 @@ WorkOS AuthKit holds the session in a sealed cookie. There is no session table.
 | 7 | Settings | **done** — three settings on `/me`, with the KV cache |
 | 8 | Contribute page, PR template, CI validation | **partly done** — the page and CI exist. No pull-request template yet. |
 | 9 | Brand the sign-in page | not started — T1 |
-| 10 | The engine: `isolate` on arrakis, then a Hono `/run` | not started — T4 to T7, and `apps/engine/README.md` |
+| 10 | The engine: `isolate` on arrakis, then a real `/run` | **started** — `apps/engine` is a Hono server with `/health`. `/run` returns 501. T4 to T7. |
 
 The site is shippable now. Everything left is either polish or the engine.
 

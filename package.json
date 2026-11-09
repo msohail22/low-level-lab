@@ -15,6 +15,7 @@
     "cf-typegen": "pnpm --filter web cf-typegen",
     "db:generate": "pnpm --filter web db:generate",
     "db:migrate": "pnpm --filter web db:migrate",
-    "typecheck": "pnpm --filter web exec tsc --noEmit"
+    "typecheck": "pnpm -r typecheck",
+    "engine": "pnpm --filter engine dev"
   }
 }

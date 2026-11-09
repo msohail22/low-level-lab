@@ -37,7 +37,7 @@ cmake_install.cmake
 compile_commands.json
 .cache/
 
-# OpenTofu / Terraform (infra/).
+# OpenTofu / Terraform (arrakis/).
 #
 # Unanchored on purpose. arrakis anchored these as `tofu/*.tfstate` and
 # `tofu/.terraform/`, which matches only that one directory — so everything

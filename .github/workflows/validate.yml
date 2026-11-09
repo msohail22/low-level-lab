@@ -82,7 +82,7 @@ jobs:
             exit 1
           fi
 
-      # infra/ arrived from a repository where `tofu/*.tfstate` was anchored one
+      # arrakis/ arrived from a repository where `tofu/*.tfstate` was anchored one
       # level too shallow, so `tofu/k8s/terraform.tfstate` — holding a plaintext
       # POSTGRES_PASSWORD and a Grafana admin password — was tracked, next to
       # 81 MB of provider binaries. State is never reviewable and a leaked
