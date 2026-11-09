@@ -11,7 +11,9 @@ Read a question. Solve it on your own machine. Check your answer.
 [![node](https://img.shields.io/badge/node-26.5-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[Contribute a question](CONTRIBUTING.md) · [Open work](docs/todo-later.md) · [The plan](docs/plan.md)
+[**Open the site →**](https://low-level-lab.msohail22.workers.dev)
+
+[Contribute a question](CONTRIBUTING.md) · [Open work](docs/todo-later.md) · [The plan](docs/plan.md) · [Security](SECURITY.md)
 
 </div>
 
@@ -75,6 +77,12 @@ Every boundary is measured, not assumed:
 | fork forever | stops at 63 children |
 | allocate past 64 MB | OOM-killed |
 | loop forever | killed at 2 s |
+
+## 🌱 Your first contribution
+
+Issues labelled [**good first issue**](https://github.com/msohail22/low-level-lab/labels/good%20first%20issue)
+are one file each and need no knowledge of the codebase. `pnpm validate` tells
+you if the format is wrong, so you cannot get it quietly wrong.
 
 ## 🤝 Contributing
 

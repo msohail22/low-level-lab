@@ -1,0 +1,64 @@
+# Dependency updates.
+#
+# Grouped on purpose. This is a pnpm workspace with two packages, and a flood
+# of one-dependency pull requests would make the CI signal useless — every one
+# of them runs the full validate, typecheck and build. Grouping means one PR
+# per ecosystem per week.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # vinext is beta and its own README says it is "not yet a drop-in
+      # replacement" for Next.js. The Cloudflare vite plugin is on a beta tag.
+      # Both are the most likely things to break the build, so they travel
+      # alone and get read properly.
+      beta-runtime:
+        patterns:
+          - vinext
+          - "@vinext/*"
+          - "@cloudflare/vite-plugin"
+          - cf
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "react-server-dom-*"
+          - "@types/react"
+          - "@types/react-dom"
+      build-tooling:
+        patterns:
+          - vite
+          - "@vitejs/*"
+          - typescript
+          - tailwindcss
+          - "@tailwindcss/*"
+          - postcss
+      content-pipeline:
+        patterns:
+          - "@mdx-js/*"
+          - "remark-*"
+          - "rehype-*"
+          - shiki
+          - "@shikijs/*"
+      everything-else:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - vinext
+          - "@vinext/*"
+          - "@cloudflare/vite-plugin"
+          - cf
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"

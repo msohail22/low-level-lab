@@ -1,0 +1,21 @@
+# Shows a Sponsor button on the repository.
+#
+# `github` requires GitHub Sponsors to be enabled on the account first —
+# github.com/sponsors/dashboard. Until it is, the button appears but leads
+# nowhere useful, which is worse than no button.
+#
+# Only `github` and `custom` accept a list. Every other platform takes exactly
+# one value. Up to 4 custom URLs, and 1 organisation plus 4 developers for
+# `github`. Quote any URL containing a colon.
+github: [msohail22]
+
+# Uncomment and fill in whichever you actually use. An empty or wrong handle
+# renders a broken link, so leave them commented until the account exists.
+# ko_fi: USERNAME
+# buy_me_a_coffee: USERNAME
+# patreon: USERNAME
+# liberapay: USERNAME
+# open_collective: PROJECT
+# polar: USERNAME
+# thanks_dev: u/gh/msohail22
+# custom: ["https://example.com/donate"]
