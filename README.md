@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔬 Low Level Lab
+<img src=".github/assets/mark.png" alt="" width="64">
+
+# Low Level Lab
 
 **A project to learn programming by practice (a lot of practice).**
 
@@ -13,7 +15,7 @@ Read a question. Solve it on your own machine. Check your answer.
 
 [**Open the site →**](https://low-level-lab.msohail22.workers.dev)
 
-[Contribute a question](CONTRIBUTING.md) · [Open work](docs/todo-later.md) · [The plan](docs/plan.md) · [Security](SECURITY.md)
+[Contribute a question](CONTRIBUTING.md) · [Security](SECURITY.md) · [Open the site](https://low-level-lab.msohail22.workers.dev)
 
 </div>
 
@@ -57,7 +59,6 @@ A pnpm workspace. Two things deploy, to two different machines.
 | `apps/web` | the site | ☁️ Cloudflare Workers |
 | `apps/engine` | compiles and grades untrusted C++ | 🖥 a sandbox VM |
 | `arrakis` | the server: OpenTofu, libvirt, host config | — |
-| `docs` | the plan, the open work, the history | — |
 
 Workers has no filesystem and no processes, so compiling someone's C++ can
 never happen there. That split is why this is a workspace and not one package.

@@ -9,6 +9,22 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Low Level Lab",
   description: "A project to learn programming by practice (a lot of practice).",
+  /**
+   * The mark is a square wave: a clock signal, the thing underneath every
+   * instruction. It is drawn as paths and carries no text element, so it does
+   * not depend on a font being present on the viewer's machine.
+   *
+   * The .ico is listed as well as the .svg because Safari and older browsers
+   * ignore an SVG favicon, and a tab with no icon reads as a broken page.
+   */
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export const viewport = {

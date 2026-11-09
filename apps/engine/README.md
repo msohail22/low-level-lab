@@ -29,12 +29,11 @@ and "no" is an answer. Non-2xx means the engine could not answer at all.
 ## Where it runs
 
 A systemd unit in a **dedicated VM on arrakis** — not on the arrakis host, and
-not in a Kubernetes pod. D80 in `docs/arrakis/learning.md` has the reasoning;
-the short version is that an isolate escape on the hypervisor would reach
-`shieldwall`, which holds the secrets.
+not in a Kubernetes pod. An isolate escape on the hypervisor would reach
+`shieldwall`, which holds the secrets; in a VM it reaches one VM. A VM is not a
+container, so the usual objection to nesting namespaces does not apply to one.
 
-**Blocked on A9** (zram and KSM). 8704 MB of an 11690 MB host is already
-allocated to four VMs, and this needs about 2048 MB more.
+The VM is `sietch`, taken out of the k3s cluster and repurposed.
 
 ## Configuration
 

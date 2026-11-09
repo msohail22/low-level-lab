@@ -40,9 +40,9 @@ These are deliberate, documented decisions and not vulnerabilities:
 - **`isolate` runs setuid root.** It is designed that way and requires it.
 - **No high availability.** One server. If it stops, the engine stops.
 
-If you think one of these is worse than we believe, say so — that argument is
-worth having, and the reasoning is in `docs/arrakis/learning.md` so you can
-check it rather than guess.
+If you think one of these is worse than we believe, say so. That argument is
+worth having, and the reasoning behind each one is written down — ask and it
+will be quoted back to you in full rather than paraphrased.
 
 ## Scope
 

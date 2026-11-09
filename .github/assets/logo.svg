@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Low Level Lab">
+  <title>Low Level Lab</title>
+  <rect width="256" height="256" rx="56" fill="#0c0a09"/>
+  <path d="M36 170 H78 V86 H120 V170 H162 V86 H220" fill="none" stroke="#fafaf9"
+        stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

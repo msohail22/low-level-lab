@@ -3,6 +3,6 @@ contact_links:
   - name: 📝 Add a question yourself
     url: https://github.com/msohail22/low-level-lab/blob/master/CONTRIBUTING.md
     about: It is one file and a pull request. Faster than filing an issue about it.
-  - name: 📋 What is already planned
-    url: https://github.com/msohail22/low-level-lab/blob/master/docs/todo-later.md
-    about: Open work, so you do not file something already agreed.
+  - name: 📋 Existing issues
+    url: https://github.com/msohail22/low-level-lab/issues
+    about: Check what is already filed before opening a new one.

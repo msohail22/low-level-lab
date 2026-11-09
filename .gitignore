@@ -15,6 +15,14 @@ tsconfig.tsbuildinfo
 # Local agent instructions, deliberately untracked
 CLAUDE.md
 
+# Working notes, deliberately untracked. plan.md, todo-later.md and the arrakis
+# history and learning log stay on this machine only.
+#
+# Nothing public may link into this directory: a reference to docs/<file> would
+# be a 404 for everyone else. Images the README needs live in .github/assets/
+# for that reason, not here.
+/docs/
+
 # Build output. Unanchored on purpose: these now live under apps/*, so a
 # leading-slash pattern would only match the repository root and miss them.
 **/dist/
