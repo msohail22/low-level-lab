@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <!--
+    Safe area: nothing readable within 100px of any edge. Twitter serves this
+    at 2:1, but other readers crop to 1.91:1 and GitHub's own settings panel
+    lays an Edit button over the bottom-left corner. Content in the outer band
+    is content you do not control.
+  -->
+  <rect width="1280" height="640" fill="#0c0a09"/>
+
+  <g transform="translate(100,96) scale(0.40)">
+    <path d="M36 170 H78 V86 H120 V170 H162 V86 H220" fill="none" stroke="#fafaf9"
+          stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="203" y="168" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="64" font-weight="700" fill="#fafaf9">Low Level Lab</text>
+  <text x="100" y="238" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="27" fill="#a8a29e">Learn programming by practice. A lot of practice.</text>
+
+  <rect x="100" y="288" width="1080" height="208" rx="14" fill="#1c1917" stroke="#292524" stroke-width="2"/>
+  <rect x="132" y="316" width="72" height="29" rx="14" fill="#4ade80" opacity="0.18"/>
+  <text x="168" y="336" text-anchor="middle" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="16" fill="#4ade80">easy</text>
+  <rect x="214" y="316" width="86" height="29" rx="14" fill="#292524"/>
+  <text x="257" y="336" text-anchor="middle" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="16" fill="#a8a29e">coding</text>
+  <text x="132" y="394" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="32" fill="#fafaf9">Reverse a singly linked list</text>
+  <text x="132" y="440" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="20" fill="#78716c">$ g++ -O2 solution.cpp -o solution</text>
+  <text x="132" y="474" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="20" fill="#4ade80">  1200 / 1200 test cases passed</text>
+
+  <text x="100" y="532" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="22" fill="#78716c">github.com/msohail22/low-level-lab</text>
+  <text x="1180" y="532" text-anchor="end" font-family="JetBrainsMono Nerd Font, monospace"
+        font-size="22" fill="#78716c">C++ · MIT</text>
+</svg>

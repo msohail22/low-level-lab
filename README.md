@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=".github/assets/mark.png" alt="" width="64">
+<img src="assets/mark.png" alt="" width="64">
 
 # Low Level Lab
 
