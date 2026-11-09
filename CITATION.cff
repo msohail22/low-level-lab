@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Low Level Lab"
+abstract: "Programming questions as files in a git repository, with a sandboxed C++ execution engine built on isolate. A project to learn programming by practice."
+type: software
+authors:
+  - family-names: "Sohail"
+    given-names: "Mohammed"
+repository-code: "https://github.com/msohail22/low-level-lab"
+license: MIT

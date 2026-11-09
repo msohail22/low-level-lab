@@ -2,24 +2,29 @@
 
 <!-- One or two lines. -->
 
-## Checklist
+## ✅ Checks
 
-Everything here is checked automatically by the `validate` workflow. The list is
-so you can see what will fail before CI tells you.
+CI runs all of these. The list is so you see what will fail before it tells you.
 
-- [ ] `pnpm validate` passes — frontmatter, required headings, required blocks
-- [ ] `pnpm build:tests` passes — every test case parses, none are duplicates
-- [ ] `pnpm exec tsc --noEmit` passes
-- [ ] `pnpm build` passes
+```sh
+pnpm validate && pnpm build:tests && pnpm typecheck && pnpm build
+```
 
-### Adding a question
+- [ ] `pnpm validate` — frontmatter, required headings, required blocks
+- [ ] `pnpm build:tests` — every test case parses, none duplicated
+- [ ] `pnpm typecheck`
+- [ ] `pnpm build`
+- [ ] Branch is up to date with `master` — CI fails if `master` moved, so that a
+      duplicate introduced by another PR is caught against the combination
 
-- [ ] The file is `content/<topic>/<slug>.mdx` and the filename matches `slug`
-- [ ] No existing question in that topic already asks this, under any slug
+### 📝 Adding a question
+
+- [ ] File is `apps/web/content/<topic>/<slug>.mdx` and the filename matches `slug`
+- [ ] No existing question in that topic asks this already, under any slug or wording
 - [ ] `kind` is one of `coding`, `mcq`, `multi`, `true-false`
-- [ ] `## Description` is clear and concise, and the title does not repeat the kind
+- [ ] `## Description` is clear, and the title does not repeat the kind
 - [ ] `coding` only: `## Input`, `## Output`, `## Test cases`, and a
       `<slug>.tests.jsonl` beside the question
 - [ ] Every other kind: `choices` in frontmatter and a bare `<Choices />` in the body
 - [ ] `<Answer>` is the last thing in the file
-- [ ] No generated files committed — `public/tests/` is built by CI
+- [ ] No generated files committed — `apps/web/public/tests/` is built by CI

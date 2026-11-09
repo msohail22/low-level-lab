@@ -1,3 +1,4 @@
+const REPO = "https://github.com/msohail22/low-level-lab";
 
 export default function ContributePage() {
   return (
@@ -10,23 +11,41 @@ export default function ContributePage() {
         review.
       </p>
 
+      {/*
+        The format contract is not repeated here. It lives in CONTRIBUTING.md next to
+        the validator that enforces it, and two copies of one contract drift. This
+        page's job is to get a reader to that file.
+      */}
       <p className="mt-4 text-muted">
-        The format is still settling, so this page is a stub. The frontmatter contract
-        and a template per question kind will land here once the shape stops moving.
-        Until then, copy an existing file under{" "}
-        <code className="rounded bg-border/50 px-1">content/cpp/</code> and follow it.
+        The full steps, the four question kinds and the test-case format are in{" "}
+        <a
+          className="underline"
+          href={`${REPO}/blob/master/CONTRIBUTING.md`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          CONTRIBUTING.md
+        </a>
+        . It is one file to copy and one command to check it.
       </p>
 
       <p className="mt-4 text-muted">
-        A coding question also needs a{" "}
-        <code className="rounded bg-border/50 px-1">&lt;slug&gt;.tests.jsonl</code>{" "}
-        beside it — one JSON object per line, each with an{" "}
-        <code className="rounded bg-border/50 px-1">in</code> and an{" "}
-        <code className="rounded bg-border/50 px-1">out</code> string. The build
-        splits it into chunks the page loads on demand, so a file with thousands of
-        cases costs the reader nothing until they ask for them.
+        <code className="rounded bg-border/50 px-1">pnpm validate</code> is the review.
+        It checks the frontmatter, the required headings, the choice counts and the test
+        file, and CI runs it on every pull request — so a question that breaks the
+        format cannot merge and nobody has to read the diff to catch it.
       </p>
 
+      <p className="mt-6">
+        <a
+          className="underline"
+          href={`${REPO}/issues/new/choose`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Suggest a question without writing it
+        </a>
+      </p>
     </div>
   );
 }

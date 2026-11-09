@@ -1,0 +1,46 @@
+name: 🐛 Bug report
+description: Something on the site or in the tooling is broken
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      placeholder: |
+        1. go to /topics/cpp
+        2. click ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - the site (apps/web)
+        - the execution engine (apps/engine)
+        - a question's content
+        - the validator or CI
+        - the server (arrakis)
+        - somewhere else
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: Error text, failing command output, or console errors.
+      render: shell
+  - type: input
+    id: env
+    attributes:
+      label: Browser or OS
+      placeholder: Firefox 148 on Linux

@@ -1,0 +1,60 @@
+name: 💡 Suggest a question
+description: An idea for a question you are not going to write yourself
+title: "[Question] "
+labels: ["question-idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Writing it yourself is faster than this form — it is one file, and
+        [CONTRIBUTING.md](../blob/master/CONTRIBUTING.md) has the three steps.
+        Use this when you have the idea but not the time.
+  - type: input
+    id: title
+    attributes:
+      label: The question, in one line
+      placeholder: What does delete on a null pointer do?
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      description: There is no free-text kind. An answer nobody can check is not worth asking for.
+      options:
+        - coding — solved on your own machine against test cases
+        - mcq — exactly one correct option
+        - multi — two or more correct options
+        - "true-false — two options, one correct"
+        - not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      options:
+        - easy
+        - medium
+        - hard
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should it teach?
+      description: The misconception it corrects, or the thing a reader learns by getting it wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: The answer, if you know it
+      description: Optional. Saves whoever writes it a lookup.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing questions and this is not one of them
+          required: true

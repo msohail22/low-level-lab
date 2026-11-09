@@ -136,7 +136,7 @@ WorkOS AuthKit holds the session in a sealed cookie. There is no session table.
 | 5 | Auth | **done** — WorkOS, not GitHub OAuth (D4) |
 | 6 | Progress: `/me/sync`, the ✓ column, `/me` | **done** |
 | 7 | Settings | **done** — three settings on `/me`, with the KV cache |
-| 8 | Contribute page, PR template, CI validation | **partly done** — the page and CI exist. No pull-request template yet. |
+| 8 | Contribute page, PR template, CI validation | **done** — `CONTRIBUTING.md`, a pull-request template, two issue forms and a chooser config, plus the CI that enforces them. `/contribute` on the site is still a stub and now points at `CONTRIBUTING.md`. |
 | 9 | Brand the sign-in page | not started — T1 |
 | 10 | The engine: `isolate`, then a real `/run`, then the VM | **in progress, unblocked.** `isolate` 2.5-1 is installed on the laptop and proven: a program runs, an infinite loop is killed on CPU time, and a memory hog is killed by the cgroup (Q65). `apps/engine` answers `/health` and `/config`; `/run` returns 501 and is the next code. The VM is A27 — reuse `sietch` (D83), so no new RAM and no A9. |
 

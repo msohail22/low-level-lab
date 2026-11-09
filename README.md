@@ -1,34 +1,91 @@
-# Low Level Lab
+<div align="center">
 
-> A project to learn programming by practice (a lot of practice).
+# 🔬 Low Level Lab
 
-Read a programming question, solve it on your own machine.
+**A project to learn programming by practice (a lot of practice).**
 
-## Layout
+Read a question. Solve it on your own machine. Check your answer.
 
-| Path | What |
-|---|---|
-| `apps/web` | the site — Cloudflare Workers |
-| `apps/engine` | runs untrusted C++ — arrakis |
-| `arrakis` | the server: OpenTofu, libvirt, host config |
-| `docs` | the plan, the open work, the history |
+[![validate](https://github.com/msohail22/low-level-lab/actions/workflows/validate.yml/badge.svg)](https://github.com/msohail22/low-level-lab/actions/workflows/validate.yml)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![node](https://img.shields.io/badge/node-26.5-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Running it
+[Contribute a question](CONTRIBUTING.md) · [Open work](docs/todo-later.md) · [The plan](docs/plan.md)
 
-From this directory, not from inside a package.
+</div>
+
+---
+
+## ✨ What it is
+
+Programming questions as plain files in a git repository. No database, no CMS,
+no submit box — **you compile locally**, which is the point. A reader who never
+leaves the browser never learns the toolchain.
+
+- 📝 **One MDX file per question.** Adding one is a pull request.
+- ✅ **CI is the review.** A question that breaks the format cannot merge, so
+  nobody has to read a diff to catch it.
+- 🔒 **Answers hide behind a click**, so you commit before you peek.
+- 🧪 **Four kinds** — `coding`, `mcq`, `multi`, `true-false`. All graded, never
+  free text: an answer nobody can check is not worth typing.
+
+## 🚀 Quick start
 
 ```sh
 pnpm install
-pnpm dev          # the site, http://[::1]:5173
-pnpm engine       # the engine, http://localhost:3000
+pnpm dev          # → http://[::1]:5173
+```
+
+```sh
 pnpm validate     # every question against the format contract
 pnpm typecheck
 pnpm build
 ```
 
-## Adding a question
+> [!NOTE]
+> The dev server binds IPv6. Use `http://[::1]:5173`, not `localhost`.
 
-One MDX file at `apps/web/content/<topic>/<slug>.mdx`, where the filename
-equals the `slug` in the frontmatter. `pnpm validate` is the review, and CI runs
-it on every pull request. Copy an existing question from
-`apps/web/content/cpp/` rather than starting from scratch.
+## 🗂 Layout
+
+A pnpm workspace. Two things deploy, to two different machines.
+
+| Path | What | Runs on |
+|---|---|---|
+| `apps/web` | the site | ☁️ Cloudflare Workers |
+| `apps/engine` | compiles and grades untrusted C++ | 🖥 a sandbox VM |
+| `arrakis` | the server: OpenTofu, libvirt, host config | — |
+| `docs` | the plan, the open work, the history | — |
+
+Workers has no filesystem and no processes, so compiling someone's C++ can
+never happen there. That split is why this is a workspace and not one package.
+
+## 🛡 How the engine runs untrusted code
+
+It doesn't invent a sandbox. [`isolate`](https://github.com/ioi/isolate) — what
+the IOI grades on — does that, behind cgroups, namespaces and seccomp. The
+engine compiles, calls it, and reads the result.
+
+Every boundary is measured, not assumed:
+
+| Attempt | Result |
+|---|---|
+| reach the internet | `Network is unreachable` |
+| read the host's `/etc/shadow` | blocked |
+| fork forever | stops at 63 children |
+| allocate past 64 MB | OOM-killed |
+| loop forever | killed at 2 s |
+
+## 🤝 Contributing
+
+**The fastest useful thing you can do is add one question.** No roles, no
+approval queue — open a pull request and CI tells you if the format is wrong.
+
+→ **[CONTRIBUTING.md](CONTRIBUTING.md)**
+
+## 📄 License
+
+[MIT](LICENSE) © Mohammed Sohail
+
+Questions and answers are part of the repository, so they carry the same
+licence as the code.
